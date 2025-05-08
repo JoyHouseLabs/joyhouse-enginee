@@ -1,0 +1,101 @@
+import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { User } from '../entities/user.entity';
+
+@Injectable()
+export class UserService {
+  constructor(
+    @InjectRepository(User)
+    private readonly userRepo: Repository<User>,
+  ) {}
+
+  async findById(id: string): Promise<User | null> {
+    return this.userRepo.findOneBy({ id });
+  }
+
+  async findByUsername(username: string): Promise<User | null> {
+    return this.userRepo.findOneBy({ username });
+  }
+
+  async register(user: Partial<User>): Promise<User> {
+    const { password, ...rest } = user;
+    const entity = this.userRepo.create({
+      ...rest,
+      id: (await import('ulid')).ulid(),
+      password, // 密码应在 service 层 hash
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+    return this.userRepo.save(entity);
+  }
+
+  // 设置用户属性（昵称、头像等）
+  async setUserProperty(userId: string, dto: { nickname?: string; avatar?: string }): Promise<void> {
+    const user = await this.findById(userId);
+    if (!user) throw new Error('用户不存在');
+    let updated = false;
+    if (dto.nickname !== undefined) { user.nickname = dto.nickname; updated = true; }
+    if (dto.avatar !== undefined) { user['avatar'] = dto.avatar; updated = true; }
+    if (updated) {
+      user.updatedAt = new Date();
+      await this.userRepo.save(user);
+    }
+  }
+
+  // 修改密码（需旧密码）
+  async changePassword(userId: string, oldPassword: string, newPassword: string): Promise<void> {
+    const user = await this.findById(userId);
+    if (!user) throw new Error('用户不存在');
+    const bcrypt = await import('bcryptjs');
+    const ok = await bcrypt.compare(oldPassword, user.password);
+    if (!ok) throw new Error('旧密码不正确');
+    user.password = await bcrypt.hash(newPassword, 10);
+    user.updatedAt = new Date();
+    await this.userRepo.save(user);
+  }
+
+  // 通过签名验证设置新密码
+  async setPasswordBySignature(dto: {
+    address: string;
+    mainchain: 'evm' | 'sol';
+    message: string;
+    sign: string;
+    ts: number | string;
+    newPassword: string;
+  }): Promise<void> {
+    // 地址规范化
+    let standardizedAddress = dto.address;
+    if (dto.mainchain === 'evm') {
+      try {
+        const { getAddress } = await import('ethers');
+        standardizedAddress = getAddress(dto.address);
+      } catch {
+        standardizedAddress = dto.address.toLowerCase();
+      }
+    } else {
+      standardizedAddress = dto.address.toLowerCase();
+    }
+    // 验签
+    const walletService = (this as any).walletService;
+    if (!walletService || typeof walletService.verifySignature !== 'function') {
+      throw new Error('钱包服务未注入');
+    }
+    const valid = await walletService.verifySignature({
+      mainchain: dto.mainchain,
+      address: standardizedAddress,
+      message: dto.message,
+      sign: dto.sign,
+      ts: dto.ts,
+    });
+    if (!valid) throw new Error('签名验证失败');
+    // 查用户
+    const user = await this.findByUsername(standardizedAddress);
+    if (!user) throw new Error('用户不存在');
+    // 更新密码
+    const bcrypt = await import('bcryptjs');
+    user.password = await bcrypt.hash(dto.newPassword, 10);
+    user.updatedAt = new Date();
+    await this.userRepo.save(user);
+  }
+}

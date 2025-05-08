@@ -1,0 +1,17 @@
+# 文件上传配置
+uploadDir: uploads
+# 服务域名（用于拼接url返回给前端）
+domain: http://localhost:3000
+fileDomain: http://localhost:3000
+# 数据库类型，可选 sqlite 或 postgresql
+dbType: postgresql
+# 是否启用 https（true/false）
+httpsEnabled: false
+# PostgreSQL 配置
+# 仅在 dbType 为 postgresql 时需要
+# 示例：
+dbHost: localhost
+dbPort: 5432
+dbUser: your_username
+dbPassword: your_password
+dbName: your_database
