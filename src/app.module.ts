@@ -19,6 +19,7 @@ import { Reply } from './entities/reply.entity';
 import { Knowledgebase } from './entities/knowledgebase.entity';
 import { Knowledgefile } from './entities/knowledgefile.entity';
 import { KnowledgebaseModule } from './knowledgebase/knowledgebase.module';
+import { CqrsModule } from '@nestjs/cqrs';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { KnowledgebaseModule } from './knowledgebase/knowledgebase.module';
       entities: [User, Note, Wallet, Storage, LlmProvider, LlmModel, Relay, Reply, Knowledgebase, Knowledgefile],
       synchronize: true,
     }),
+    CqrsModule,
     UserModule, 
     NoteModule, 
     RelayModule,

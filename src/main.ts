@@ -21,10 +21,19 @@ async function bootstrap() {
       key: fs.readFileSync(join(process.cwd(), 'cert/key.pem')),
       cert: fs.readFileSync(join(process.cwd(), 'cert/cert.pem')),
     };
-    app = await NestFactory.create<NestExpressApplication>(AppModule, { httpsOptions });
+    app = await NestFactory.create<NestExpressApplication>(AppModule, { 
+      httpsOptions,
+      cors: true,
+      bufferLogs: true,
+      abortOnError: false,
+    });
     console.log('[启动] HTTPS 已启用');
   } else {
-    app = await NestFactory.create<NestExpressApplication>(AppModule);
+    app = await NestFactory.create<NestExpressApplication>(AppModule, {
+      cors: true,
+      bufferLogs: true,
+      abortOnError: false,
+    });
     console.log('[启动] HTTP（未启用 https）');
   }
 
@@ -48,7 +57,7 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, swaggerConfig);
   SwaggerModule.setup('swagger', app, document);
 
-  await app.listen(process.env.PORT ?? 3000);
-  console.log(`Swagger 文档已生成: http://localhost:3000/swagger`);
+  await app.listen(process.env.PORT ?? 1666);
+  console.log(`Swagger 文档已生成: http://localhost:1666/swagger`);
 }
 bootstrap();
