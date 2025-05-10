@@ -43,7 +43,9 @@
     "swagger-ui-express": "^5.0.1",
     "tweetnacl": "^1.0.3",
     "typeorm": "^0.3.23",
-    "ulid": "^3.0.0"
+    "ulid": "^3.0.0",
+    "winston": "^3.17.0",
+    "winston-daily-rotate-file": "^5.0.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",

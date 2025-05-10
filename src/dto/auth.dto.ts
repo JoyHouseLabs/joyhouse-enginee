@@ -29,15 +29,15 @@ export class LoginDto {
 }
 
 export class SetUserPropertyDto {
-  @ApiProperty({ description: '昵称', required: false })
+  @ApiProperty({ description: 'key', required: false })
   @IsOptional()
   @IsString()
-  nickname?: string;
+  key?: string;
 
-  @ApiProperty({ description: '头像URL', required: false })
+  @ApiProperty({ description: 'value', required: false })
   @IsOptional()
   @IsString()
-  avatar?: string;
+  value?: string;
 }
 
 export class ChangePasswordDto {

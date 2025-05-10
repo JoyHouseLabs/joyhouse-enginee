@@ -5,16 +5,26 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
 import { ResponseInterceptor } from './common/response.interceptor';
 import { HttpExceptionFilter } from './common/http-exception.filter';
+import { LoggingInterceptor } from './common/logging.interceptor';
 
 import { join } from 'path';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { JoyhouseConfigService } from './common/joyhouse-config';
+import { JoyhouseLoggerService } from './common/logger.service';
 
 import * as fs from 'fs';
 
 async function bootstrap() {
   // 通过配置决定是否启用 https
   const config = JoyhouseConfigService.loadConfig();
+  
+  // 默认的 CORS 配置
+  const corsConfig = config.cors || {
+    origins: ['http://localhost:5173', 'http://localhost:3000'],
+    credentials: true,
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS'
+  };
+
   let app;
   if (config.httpsEnabled) {
     const httpsOptions = {
@@ -23,16 +33,20 @@ async function bootstrap() {
     };
     app = await NestFactory.create<NestExpressApplication>(AppModule, { 
       httpsOptions,
-      cors: true,
-      bufferLogs: true,
-      abortOnError: false,
+      cors: {
+        origin: corsConfig.origins,
+        methods: corsConfig.methods,
+        credentials: corsConfig.credentials,
+      }
     });
     console.log('[启动] HTTPS 已启用');
   } else {
     app = await NestFactory.create<NestExpressApplication>(AppModule, {
-      cors: true,
-      bufferLogs: true,
-      abortOnError: false,
+      cors: {
+        origin: corsConfig.origins,
+        methods: corsConfig.methods,
+        credentials: corsConfig.credentials,
+      }
     });
     console.log('[启动] HTTP（未启用 https）');
   }
@@ -45,6 +59,10 @@ async function bootstrap() {
   app.setGlobalPrefix('api');
   app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
   app.useGlobalInterceptors(new ResponseInterceptor());
+  
+  // 创建日志服务实例并注入到拦截器
+  const logger = app.get(JoyhouseLoggerService);
+  app.useGlobalInterceptors(new LoggingInterceptor(logger));
   app.useGlobalFilters(new HttpExceptionFilter());
 
   // Swagger 文档配置

@@ -20,6 +20,7 @@ import { Knowledgebase } from './entities/knowledgebase.entity';
 import { Knowledgefile } from './entities/knowledgefile.entity';
 import { KnowledgebaseModule } from './knowledgebase/knowledgebase.module';
 import { CqrsModule } from '@nestjs/cqrs';
+import { JoyhouseLoggerService } from './common/logger.service';
 
 @Module({
   imports: [
@@ -39,6 +40,10 @@ import { CqrsModule } from '@nestjs/cqrs';
     KnowledgebaseModule
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    JoyhouseLoggerService,
+  ],
+  exports: [JoyhouseLoggerService],
 })
 export class AppModule {}

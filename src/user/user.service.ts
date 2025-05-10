@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from '../entities/user.entity';
@@ -31,12 +31,11 @@ export class UserService {
   }
 
   // 设置用户属性（昵称、头像等）
-  async setUserProperty(userId: string, dto: { nickname?: string; avatar?: string }): Promise<void> {
+  async setUserProperty(userId: string, dto: { key?: string; value?: string }): Promise<void> {
     const user = await this.findById(userId);
     if (!user) throw new Error('用户不存在');
     let updated = false;
-    if (dto.nickname !== undefined) { user.nickname = dto.nickname; updated = true; }
-    if (dto.avatar !== undefined) { user['avatar'] = dto.avatar; updated = true; }
+    if (dto.key !== undefined && dto.value !== undefined && dto.key in ['nickname', 'avatar']) { user[dto.key] = dto.value; updated = true; }
     if (updated) {
       user.updatedAt = new Date();
       await this.userRepo.save(user);
@@ -46,10 +45,24 @@ export class UserService {
   // 修改密码（需旧密码）
   async changePassword(userId: string, oldPassword: string, newPassword: string): Promise<void> {
     const user = await this.findById(userId);
-    if (!user) throw new Error('用户不存在');
+    if (!user) {
+      throw new HttpException({
+        code: 1001,
+        message: '用户不存在',
+        data: null
+      }, HttpStatus.BAD_REQUEST);
+    }
+    
     const bcrypt = await import('bcryptjs');
     const ok = await bcrypt.compare(oldPassword, user.password);
-    if (!ok) throw new Error('旧密码不正确');
+    if (!ok) {
+      throw new HttpException({
+        code: 1002,
+        message: '旧密码不正确',
+        data: null
+      }, HttpStatus.BAD_REQUEST);
+    }
+    
     user.password = await bcrypt.hash(newPassword, 10);
     user.updatedAt = new Date();
     await this.userRepo.save(user);

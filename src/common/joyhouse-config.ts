@@ -3,6 +3,21 @@ import * as yaml from 'js-yaml';
 
 const CONFIG_PATH = __dirname + '/../../joyhouse.yaml';
 
+export interface LoggingConfig {
+  dir: string;
+  level: string;
+  console: boolean;
+  maxSize: number;
+  maxFiles: number;
+  dailyRotate: boolean;
+}
+
+export interface CorsConfig {
+  origins: string | string[];
+  credentials: boolean;
+  methods: string;
+}
+
 export interface JoyhouseConfig {
   uploadDir: string;
   domain: string;
@@ -14,6 +29,8 @@ export interface JoyhouseConfig {
   dbPassword?: string;
   dbName?: string;
   httpsEnabled?: boolean; // 新增，控制是否启用 https
+  logging?: LoggingConfig;
+  cors?: CorsConfig;
 }
 
 export class JoyhouseConfigService {
@@ -30,6 +47,8 @@ export class JoyhouseConfigService {
       let dbUser: string | undefined;
       let dbPassword: string | undefined;
       let dbName: string | undefined;
+      let logging: LoggingConfig | undefined;
+      let cors: CorsConfig | undefined;
       try {
         const config = yaml.load(fs.readFileSync(CONFIG_PATH, 'utf8')) as JoyhouseConfig;
         uploadDir = uploadDir || config.uploadDir;
@@ -41,6 +60,8 @@ export class JoyhouseConfigService {
         dbUser = config.dbUser;
         dbPassword = config.dbPassword;
         dbName = config.dbName;
+        logging = config.logging;
+        cors = config.cors;
       } catch {}
       JoyhouseConfigService.config = {
         uploadDir: uploadDir!,
@@ -52,6 +73,8 @@ export class JoyhouseConfigService {
         dbUser,
         dbPassword,
         dbName,
+        logging,
+        cors,
       };
     }
     return JoyhouseConfigService.config;

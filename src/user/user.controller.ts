@@ -1,4 +1,4 @@
-import { Controller, Get, Req, UseGuards, Patch, Body, Post } from '@nestjs/common';
+import { Controller, Get, Req, UseGuards, Patch, Body, Post, Put } from '@nestjs/common';
 import { WalletService } from '../wallet/wallet.service';
 import { ApiTags, ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
 import { UserService } from './user.service';
@@ -32,7 +32,7 @@ export class UserController {
     } as UserDto;
   }
 
-  @Post('set-property')
+  @Put('set-property')
   @ApiBearerAuth()
   @ApiResponse({ status: 200, description: '用户属性设置成功' })
   @UseGuards(JwtAuthGuard)
@@ -42,14 +42,19 @@ export class UserController {
     return { message: '用户属性设置成功' };
   }
 
-  @Post('password')
+  @Put('password')
   @ApiBearerAuth()
   @ApiResponse({ status: 200, description: '密码修改成功' })
+  @ApiResponse({ status: 400, description: '密码修改失败' })
   @UseGuards(JwtAuthGuard)
   async changePassword(@Req() req, @Body() dto: ChangePasswordDto) {
     const userId = req.user.sub;
     await this.userService.changePassword(userId, dto.oldPassword, dto.newPassword);
-    return { message: '密码修改成功' };
+    return { 
+      code: 0,
+      message: '密码修改成功',
+      data: null
+    };
   }
 
   @Post('password-by-signature')
