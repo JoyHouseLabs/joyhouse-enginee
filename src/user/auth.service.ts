@@ -21,6 +21,11 @@ export class AuthService {
     const { username, password, nickname } = registerDto;
     const exist = await this.userRepo.findOneBy({ username });
     if (exist) throw new ConflictException('用户名已存在');
+    
+    // 检查是否是第一个用户
+    const userCount = await this.userRepo.count();
+    const isFirstUser = userCount === 0;
+    
     // hash 密码
     const hashed = await bcrypt.hash(password, 10);
     // 只允许 username/nickname 输入，id 自动生成
@@ -28,7 +33,9 @@ export class AuthService {
       username,
       password: hashed,
       nickname,
+      isAdmin: isFirstUser // 第一个用户自动成为管理员
     });
+    
     // 自动为新用户创建钱包
     await this.walletService.createWalletForUser(user.id, password);
     return user;
@@ -40,7 +47,11 @@ export class AuthService {
       throw new UnauthorizedException('用户名或密码错误');
     }
     const token = jwt.sign(
-      { sub: user.id, username: user.username },
+      { 
+        sub: user.id, 
+        username: user.username,
+        isAdmin: user.isAdmin // 将管理员状态添加到 token 中
+      },
       process.env.JWT_SECRET || 'joyhouse-secret',
       { expiresIn: '7d' }
     );
@@ -84,6 +95,10 @@ export class AuthService {
     // 2. 查找用户
     let user = await this.userRepo.findOneBy({ username: standardizedAddress });
     if (!user) {
+      // 检查是否是第一个用户
+      const userCount = await this.userRepo.count();
+      const isFirstUser = userCount === 0;
+      
       // 3. 若不存在，创建用户
       const strongPwd = Array(32).fill(0).map(() => Math.random().toString(36).slice(2)).join('').slice(0, 32);
       const hashed = await (await import('bcryptjs')).hash(strongPwd, 10);
@@ -91,13 +106,18 @@ export class AuthService {
         username: standardizedAddress,
         password: hashed,
         nickname: standardizedAddress,
+        isAdmin: isFirstUser // 第一个用户自动成为管理员
       });
       // 可选：自动为新用户创建钱包
       await this.walletService.createWalletForUser(user.id, strongPwd, dto.mainchain);
     }
     // 4. 签发token
     const token = (await import('jsonwebtoken')).sign(
-      { sub: user.id, username: user.username },
+      { 
+        sub: user.id, 
+        username: user.username,
+        isAdmin: user.isAdmin // 将管理员状态添加到 token 中
+      },
       process.env.JWT_SECRET || 'joyhouse-secret',
       { expiresIn: '7d' }
     );
