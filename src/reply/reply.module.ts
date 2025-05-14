@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { Reply } from '../entities/reply.entity';
+import { Reply } from './reply.entity';
 import { ReplyService } from './reply.service';
 import { ReplyController } from './reply.controller';
 

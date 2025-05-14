@@ -1,6 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
-import { LlmProvider } from '../entities/llm-provider.entity';
+import { LlmProvider } from './llm-provider.entity';
 
 @Entity('llm_model')
 export class LlmModel {

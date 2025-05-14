@@ -4,16 +4,7 @@ import { IsString, IsOptional, IsBoolean, IsInt } from 'class-validator';
 export class CreateRelayDto {
   @ApiProperty()
   @IsString()
-  ip: string;
-
-  @ApiProperty()
-  @IsInt()
-  port: number;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsString()
-  domain?: string;
+  host: string;
 
   @ApiProperty()
   @IsString()
@@ -24,9 +15,6 @@ export class CreateRelayDto {
   @IsString()
   icon?: string;
 
-  @ApiProperty()
-  @IsBoolean()
-  useDomain: boolean;
 
   @ApiPropertyOptional()
   @IsOptional()
@@ -50,17 +38,7 @@ export class UpdateRelayDto {
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()
-  ip?: string;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsInt()
-  port?: number;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsString()
-  domain?: string;
+  host?: string;
 
   @ApiPropertyOptional()
   @IsOptional()
@@ -91,9 +69,4 @@ export class UpdateRelayDto {
   @IsOptional()
   @IsString()
   status?: string;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsString()
-  userId?: string;
 }

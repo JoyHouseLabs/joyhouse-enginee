@@ -2,7 +2,7 @@ import { Controller, Post, UploadedFile, UseInterceptors, Req } from '@nestjs/co
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags, ApiBearerAuth, ApiConsumes, ApiBody, ApiResponse } from '@nestjs/swagger';
 import { StorageService } from './storage.service';
-import { StorageUploadResponseDto } from '../dto/storage.dto';
+import { StorageUploadResponseDto } from './storage.dto';
 import * as fs from 'fs';
 import { JoyhouseConfigService } from '../common/joyhouse-config';
 import { extname } from 'path';

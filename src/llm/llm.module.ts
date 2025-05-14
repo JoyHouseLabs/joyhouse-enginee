@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { LlmProvider } from '../entities/llm-provider.entity';
-import { LlmModel } from '../entities/llm-model.entity';
+import { LlmProvider } from './llm-provider.entity';
+import { LlmModel } from './llm-model.entity';
 
 import { LlmService } from './llm.service';
 import { LlmController } from './llm.controller';

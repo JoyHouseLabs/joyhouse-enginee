@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, ILike } from 'typeorm';
-import { Relay } from '../entities/relay.entity';
+import { Relay } from './relay.entity';
 
 @Injectable()
 export class RelayService {

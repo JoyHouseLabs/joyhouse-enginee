@@ -2,12 +2,9 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class RelayListItemDto {
   @ApiProperty() id: string;
-  @ApiProperty() ip: string;
-  @ApiProperty() port: number;
-  @ApiPropertyOptional() domain?: string;
+  @ApiProperty() host: string;
   @ApiProperty() name: string;
   @ApiPropertyOptional() icon?: string;
-  @ApiProperty() useDomain: boolean;
   @ApiPropertyOptional() description?: string;
   @ApiPropertyOptional() memo?: string;
   @ApiProperty() status: string;

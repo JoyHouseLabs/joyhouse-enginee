@@ -4,13 +4,11 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 @Entity()
 export class Relay {
   @ApiProperty() @PrimaryGeneratedColumn('uuid') id: string;
-  @ApiProperty() @Column({ type: 'varchar', length: 255 }) ip: string;
   @ApiProperty() @Column({ type: 'varchar', length: 26 }) userId: string;
-  @ApiProperty() @Column({ type: 'int' }) port: number;
-  @ApiPropertyOptional() @Column({ type: 'varchar', length: 255, nullable: true }) domain?: string;
+  @ApiProperty() @Column({ type: 'varchar', length: 255 }) host: string;
   @ApiProperty() @Column({ type: 'varchar', length: 255 }) name: string;
   @ApiPropertyOptional() @Column({ type: 'varchar', length: 1024, nullable: true }) icon?: string;
-  @ApiProperty({ description: 'Whether to use domain for relay' }) @Column({ type: 'boolean', default: false }) useDomain: boolean;
+
   @ApiPropertyOptional() @Column({ type: 'varchar', length: 1024, nullable: true }) description?: string;
   @ApiPropertyOptional() @Column({ type: 'varchar', length: 4096, nullable: true }) memo?: string;
   @ApiProperty() @Column({ type: 'varchar', length: 64 }) status: string;

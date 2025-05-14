@@ -1,6 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
-import { LlmModel } from '../entities/llm-model.entity';
+import { LlmModel } from './llm-model.entity';
 
 export type LlmApiType = 'ollama' | 'openai';
 

@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Reply } from '../entities/reply.entity';
-import { ReplyCreateDto, ReplyUpdateDto } from '../dto/reply.dto';
+import { Reply } from './reply.entity';
+import { ReplyCreateDto, ReplyUpdateDto } from './reply.dto';
 
 @Injectable()
 export class ReplyService {

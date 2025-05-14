@@ -30,9 +30,4 @@ export class NoteCreateDto {
   @IsOptional()
   @IsString()
   analysis?: string;
-
- 
-
-
-
 }

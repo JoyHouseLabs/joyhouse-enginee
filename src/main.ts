@@ -17,6 +17,28 @@ import * as fs from 'fs';
 async function bootstrap() {
   // 通过配置决定是否启用 https
   const config = JoyhouseConfigService.loadConfig();
+
+  // 数据库路径日志
+  if (config.dbType === 'sqlite') {
+    let dbFile = config.dbName;
+    if (!dbFile) {
+      const os = require('os');
+      const path = require('path');
+      let userDataDir = '';
+      const platform = os.platform();
+      if (platform === 'win32') {
+        userDataDir = process.env.APPDATA || path.join(os.homedir(), 'AppData', 'Roaming');
+      } else if (platform === 'darwin') {
+        userDataDir = path.join(os.homedir(), 'Library', 'Application Support');
+      } else {
+        userDataDir = process.env.XDG_DATA_HOME || path.join(os.homedir(), '.local', 'share');
+      }
+      dbFile = path.join(userDataDir, 'joyhouse', 'joyhouse.db');
+    }
+    console.log('[数据库] SQLite 数据库文件路径:', dbFile);
+  } else {
+    console.log('[数据库] 类型:', config.dbType, '主机:', config.dbHost, '端口:', config.dbPort, '库名:', config.dbName);
+  }
   
   // 默认的 CORS 配置
   const corsConfig = config.cors || {

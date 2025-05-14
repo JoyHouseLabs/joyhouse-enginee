@@ -4,9 +4,9 @@ import { ApiTags, ApiResponse, ApiBody, ApiParam, ApiBearerAuth, ApiQuery, ApiCo
 import { FileInterceptor } from '@nestjs/platform-express';
 import { KnowledgebaseService } from './knowledgebase.service';
 import { KnowledgefileService } from './knowledgefile.service';
-import { KnowledgebaseDto } from '../dto/knowledgebase.dto';
-import { KnowledgebaseCreateDto } from '../dto/knowledgebase-create.dto';
-import { KnowledgebaseUpdateDto } from '../dto/knowledgebase-update.dto';
+import { KnowledgebaseDto } from './knowledgebase.dto';
+import { KnowledgebaseCreateDto } from './knowledgebase-create.dto';
+import { KnowledgebaseUpdateDto } from './knowledgebase-update.dto';
 import { JwtAuthGuard } from '../user/jwt-auth.guard';
 
 @ApiTags('知识库')
@@ -95,7 +95,7 @@ export class KnowledgebaseController {
       }
     }
   })
-  async getAll(@Req() req, @Query() query: import('../dto/knowledgebase-query.dto').KnowledgebaseQueryDto) {
+  async getAll(@Req() req, @Query() query: import('./knowledgebase-query.dto').KnowledgebaseQueryDto) {
     const userId = req.user.sub;
     const { page = 1, pageSize = 10, name } = query;
     return this.kbService.findAll(userId, page, pageSize, name);
@@ -146,7 +146,7 @@ export class KnowledgebaseController {
       }
     }
   })
-  async create(@Body() body: import('../dto/knowledgebase-create.dto').KnowledgebaseCreateDto, @Req() req) {
+  async create(@Body() body: import('./knowledgebase-create.dto').KnowledgebaseCreateDto, @Req() req) {
     const userId = req.user.sub;
     return this.kbService.create(body, userId);
   }
@@ -190,7 +190,7 @@ export class KnowledgebaseController {
       }
     }
   })
-  async update(@Body() body: import('../dto/knowledgebase-update.dto').KnowledgebaseUpdateDto, @Req() req) {
+  async update(@Body() body: import('./knowledgebase-update.dto').KnowledgebaseUpdateDto, @Req() req) {
     const userId = req.user.sub;
     return this.kbService.update(body.id, userId, body);
   }

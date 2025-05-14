@@ -1,8 +1,8 @@
 import { Controller, Get, Post, Body, Param, Req, UseGuards, Query } from '@nestjs/common';
 import { ApiTags, ApiResponse, ApiBody, ApiBearerAuth } from '@nestjs/swagger';
-import { ReplyCreateDto, ReplyUpdateDto } from '../dto/reply.dto';
-import { ReplyQueryDto } from '../dto/reply-query.dto';
-import { ReplyListItemDto, ReplyListPageDto } from '../dto/reply-list.dto';
+import { ReplyCreateDto, ReplyUpdateDto } from './reply.dto';
+import { ReplyQueryDto } from './reply-query.dto';
+import { ReplyListItemDto, ReplyListPageDto } from './reply-list.dto';
 import { JwtAuthGuard } from '../user/jwt-auth.guard';
 import { ReplyService } from './reply.service';
 
@@ -29,7 +29,7 @@ export class ReplyController {
 
   @Get(':id')
   @ApiResponse({ status: 200, type: ReplyListItemDto, description: '获取单条回复' })
-  async getReply(@Param('id') id: string, @Req() req): Promise<ReplyListItemDto | null> {
+  async getReply(@Param('id') id, @Req() req): Promise<ReplyListItemDto | null> {
     const userId = req.user.sub;
     return this.replyService.findById(id, userId);
   }
@@ -53,7 +53,7 @@ export class ReplyController {
 
   @Post(':id/delete')
   @ApiResponse({ status: 200, description: '删除回复，返回是否成功' })
-  async removeReply(@Param('id') id: string, @Req() req): Promise<{ success: boolean }> {
+  async removeReply(@Param('id') id, @Req() req): Promise<{ success: boolean }> {
     const userId = req.user.sub;
     const success = await this.replyService.remove(id, userId);
     return { success };

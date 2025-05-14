@@ -2,7 +2,7 @@ import { Controller, Get, Req, UseGuards, Patch, Body, Post, Put } from '@nestjs
 import { WalletService } from '../wallet/wallet.service';
 import { ApiTags, ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
 import { UserService } from './user.service';
-import { UserDto } from '../dto/user.dto';
+import { UserDto } from './user.dto';
 import { ChangePasswordDto, WalletSignatureSetPasswordDto, SetUserPropertyDto } from '../dto/auth.dto';
 import { JwtAuthGuard } from './jwt-auth.guard';
 

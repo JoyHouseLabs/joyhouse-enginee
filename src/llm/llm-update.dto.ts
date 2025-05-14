@@ -76,7 +76,7 @@ export class LlmModelUpdateDto {
   @IsString()
   license?: string;
 
-  @ApiPropertyOptional({ description: '参数', type: Object })
+  @ApiPropertyOptional({ description: '参数' })
   @IsOptional()
   params?: Record<string, any>;
 }

@@ -20,5 +20,4 @@ export class NoteUpdateDto {
   @IsOptional()
   @IsString()
   content?: string;
-
 }

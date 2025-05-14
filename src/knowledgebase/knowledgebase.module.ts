@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { Knowledgebase } from '../entities/knowledgebase.entity';
-import { Knowledgefile } from '../entities/knowledgefile.entity';
+import { Knowledgebase } from './knowledgebase.entity';
+import { Knowledgefile } from './knowledgefile.entity';
 import { KnowledgebaseService } from './knowledgebase.service';
 import { KnowledgefileService } from './knowledgefile.service';
 import { KnowledgebaseController } from './knowledgebase.controller';

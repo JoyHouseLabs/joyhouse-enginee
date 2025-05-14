@@ -4,7 +4,7 @@ uploadDir: uploads
 domain: http://localhost:3000
 fileDomain: http://localhost:1666
 # 数据库类型，可选 sqlite 或 postgresql
-dbType: postgresql
+dbType: sqlite
 # 是否启用 https（true/false）
 httpsEnabled: false
 # PostgreSQL 配置
@@ -14,7 +14,7 @@ dbHost: localhost
 dbPort: 5432
 dbUser: your_username
 dbPassword: your_password
-dbName: your_database
+#dbName: your_database
 
 # 日志配置
 logging:

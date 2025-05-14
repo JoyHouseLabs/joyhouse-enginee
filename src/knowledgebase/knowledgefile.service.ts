@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Knowledgefile } from '../entities/knowledgefile.entity';
+import { Knowledgefile } from './knowledgefile.entity';
 import { ulid } from 'ulid';
 
 @Injectable()

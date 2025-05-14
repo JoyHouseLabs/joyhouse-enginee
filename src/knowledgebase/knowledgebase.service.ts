@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Knowledgebase } from '../entities/knowledgebase.entity';
+import { Knowledgebase } from './knowledgebase.entity';
 import { ulid } from 'ulid';
 
 @Injectable()

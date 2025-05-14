@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Like } from 'typeorm';
-import { LlmProvider } from '../entities/llm-provider.entity';
-import { LlmModel } from '../entities/llm-model.entity';
+import { LlmProvider } from './llm-provider.entity';
+import { LlmModel } from './llm-model.entity';
 
 @Injectable()
 export class LlmService {
@@ -30,7 +30,10 @@ export class LlmService {
     // 只更新当前用户的数据
     return this.providerRepo.update({ id, user_id: dto.user_id }, dto);
   }
-  deleteProvider(id: string, user_id: string) {
+  async deleteProvider(id: string, user_id: string) {
+    // 先删除所有该 provider 下的模型
+    await this.modelRepo.delete({ provider: { id } });
+    // 再删除 provider 本身
     return this.providerRepo.delete({ id, user_id });
   }
 
@@ -53,7 +56,15 @@ export class LlmService {
       take: limit,
       order: { id: 'DESC' },
     });
-    return { data, total, page, limit };
+    // 为每个 provider 统计模型数量
+    const listWithModelCount = await Promise.all(
+      data.map(async (provider) => {
+        const modelCount = await this.modelRepo.count({ where: { provider } });
+        return { ...provider, modelCount };
+      })
+    );
+    return { list: listWithModelCount, total, page, limit };
+
   }
 
   async findModelsPaged(user_id: string | undefined, page = 1, limit = 20, name?: string, provider?: string) {

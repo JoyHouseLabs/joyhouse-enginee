@@ -1,11 +1,11 @@
 import { Controller, Get, Post, Body, Param, Req, UseGuards, Query } from '@nestjs/common';
 import { ApiTags, ApiResponse, ApiBody, ApiParam, ApiBearerAuth } from '@nestjs/swagger';
 import { NoteService } from './note.service';
-import { NoteDto } from '../dto/note.dto';
-import { NoteCreateDto } from '../dto/note-create.dto';
-import { NoteUpdateDto } from '../dto/note-update.dto';
-import { NoteQueryDto } from '../dto/note-query.dto';
-import { NoteListItemDto } from '../dto/note-list.dto';
+import { NoteDto } from './note.dto';
+import { NoteCreateDto } from './note-create.dto';
+import { NoteUpdateDto } from './note-update.dto';
+import { NoteQueryDto } from './note-query.dto';
+import { NoteListItemDto } from './note-list.dto';
 import { JwtAuthGuard } from '../user/jwt-auth.guard';
 
 @ApiTags('笔记')

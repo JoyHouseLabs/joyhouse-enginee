@@ -1,7 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Note } from '../entities/note.entity';
+import { Note } from './note.entity';
+import { NoteCreateDto } from './note-create.dto';
+import { NoteListItemDto } from './note-list.dto';
+import { NoteQueryDto } from './note-query.dto';
+import { NoteUpdateDto } from './note-update.dto';
 import { ulid } from 'ulid';
 
 @Injectable()

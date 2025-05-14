@@ -62,7 +62,7 @@ export class LlmModelCreateDto {
   @IsString()
   license?: string;
 
-  @ApiProperty({ description: '参数', required: false, type: Object })
+  @ApiProperty({ description: '参数', required: false })
   @IsOptional()
   params?: Record<string, any>;
 }

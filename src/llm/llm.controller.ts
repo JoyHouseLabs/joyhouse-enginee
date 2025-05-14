@@ -2,11 +2,11 @@ import { Body, Controller, Get, Param, Post, Req, UseGuards, Query } from '@nest
 import { ApiTags, ApiResponse, ApiBearerAuth, ApiBody, ApiParam } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../user/jwt-auth.guard';
 import { LlmService } from './llm.service';
-import { LlmProvider } from '../entities/llm-provider.entity';
-import { LlmModel } from '../entities/llm-model.entity';
-import { LlmProviderCreateDto, LlmModelCreateDto } from '../dto/llm-create.dto';
-import { LlmProviderUpdateDto, LlmModelUpdateDto } from '../dto/llm-update.dto';
-import { LlmProviderQueryDto, LlmModelQueryDto } from '../dto/llm-query.dto';
+import { LlmProvider } from './llm-provider.entity';
+import { LlmModel } from './llm-model.entity';
+import { LlmProviderCreateDto, LlmModelCreateDto } from './llm-create.dto';
+import { LlmProviderUpdateDto, LlmModelUpdateDto } from './llm-update.dto';
+import { LlmProviderQueryDto, LlmModelQueryDto } from './llm-query.dto';
 
 @ApiTags('LLM')
 @ApiBearerAuth()
@@ -16,7 +16,7 @@ export class LlmController {
   constructor(private readonly llmService: LlmService) {}
 
   // Provider CRUD
-  @Get('provider')
+  @Get('provider/list')
   @ApiResponse({ status: 200, type: [LlmProvider] })
   @ApiBody({ type: LlmProviderQueryDto })
   async findAllProviders(@Req() req, @Query() query: LlmProviderQueryDto) {
@@ -31,7 +31,7 @@ export class LlmController {
     return this.llmService.findProviderById(id, req.user.sub);
   }
 
-  @Post('create-provider')
+  @Post('provider/create')
   @ApiResponse({ status: 201, type: LlmProvider })
   @ApiBody({ type: LlmProviderCreateDto })
   createProvider(@Req() req, @Body() dto: LlmProviderCreateDto) {
@@ -46,12 +46,11 @@ export class LlmController {
     return this.llmService.updateProvider(id, { ...rest, user_id: req.user.sub });
   }
 
-  @Post('provider/:id/delete')
-  @ApiParam({ name: 'id', description: '要删除的 Provider ID' })
+  @Post('provider/delete')
   @ApiResponse({ status: 200, description: '删除 provider，返回是否成功' })
-  async deleteProvider(@Param('id') id: string, @Req() req): Promise<{ success: boolean }> {
+  async deleteProvider(@Body() body: { id: string }, @Req() req): Promise<{ success: boolean }> {
     const userId = req.user.sub;
-    const result = await this.llmService.deleteProvider(id, userId);
+    const result = await this.llmService.deleteProvider(body.id, userId);
     return { success: !!result.affected };
   }
 
