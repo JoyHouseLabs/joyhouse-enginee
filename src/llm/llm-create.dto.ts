@@ -42,7 +42,7 @@ export class LlmModelCreateDto {
   @ApiProperty({ description: '图标', required: false })
   @IsOptional()
   @IsString()
-  icon?: string;
+  label?: string;
 
   @ApiProperty({ description: '描述', required: false })
   @IsOptional()

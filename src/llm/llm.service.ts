@@ -67,18 +67,18 @@ export class LlmService {
 
   }
 
-  async findModelsPaged(user_id: string | undefined, page = 1, limit = 20, name?: string, provider?: string) {
+  async findModelsPaged(user_id: string | undefined, page = 1, limit = 20, name?: string, provider?: string): Promise<{ list: any[]; total: number; page: number; limit: number }> {
     const where: any = user_id ? { user_id } : {};
     if (name) where.name = (typeof name === 'string') ? Like(`%${name}%`) : undefined;
     if (provider) where.provider = provider;
-    const [data, total] = await this.modelRepo.findAndCount({
+    const [list, total] = await this.modelRepo.findAndCount({
       where,
       skip: (page - 1) * limit,
       take: limit,
       order: { id: 'DESC' },
       relations: ['provider'],
     });
-    return { data, total, page, limit };
+    return { list, total, page, limit };
   }
 
   async createModel(dto: Partial<LlmModel> & { providerId?: string }) {

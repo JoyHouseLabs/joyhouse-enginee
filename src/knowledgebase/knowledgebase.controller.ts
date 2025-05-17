@@ -64,7 +64,7 @@ export class KnowledgebaseController {
     return knowledgefile;
   }
 
-  @Get()
+  @Get('list')
   @ApiQuery({ name: 'page', required: false, type: Number, description: '页码（默认1）' })
   @ApiQuery({ name: 'pageSize', required: false, type: Number, description: '每页数量（默认10）' })
   @ApiQuery({ name: 'name', required: false, type: String, description: '知识库名称模糊搜索' })

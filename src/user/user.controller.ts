@@ -42,6 +42,16 @@ export class UserController {
     return { message: '用户属性设置成功' };
   }
 
+  @Post('onboarded')
+  @ApiBearerAuth()
+  @ApiResponse({ status: 200, description: '首次登录状态已设置' })
+  @UseGuards(JwtAuthGuard)
+  async setOnboarded(@Req() req) {
+    const userId = req.user.sub;
+    await this.userService.setUserProperty(userId, { key: 'onboarded', value: 'true' });
+    return { message: '首次登录状态已设置' };
+  }
+
   @Put('password')
   @ApiBearerAuth()
   @ApiResponse({ status: 200, description: '密码修改成功' })

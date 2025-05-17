@@ -35,7 +35,14 @@ export class UserService {
     const user = await this.findById(userId);
     if (!user) throw new Error('用户不存在');
     let updated = false;
-    if (dto.key !== undefined && dto.value !== undefined && dto.key in ['nickname', 'avatar']) { user[dto.key] = dto.value; updated = true; }
+    if (dto.key !== undefined && dto.value !== undefined && dto.key in ['nickname', 'avatar']) {
+      user[dto.key] = dto.value;
+      updated = true;
+    }
+    if (dto.key === 'onboarded') {
+      user.onboarded = typeof dto.value === 'string' ? dto.value.toLowerCase() === 'true' : Boolean(dto.value);
+      updated = true;
+    }
     if (updated) {
       user.updatedAt = new Date();
       await this.userRepo.save(user);

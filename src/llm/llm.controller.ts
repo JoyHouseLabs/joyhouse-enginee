@@ -55,12 +55,17 @@ export class LlmController {
   }
 
   // Model CRUD
-  @Get('model')
+  /**
+   * 获取模型列表，可选参数provider_id用于查询特定provider下的模型
+   * @param query.provider 指定provider的ID
+   */
+  @Get('model/list')
   @ApiResponse({ status: 200, type: [LlmModel] })
   @ApiBody({ type: LlmModelQueryDto })
   async findAllModels(@Req() req, @Query() query: LlmModelQueryDto) {
     // 管理员可看全部
     const userId = req.user.isAdmin ? undefined : req.user.sub;
+    // 支持通过provider_id筛选模型
     return this.llmService.findModelsPaged(userId, query.page ?? 1, query.limit ?? 20, query.name, query.provider);
   }
 
@@ -70,7 +75,7 @@ export class LlmController {
     return this.llmService.findModelById(id, req.user.sub);
   }
 
-  @Post('create-model')
+  @Post('model/create')
   @ApiResponse({ status: 201, type: LlmModel })
   @ApiBody({ type: LlmModelCreateDto })
   createModel(@Req() req, @Body() dto: LlmModelCreateDto) {
@@ -87,12 +92,12 @@ export class LlmController {
     return this.llmService.updateModel(id, { ...rest, providerId: provider, user_id: req.user.sub });
   }
 
-  @Post('model/:id/delete')
-  @ApiParam({ name: 'id', description: '要删除的模型 ID' })
+  @Post('model/delete')
+  @ApiBody({ schema: { properties: { id: { type: 'string', description: '要删除的模型 ID' } }, required: ['id'] } })
   @ApiResponse({ status: 200, description: '删除模型，返回是否成功' })
-  async deleteModel(@Param('id') id: string, @Req() req): Promise<{ success: boolean }> {
+  async deleteModel(@Body() body: { id: string }, @Req() req): Promise<{ success: boolean }> {
     const userId = req.user.sub;
-    const result = await this.llmService.deleteModel(id, userId);
+    const result = await this.llmService.deleteModel(body.id, userId);
     return { success: !!result.affected };
   }
 }

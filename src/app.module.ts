@@ -18,6 +18,11 @@ import { RelayModule } from './relay/relay.module';
 import { ReplyModule } from './reply/reply.module';
 import { Knowledgebase } from './knowledgebase/knowledgebase.entity';
 import { Knowledgefile } from './knowledgebase/knowledgefile.entity';
+import { StorageDir } from './storage/storage-dir.entity'
+import { Permission } from './role/permission.entity'
+import {UserRole} from './role/user-role.entity'
+import { Role} from  './role/role.entity'
+
 import { KnowledgebaseModule } from './knowledgebase/knowledgebase.module';
 import { CqrsModule } from '@nestjs/cqrs';
 import { JoyhouseLoggerService } from './common/logger.service';
@@ -33,7 +38,8 @@ import { JoyhouseLoggerService } from './common/logger.service';
         if (type === 'mysql') type = 'mysql';
         const baseConfig = {
           type,
-          entities: [User, Note, Wallet, Storage, LlmProvider, LlmModel, Relay, Reply, Knowledgebase, Knowledgefile],
+          entities: [User, Note, Wallet, Storage, LlmProvider, LlmModel, Relay, Reply, 
+            Knowledgebase, Knowledgefile,Permission,Role,UserRole,StorageDir],
           synchronize: true,
         };
         if (type === 'sqlite') {

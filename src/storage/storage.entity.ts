@@ -23,6 +23,9 @@ export class Storage {
   @Column({ type: 'varchar', length: 64 })
   user_id: string;
 
+  @Column({ type: 'varchar', length: 64, nullable: true })
+  storage_dir_id?: string;
+
   @CreateDateColumn()
   createdAt: Date;
 }

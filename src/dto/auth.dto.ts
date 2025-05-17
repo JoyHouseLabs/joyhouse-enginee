@@ -38,6 +38,9 @@ export class SetUserPropertyDto {
   @IsOptional()
   @IsString()
   value?: string;
+  @ApiProperty({ description: '是否完成首次登录', required: false })
+  @IsOptional()
+  onboarded?: boolean;
 }
 
 export class ChangePasswordDto {

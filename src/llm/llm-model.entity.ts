@@ -11,6 +11,9 @@ export class LlmModel {
   name: string;
 
   @Column({ nullable: true })
+  label: string;
+
+  @Column({ nullable: true })
   icon: string;
 
   @Column({ nullable: true })

@@ -55,6 +55,11 @@ export class LlmModelUpdateDto {
   @ApiPropertyOptional({ description: '图标' })
   @IsOptional()
   @IsString()
+  label?: string;
+
+  @ApiPropertyOptional({ description: '模型icon' })
+  @IsOptional()
+  @IsString()
   icon?: string;
 
   @ApiPropertyOptional({ description: '描述' })
