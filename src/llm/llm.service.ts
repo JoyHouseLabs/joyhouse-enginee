@@ -106,4 +106,27 @@ provider = found === null ? undefined : found;
   deleteModel(id: string, user_id: string) {
     return this.modelRepo.delete({ id, user_id });
   }
+
+  async setDefaultModel(id: string, user_id: string): Promise<boolean> {
+    // 1. 验证模型是否存在且属于该用户
+    const model = await this.modelRepo.findOne({ where: { id, user_id } });
+    if (!model) {
+      return false;
+    }
+
+    // 2. 开启事务，确保操作的原子性
+    return this.modelRepo.manager.transaction(async (manager) => {
+      // 3. 将该用户的所有模型设置为非默认
+      await manager.update(LlmModel, { user_id }, { is_default: false });
+      
+      // 4. 将指定模型设置为默认
+      const result = await manager.update(LlmModel, { id, user_id }, { is_default: true });
+      
+      return (result.affected ?? 0) > 0;
+    });
+  }
+
+  async countModelsByProvider(providerId: string): Promise<number> {
+    return this.modelRepo.count({ where: { provider: { id: providerId } } });
+  }
 }

@@ -1,6 +1,7 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsOptional, IsInt, Min, Max, IsString } from 'class-validator';
+import { IsOptional, IsInt, Min, Max, IsString, IsEnum } from 'class-validator';
 import { Type } from 'class-transformer';
+import { NoteType } from './note.entity';
 
 export class NoteQueryDto {
   @ApiPropertyOptional({ description: '页码', default: 1 })
@@ -22,4 +23,14 @@ export class NoteQueryDto {
   @IsOptional()
   @IsString()
   title?: string;
+
+  @ApiPropertyOptional({ description: '按内容模糊查询' })
+  @IsOptional()
+  @IsString()
+  content?: string;
+
+  @ApiPropertyOptional({ description: '按笔记类型筛选', enum: NoteType })
+  @IsOptional()
+  @IsEnum(NoteType)
+  type?: NoteType;
 }

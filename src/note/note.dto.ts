@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsString, IsOptional, IsBoolean, IsArray } from 'class-validator';
+import { IsString, IsOptional, IsBoolean, IsArray, IsInt } from 'class-validator';
 
 export class NoteDto {
   @ApiProperty()
@@ -58,4 +58,12 @@ export class NoteDto {
   @ApiProperty()
   @IsOptional()
   updatedAt: Date;
+
+  @ApiProperty()
+  @IsInt()
+  selfViewTimes: number;
+
+  @ApiProperty()
+  @IsInt()
+  otherViewTimes: number;
 }

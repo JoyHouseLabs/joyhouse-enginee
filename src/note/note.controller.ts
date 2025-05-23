@@ -7,6 +7,7 @@ import { NoteUpdateDto } from './note-update.dto';
 import { NoteQueryDto } from './note-query.dto';
 import { NoteListItemDto } from './note-list.dto';
 import { JwtAuthGuard } from '../user/jwt-auth.guard';
+import { NoteDeleteDto } from './note-delete.dto';
 
 @ApiTags('笔记')
 @ApiBearerAuth()
@@ -19,10 +20,17 @@ export class NoteController {
   @ApiResponse({ status: 200, description: '分页获取笔记', schema: { example: { list: [{ title: 'xxx', content: 'yyy' }], total: 11, total_page: 2, pagesize: 10 } } })
   async getNotes(@Req() req, @Query() query: NoteQueryDto): Promise<{ list: NoteListItemDto[]; total: number; total_page: number; pagesize: number }> {
     const userId = req.user.sub;
-    const { page = 1, pageSize = 10, title } = query;
-    const { data, total } = await this.noteService.findAll(userId, page, pageSize, title);
+    const { page = 1, pageSize = 10, title, content, type } = query;
+    const { data, total } = await this.noteService.findAll(userId, page, pageSize, title, content, type);
     return {
-      list: data.map(({ id, event,title, createdAt, updatedAt }) => ({ id, event,title, createdAt, updatedAt })),
+      list: data.map(({ id, event, title, type, createdAt, updatedAt }) => ({ 
+        id, 
+        event: event || '', 
+        title: title || '', 
+        type,
+        createdAt, 
+        updatedAt 
+      })),
       total,
       total_page: Math.ceil(total / pageSize),
       pagesize: pageSize,
@@ -61,12 +69,28 @@ export class NoteController {
     return dtoResult as NoteDto;
   }
 
-  @Post(':id/delete')
-  @ApiParam({ name: 'id', description: '要删除的笔记 ID' })
+  @Post('delete')
+  @ApiBody({ type: NoteDeleteDto, description: '要删除的笔记信息' })
   @ApiResponse({ status: 200, description: '删除笔记，返回是否成功' })
-  async deleteNote(@Param('id') id: string, @Req() req): Promise<{ success: boolean }> {
+  async deleteNote(@Body() dto: NoteDeleteDto, @Req() req): Promise<{ success: boolean }> {
     const userId = req.user.sub;
-    const success = await this.noteService.remove(id, userId);
+    const success = await this.noteService.remove(dto.id, userId);
+    return { success };
+  }
+
+  @Post('increment-self-view')
+  @ApiResponse({ status: 200, description: '增加自己的查看次数' })
+  async incrementSelfView(@Body('id') id: string, @Req() req): Promise<{ success: boolean }> {
+    const userId = req.user.sub;
+    const success = await this.noteService.incrementSelfView(id, userId);
+    return { success };
+  }
+
+  @Post('increment-other-view')
+  @ApiResponse({ status: 200, description: '增加他人的查看次数' })
+  async incrementOtherView(@Body('id') id: string, @Req() req): Promise<{ success: boolean }> {
+    const userId = req.user.sub;
+    const success = await this.noteService.incrementOtherView(id, userId);
     return { success };
   }
 }

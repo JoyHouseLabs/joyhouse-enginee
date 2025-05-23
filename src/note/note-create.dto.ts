@@ -1,33 +1,55 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsString, IsOptional, IsBoolean, IsArray } from 'class-validator';
+import { IsString, IsOptional, IsBoolean, IsArray, IsEnum } from 'class-validator';
+import { NoteType } from './note.entity';
 
 export class NoteCreateDto {
-  @ApiPropertyOptional({ description: '标题' })
+  @ApiPropertyOptional({ enum: NoteType, default: NoteType.REGULAR })
+  @IsOptional()
+  @IsEnum(NoteType)
+  type?: NoteType;
+
+  @ApiPropertyOptional()
   @IsOptional()
   @IsString()
   title?: string;
 
-  @ApiProperty({ description: '内容' })
+  @ApiProperty()
   @IsString()
   content: string;
 
-  @ApiPropertyOptional({ description: '笔记事件' })
+  @ApiPropertyOptional()
   @IsOptional()
   @IsString()
   event?: string;
 
-  @ApiPropertyOptional({ description: '笔记感受' })
+  @ApiPropertyOptional()
   @IsOptional()
   @IsString()
   feelings?: string;
 
-  @ApiPropertyOptional({ description: '笔记防御' })
+  @ApiPropertyOptional()
   @IsOptional()
   @IsString()
   defense?: string;
 
-  @ApiPropertyOptional({ description: '笔记分析' })
+  @ApiPropertyOptional()
   @IsOptional()
   @IsString()
   analysis?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  who_can_see?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsBoolean()
+  can_comment?: boolean;
+
+  @ApiPropertyOptional({ type: [String] })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  watchers?: string[];
 }

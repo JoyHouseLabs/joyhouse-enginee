@@ -1,23 +1,70 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsString, IsOptional } from 'class-validator';
+import { IsString, IsOptional, IsBoolean, IsArray, IsInt, IsEnum } from 'class-validator';
+import { NoteType } from './note.entity';
 
 export class NoteUpdateDto {
-  @ApiProperty({ description: '要更新的笔记ID' })
+  @ApiProperty()
   @IsString()
   id: string;
 
-  @ApiPropertyOptional({ description: '事件内容' })
+  @ApiPropertyOptional({ enum: NoteType })
   @IsOptional()
-  @IsString()
-  event?: string;
+  @IsEnum(NoteType)
+  type?: NoteType;
 
-  @ApiPropertyOptional({ description: '标题' })
+  @ApiPropertyOptional()
   @IsOptional()
   @IsString()
   title?: string;
 
-  @ApiPropertyOptional({ description: '内容' })
+  @ApiPropertyOptional()
   @IsOptional()
   @IsString()
   content?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  event?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  feelings?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  defense?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  analysis?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  who_can_see?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsBoolean()
+  can_comment?: boolean;
+
+  @ApiPropertyOptional({ type: [String] })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  watchers?: string[];
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsInt()
+  selfViewTimes?: number;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsInt()
+  otherViewTimes?: number;
 }

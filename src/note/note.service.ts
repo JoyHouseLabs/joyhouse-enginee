@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Note } from './note.entity';
+import { Note, NoteType } from './note.entity';
 import { NoteCreateDto } from './note-create.dto';
 import { NoteListItemDto } from './note-list.dto';
 import { NoteQueryDto } from './note-query.dto';
@@ -19,14 +19,33 @@ export class NoteService {
     return this.noteRepo.findOneBy({ id, userId });
   }
 
-  async findAll(userId: string, page = 1, pageSize = 10, title?: string): Promise<{ data: Note[]; total: number }> {
-    const qb = this.noteRepo.createQueryBuilder('note').where('note.userId = :userId', { userId });
+  async findAll(
+    userId: string, 
+    page = 1, 
+    pageSize = 10, 
+    title?: string,
+    content?: string,
+    type?: NoteType
+  ): Promise<{ data: Note[]; total: number }> {
+    const qb = this.noteRepo.createQueryBuilder('note')
+      .where('note.userId = :userId', { userId });
+
     if (title) {
       qb.andWhere('note.title LIKE :title', { title: `%${title}%` });
     }
+
+    if (content) {
+      qb.andWhere('note.content LIKE :content', { content: `%${content}%` });
+    }
+
+    if (type) {
+      qb.andWhere('note.type = :type', { type });
+    }
+
     qb.orderBy('note.createdAt', 'DESC')
       .skip((page - 1) * pageSize)
       .take(pageSize);
+
     const [data, total] = await qb.getManyAndCount();
     return { data, total };
   }
@@ -53,6 +72,24 @@ export class NoteService {
     const note = await this.noteRepo.findOneBy({ id, userId });
     if (!note) return false;
     await this.noteRepo.remove(note);
+    return true;
+  }
+
+  async incrementSelfView(id: string, userId: string): Promise<boolean> {
+    const note = await this.noteRepo.findOneBy({ id, userId });
+    if (!note) return false;
+    note.selfViewTimes += 1;
+    await this.noteRepo.save(note);
+    return true;
+  }
+
+  async incrementOtherView(id: string, userId: string): Promise<boolean> {
+    const note = await this.noteRepo.findOneBy({ id });
+    if (!note) return false;
+    // 确保不是作者自己查看
+    if (note.userId === userId) return false;
+    note.otherViewTimes += 1;
+    await this.noteRepo.save(note);
     return true;
   }
 }

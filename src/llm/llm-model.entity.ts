@@ -37,4 +37,7 @@ export class LlmModel {
 
   @Column('json', { nullable: true })
   params: Record<string, any>;
+
+  @Column({ default: false })
+  is_default: boolean;
 }

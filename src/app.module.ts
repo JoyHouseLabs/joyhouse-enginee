@@ -22,10 +22,13 @@ import { StorageDir } from './storage/storage-dir.entity'
 import { Permission } from './role/permission.entity'
 import {UserRole} from './role/user-role.entity'
 import { Role} from  './role/role.entity'
+import { Meditation } from './meditation/meditation.entity'
 
 import { KnowledgebaseModule } from './knowledgebase/knowledgebase.module';
 import { CqrsModule } from '@nestjs/cqrs';
 import { JoyhouseLoggerService } from './common/logger.service';
+import { BrainModule } from './brain/brain.module';
+import { MeditationModule } from './meditation/meditation.module';
 
 @Module({
   imports: [
@@ -39,7 +42,7 @@ import { JoyhouseLoggerService } from './common/logger.service';
         const baseConfig = {
           type,
           entities: [User, Note, Wallet, Storage, LlmProvider, LlmModel, Relay, Reply, 
-            Knowledgebase, Knowledgefile,Permission,Role,UserRole,StorageDir],
+            Knowledgebase, Knowledgefile, Permission, Role, UserRole, StorageDir, Meditation],
           synchronize: true,
         };
         if (type === 'sqlite') {
@@ -89,7 +92,9 @@ import { JoyhouseLoggerService } from './common/logger.service';
     StorageModule, 
     ReplyModule,
     LlmModule,
-    KnowledgebaseModule
+    KnowledgebaseModule,
+    MeditationModule,
+    BrainModule
   ],
   controllers: [AppController],
   providers: [

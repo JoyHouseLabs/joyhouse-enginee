@@ -42,7 +42,7 @@ async function bootstrap() {
   
   // 默认的 CORS 配置
   const corsConfig = config.cors || {
-    origins: ['http://localhost:5173', 'http://localhost:3000'],
+    origin: '*',  // 允许所有来源访问
     credentials: true,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS'
   };
@@ -55,20 +55,12 @@ async function bootstrap() {
     };
     app = await NestFactory.create<NestExpressApplication>(AppModule, { 
       httpsOptions,
-      cors: {
-        origin: corsConfig.origins,
-        methods: corsConfig.methods,
-        credentials: corsConfig.credentials,
-      }
+      cors: corsConfig
     });
     console.log('[启动] HTTPS 已启用');
   } else {
     app = await NestFactory.create<NestExpressApplication>(AppModule, {
-      cors: {
-        origin: corsConfig.origins,
-        methods: corsConfig.methods,
-        credentials: corsConfig.credentials,
-      }
+      cors: corsConfig
     });
     console.log('[启动] HTTP（未启用 https）');
   }
@@ -76,6 +68,11 @@ async function bootstrap() {
   // 统一用 JoyhouseConfigService 获取上传目录
   const staticPath = join(process.cwd(), config.uploadDir);
   const staticPrefix = '/uploads/';
+  
+  // 添加静态文件服务，用于提供 favicon.ico 等公共资源
+  const publicPath = join(process.cwd(), 'src', 'public');
+  app.useStaticAssets(publicPath);
+  
   console.log('[静态资源目录]', staticPath, '映射前缀', staticPrefix);
   app.useStaticAssets(staticPath, { prefix: staticPrefix });
   app.setGlobalPrefix('api');
@@ -97,7 +94,9 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, swaggerConfig);
   SwaggerModule.setup('swagger', app, document);
 
-  await app.listen(process.env.PORT ?? 1666);
-  console.log(`Swagger 文档已生成: http://localhost:1666/swagger`);
+  const port = process.env.PORT ?? 1666;
+  await app.listen(port, '0.0.0.0');
+  console.log(`Swagger 文档已生成: http://localhost:${port}/swagger`);
+  console.log(`服务已启动，监听所有网络接口: 0.0.0.0:${port}`);
 }
 bootstrap();

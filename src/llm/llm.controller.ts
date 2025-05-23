@@ -22,7 +22,17 @@ export class LlmController {
   async findAllProviders(@Req() req, @Query() query: LlmProviderQueryDto) {
     // 管理员可看全部
     const userId = req.user.isAdmin ? undefined : req.user.sub;
-    return this.llmService.findProvidersPaged(userId, query.page ?? 1, query.limit ?? 20, query.name);
+    const result = await this.llmService.findProvidersPaged(userId, query.page ?? 1, query.limit ?? 20, query.name);
+    
+    // 为每个 provider 添加模型数量
+    const providersWithModelCount = await Promise.all(
+      result.list.map(async (provider) => {
+        const modelCount = await this.llmService.countModelsByProvider(provider.id);
+        return { ...provider, modelCount };
+      })
+    );
+    
+    return { ...result, list: providersWithModelCount };
   }
 
   @Get('provider/:id')
@@ -99,5 +109,14 @@ export class LlmController {
     const userId = req.user.sub;
     const result = await this.llmService.deleteModel(body.id, userId);
     return { success: !!result.affected };
+  }
+
+  @Post('model/set-default')
+  @ApiBody({ schema: { properties: { id: { type: 'string', description: '要设为默认的模型ID' } }, required: ['id'] } })
+  @ApiResponse({ status: 200, description: '设置默认模型，返回是否成功' })
+  async setDefaultModel(@Req() req, @Body() body: { id: string }): Promise<{ success: boolean }> {
+    const userId = req.user.sub;
+    const result = await this.llmService.setDefaultModel(body.id, userId);
+    return { success: result };
   }
 }
