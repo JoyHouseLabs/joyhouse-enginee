@@ -1,7 +1,20 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsEnum, IsOptional, IsObject, IsBoolean, IsArray, ValidateNested } from 'class-validator';
+import {
+  IsString,
+  IsEnum,
+  IsOptional,
+  IsObject,
+  IsBoolean,
+  IsArray,
+  ValidateNested,
+} from 'class-validator';
 import { Type } from 'class-transformer';
-import { WorkflowStatus, WorkflowNode, WorkflowEdge, WorkflowTrigger } from '../entities/workflow.entity';
+import {
+  WorkflowStatus,
+  WorkflowNode,
+  WorkflowEdge,
+  WorkflowTrigger,
+} from '../entities/workflow.entity';
 
 export class WorkflowNodeDto {
   @ApiProperty({ description: '节点ID' })
@@ -91,7 +104,11 @@ export class CreateWorkflowDto {
   @IsOptional()
   variables?: Record<string, any>;
 
-  @ApiProperty({ description: '触发器', type: [WorkflowTriggerDto], required: false })
+  @ApiProperty({
+    description: '触发器',
+    type: [WorkflowTriggerDto],
+    required: false,
+  })
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => WorkflowTriggerDto)
@@ -105,7 +122,11 @@ export class CreateWorkflowDto {
 }
 
 export class UpdateWorkflowDto extends CreateWorkflowDto {
-  @ApiProperty({ description: '工作流状态', enum: WorkflowStatus, required: false })
+  @ApiProperty({
+    description: '工作流状态',
+    enum: WorkflowStatus,
+    required: false,
+  })
   @IsEnum(WorkflowStatus)
   @IsOptional()
   status?: WorkflowStatus;
@@ -143,4 +164,4 @@ export class ApprovalDto {
   @IsString()
   @IsOptional()
   comment?: string;
-} 
+}

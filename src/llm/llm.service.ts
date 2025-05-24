@@ -43,16 +43,28 @@ export class LlmService {
   // Model CRUD
   findAllModels(user_id?: string) {
     if (user_id) {
-      return this.modelRepo.find({ where: { user_id }, relations: ['provider'] });
+      return this.modelRepo.find({
+        where: { user_id },
+        relations: ['provider'],
+      });
     }
     return this.modelRepo.find({ relations: ['provider'] });
   }
   findModelById(id: string, user_id: string) {
-    return this.modelRepo.findOne({ where: { id, user_id }, relations: ['provider'] });
+    return this.modelRepo.findOne({
+      where: { id, user_id },
+      relations: ['provider'],
+    });
   }
-  async findProvidersPaged(user_id: string | undefined, page = 1, limit = 20, name?: string) {
+  async findProvidersPaged(
+    user_id: string | undefined,
+    page = 1,
+    limit = 20,
+    name?: string,
+  ) {
     const where: any = user_id ? { user_id } : {};
-    if (name) where.name = (typeof name === 'string') ? Like(`%${name}%`) : undefined;
+    if (name)
+      where.name = typeof name === 'string' ? Like(`%${name}%`) : undefined;
     const [data, total] = await this.providerRepo.findAndCount({
       where,
       skip: (page - 1) * limit,
@@ -64,15 +76,21 @@ export class LlmService {
       data.map(async (provider) => {
         const modelCount = await this.modelRepo.count({ where: { provider } });
         return { ...provider, modelCount };
-      })
+      }),
     );
     return { list: listWithModelCount, total, page, limit };
-
   }
 
-  async findModelsPaged(user_id: string | undefined, page = 1, limit = 20, name?: string, provider?: string): Promise<{ list: any[]; total: number; page: number; limit: number }> {
+  async findModelsPaged(
+    user_id: string | undefined,
+    page = 1,
+    limit = 20,
+    name?: string,
+    provider?: string,
+  ): Promise<{ list: any[]; total: number; page: number; limit: number }> {
     const where: any = user_id ? { user_id } : {};
-    if (name) where.name = (typeof name === 'string') ? Like(`%${name}%`) : undefined;
+    if (name)
+      where.name = typeof name === 'string' ? Like(`%${name}%`) : undefined;
     if (provider) where.provider = provider;
     const [list, total] = await this.modelRepo.findAndCount({
       where,
@@ -88,19 +106,22 @@ export class LlmService {
     let provider = dto.provider;
     if (!provider && dto.providerId) {
       const found = await this.providerRepo.findOneBy({ id: dto.providerId });
-provider = found === null ? undefined : found;
+      provider = found === null ? undefined : found;
     }
     if (!provider) throw new Error('Provider not found');
     const entity = this.modelRepo.create({ ...dto, provider });
     delete (entity as any).providerId;
     return this.modelRepo.save(entity);
   }
-  async updateModel(id: string, dto: Partial<LlmModel> & { providerId?: string }) {
+  async updateModel(
+    id: string,
+    dto: Partial<LlmModel> & { providerId?: string },
+  ) {
     // 只更新当前用户的数据
     let provider = dto.provider;
     if (!provider && dto.providerId) {
       const found = await this.providerRepo.findOneBy({ id: dto.providerId });
-provider = found === null ? undefined : found;
+      provider = found === null ? undefined : found;
     }
     const updateData = { ...dto, provider };
     delete (updateData as any).providerId;
@@ -121,10 +142,14 @@ provider = found === null ? undefined : found;
     return this.modelRepo.manager.transaction(async (manager) => {
       // 3. 将该用户的所有模型设置为非默认
       await manager.update(LlmModel, { user_id }, { is_default: false });
-      
+
       // 4. 将指定模型设置为默认
-      const result = await manager.update(LlmModel, { id, user_id }, { is_default: true });
-      
+      const result = await manager.update(
+        LlmModel,
+        { id, user_id },
+        { is_default: true },
+      );
+
       return (result.affected ?? 0) > 0;
     });
   }
@@ -135,7 +160,7 @@ provider = found === null ? undefined : found;
 
   async chat(request: ChatRequest): Promise<ChatResponse> {
     const { model: modelName, messages, ...params } = request;
-    
+
     // 获取模型信息
     const model = await this.modelRepo.findOne({
       where: { name: modelName },
@@ -162,7 +187,11 @@ provider = found === null ? undefined : found;
     }
   }
 
-  private async chatWithOpenAI(model: LlmModel, messages: any[], params: any): Promise<ChatResponse> {
+  private async chatWithOpenAI(
+    model: LlmModel,
+    messages: any[],
+    params: any,
+  ): Promise<ChatResponse> {
     const response = await axios.post(
       'https://api.openai.com/v1/chat/completions',
       {
@@ -172,7 +201,7 @@ provider = found === null ? undefined : found;
       },
       {
         headers: {
-          'Authorization': `Bearer ${model.provider.apiKey}`,
+          Authorization: `Bearer ${model.provider.apiKey}`,
           'Content-Type': 'application/json',
         },
       },
@@ -190,15 +219,16 @@ provider = found === null ? undefined : found;
     };
   }
 
-  private async chatWithOllama(model: LlmModel, messages: any[], params: any): Promise<ChatResponse> {
-    const response = await axios.post(
-      `${model.provider.baseUrl}/api/chat`,
-      {
-        model: model.name,
-        messages,
-        ...params,
-      },
-    );
+  private async chatWithOllama(
+    model: LlmModel,
+    messages: any[],
+    params: any,
+  ): Promise<ChatResponse> {
+    const response = await axios.post(`${model.provider.baseUrl}/api/chat`, {
+      model: model.name,
+      messages,
+      ...params,
+    });
 
     const result = response.data;
     return {
@@ -207,7 +237,10 @@ provider = found === null ? undefined : found;
     };
   }
 
-  async streamChat(modelName: string, request: ChatRequest): Promise<Observable<{ content: string; done: boolean }>> {
+  async streamChat(
+    modelName: string,
+    request: ChatRequest,
+  ): Promise<Observable<{ content: string; done: boolean }>> {
     const model = await this.modelRepo.findOne({
       where: { name: modelName },
       relations: ['provider'],
@@ -232,8 +265,11 @@ provider = found === null ? undefined : found;
     }
   }
 
-  private async streamOpenAIChat(model: LlmModel, request: ChatRequest): Promise<Observable<{ content: string; done: boolean }>> {
-    return new Observable(subscriber => {
+  private async streamOpenAIChat(
+    model: LlmModel,
+    request: ChatRequest,
+  ): Promise<Observable<{ content: string; done: boolean }>> {
+    return new Observable((subscriber) => {
       const response = axios.post(
         `${model.provider.baseUrl}/v1/chat/completions`,
         {
@@ -245,53 +281,61 @@ provider = found === null ? undefined : found;
         },
         {
           headers: {
-            'Authorization': `Bearer ${model.provider.apiKey}`,
+            Authorization: `Bearer ${model.provider.apiKey}`,
             'Content-Type': 'application/json',
           },
           responseType: 'stream',
         },
       );
 
-      response.then(res => {
-        res.data.on('data', (chunk: Buffer) => {
-          const lines = chunk.toString().split('\n').filter(line => line.trim() !== '');
-          for (const line of lines) {
-            if (line.startsWith('data: ')) {
-              const data = line.slice(6);
-              if (data === '[DONE]') {
-                subscriber.next({ content: '', done: true });
-                subscriber.complete();
-                return;
-              }
-              try {
-                const parsed = JSON.parse(data);
-                const content = parsed.choices[0]?.delta?.content || '';
-                if (content) {
-                  subscriber.next({ content, done: false });
+      response
+        .then((res) => {
+          res.data.on('data', (chunk: Buffer) => {
+            const lines = chunk
+              .toString()
+              .split('\n')
+              .filter((line) => line.trim() !== '');
+            for (const line of lines) {
+              if (line.startsWith('data: ')) {
+                const data = line.slice(6);
+                if (data === '[DONE]') {
+                  subscriber.next({ content: '', done: true });
+                  subscriber.complete();
+                  return;
                 }
-              } catch (e) {
-                console.error('Error parsing SSE message:', e);
+                try {
+                  const parsed = JSON.parse(data);
+                  const content = parsed.choices[0]?.delta?.content || '';
+                  if (content) {
+                    subscriber.next({ content, done: false });
+                  }
+                } catch (e) {
+                  console.error('Error parsing SSE message:', e);
+                }
               }
             }
-          }
-        });
+          });
 
-        res.data.on('end', () => {
-          subscriber.next({ content: '', done: true });
-          subscriber.complete();
-        });
+          res.data.on('end', () => {
+            subscriber.next({ content: '', done: true });
+            subscriber.complete();
+          });
 
-        res.data.on('error', (error: Error) => {
+          res.data.on('error', (error: Error) => {
+            subscriber.error(error);
+          });
+        })
+        .catch((error) => {
           subscriber.error(error);
         });
-      }).catch(error => {
-        subscriber.error(error);
-      });
     });
   }
 
-  private async streamOllamaChat(model: LlmModel, request: ChatRequest): Promise<Observable<{ content: string; done: boolean }>> {
-    return new Observable(subscriber => {
+  private async streamOllamaChat(
+    model: LlmModel,
+    request: ChatRequest,
+  ): Promise<Observable<{ content: string; done: boolean }>> {
+    return new Observable((subscriber) => {
       const response = axios.post(
         `${model.provider.baseUrl}/api/chat`,
         {
@@ -308,38 +352,43 @@ provider = found === null ? undefined : found;
         },
       );
 
-      response.then(res => {
-        res.data.on('data', (chunk: Buffer) => {
-          const lines = chunk.toString().split('\n').filter(line => line.trim() !== '');
-          for (const line of lines) {
-            try {
-              const parsed = JSON.parse(line);
-              if (parsed.done) {
-                subscriber.next({ content: '', done: true });
-                subscriber.complete();
-                return;
+      response
+        .then((res) => {
+          res.data.on('data', (chunk: Buffer) => {
+            const lines = chunk
+              .toString()
+              .split('\n')
+              .filter((line) => line.trim() !== '');
+            for (const line of lines) {
+              try {
+                const parsed = JSON.parse(line);
+                if (parsed.done) {
+                  subscriber.next({ content: '', done: true });
+                  subscriber.complete();
+                  return;
+                }
+                const content = parsed.message?.content || '';
+                if (content) {
+                  subscriber.next({ content, done: false });
+                }
+              } catch (e) {
+                console.error('Error parsing Ollama message:', e);
               }
-              const content = parsed.message?.content || '';
-              if (content) {
-                subscriber.next({ content, done: false });
-              }
-            } catch (e) {
-              console.error('Error parsing Ollama message:', e);
             }
-          }
-        });
+          });
 
-        res.data.on('end', () => {
-          subscriber.next({ content: '', done: true });
-          subscriber.complete();
-        });
+          res.data.on('end', () => {
+            subscriber.next({ content: '', done: true });
+            subscriber.complete();
+          });
 
-        res.data.on('error', (error: Error) => {
+          res.data.on('error', (error: Error) => {
+            subscriber.error(error);
+          });
+        })
+        .catch((error) => {
           subscriber.error(error);
         });
-      }).catch(error => {
-        subscriber.error(error);
-      });
     });
   }
 }

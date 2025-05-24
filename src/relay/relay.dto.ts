@@ -15,7 +15,6 @@ export class CreateRelayDto {
   @IsString()
   icon?: string;
 
-
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()

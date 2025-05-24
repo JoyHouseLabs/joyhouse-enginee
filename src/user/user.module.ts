@@ -14,7 +14,7 @@ import { AuthModule } from '../auth/auth.module';
     TypeOrmModule.forFeature([User, JailUser]),
     WalletModule,
     StorageModule,
-    forwardRef(() => AuthModule)
+    forwardRef(() => AuthModule),
   ],
   providers: [UserService],
   controllers: [UserController, AdminController],

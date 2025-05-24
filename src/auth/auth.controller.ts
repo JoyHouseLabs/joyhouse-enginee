@@ -1,9 +1,28 @@
-import { Controller, Post, Body, UseGuards, Get, Request, Put, Param } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  Controller,
+  Post,
+  Body,
+  UseGuards,
+  Get,
+  Request,
+  Put,
+  Param,
+} from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { LocalAuthGuard } from './guards/local-auth.guard';
-import { RegisterDto, LoginDto, LoginResponseDto, WalletSignatureLoginDto } from '../dto/auth.dto';
+import {
+  RegisterDto,
+  LoginDto,
+  LoginResponseDto,
+  WalletSignatureLoginDto,
+} from '../dto/auth.dto';
 import { UserDto } from '../user/user.dto';
 import { StorageService } from '../storage/storage.service';
 
@@ -12,7 +31,7 @@ import { StorageService } from '../storage/storage.service';
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
-    private readonly storageService: StorageService
+    private readonly storageService: StorageService,
   ) {}
 
   @Post('register')
@@ -32,7 +51,11 @@ export class AuthController {
   }
 
   @Post('wallet-signature-login')
-  @ApiResponse({ status: 200, type: LoginResponseDto, description: '签名登录成功，返回token和用户信息' })
+  @ApiResponse({
+    status: 200,
+    type: LoginResponseDto,
+    description: '签名登录成功，返回token和用户信息',
+  })
   async walletSignatureLogin(@Body() dto: WalletSignatureLoginDto) {
     const result = await this.authService.walletSignatureLogin(dto);
     // 检查并创建用户目录
@@ -59,7 +82,11 @@ export class AuthController {
     @Body('oldPassword') oldPassword: string,
     @Body('newPassword') newPassword: string,
   ) {
-    return this.authService.changePassword(req.user.id, oldPassword, newPassword);
+    return this.authService.changePassword(
+      req.user.id,
+      oldPassword,
+      newPassword,
+    );
   }
 
   @UseGuards(JwtAuthGuard)
@@ -108,26 +135,32 @@ export class AuthController {
   private async ensureUserDirectories(userId: string) {
     try {
       // 检查home目录
-      const homeDir = await this.storageService.findDirByUserIdAndName(userId, 'home');
+      const homeDir = await this.storageService.findDirByUserIdAndName(
+        userId,
+        'home',
+      );
       if (!homeDir) {
         await this.storageService.createDir({
           user_id: userId,
           name: 'home',
-          parent: ''
+          parent: '',
         });
       }
 
       // 检查share目录
-      const shareDir = await this.storageService.findDirByUserIdAndName(userId, 'share');
+      const shareDir = await this.storageService.findDirByUserIdAndName(
+        userId,
+        'share',
+      );
       if (!shareDir) {
         await this.storageService.createDir({
           user_id: userId,
           name: 'share',
-          parent: ''
+          parent: '',
         });
       }
     } catch (error) {
       console.error('创建用户目录失败:', error);
     }
   }
-} 
+}

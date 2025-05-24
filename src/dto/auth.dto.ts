@@ -58,7 +58,11 @@ export class WalletSignatureSetPasswordDto {
   @IsString()
   address: string;
 
-  @ApiProperty({ description: '主链类型', enum: ['evm', 'sol'], example: 'evm' })
+  @ApiProperty({
+    description: '主链类型',
+    enum: ['evm', 'sol'],
+    example: 'evm',
+  })
   @IsString()
   mainchain: 'evm' | 'sol';
 
@@ -83,7 +87,11 @@ export class WalletSignatureLoginDto {
   @IsString()
   address: string;
 
-  @ApiProperty({ description: '主链类型', enum: ['evm', 'sol'], example: 'evm' })
+  @ApiProperty({
+    description: '主链类型',
+    enum: ['evm', 'sol'],
+    example: 'evm',
+  })
   @IsString()
   mainchain: 'evm' | 'sol';
 

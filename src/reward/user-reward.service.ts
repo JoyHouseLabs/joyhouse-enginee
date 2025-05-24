@@ -14,7 +14,9 @@ export class UserRewardService {
   ) {}
 
   async grantReward(userId: string, rewardId: string): Promise<UserReward> {
-    const reward = await this.rewardRepository.findOne({ where: { id: rewardId } });
+    const reward = await this.rewardRepository.findOne({
+      where: { id: rewardId },
+    });
     if (!reward) {
       throw new Error('Reward not found');
     }
@@ -34,7 +36,7 @@ export class UserRewardService {
   async getUserRewards(userId: string): Promise<UserReward[]> {
     return this.userRewardRepository.find({
       where: { user_id: userId },
-      relations: ['reward']
+      relations: ['reward'],
     });
   }
-} 
+}

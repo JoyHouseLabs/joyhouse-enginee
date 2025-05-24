@@ -18,6 +18,26 @@ export interface CorsConfig {
   methods: string;
 }
 
+export interface MonitoringConfig {
+  enabled: boolean;
+  websocket: {
+    port: number;
+    namespace: string;
+    corsOrigin: string;
+  };
+  performance: {
+    trackingEnabled: boolean;
+    retentionHours: number;
+    warningThresholdMs: number;
+    criticalThresholdMs: number;
+  };
+  events: {
+    enableNodeEvents: boolean;
+    enableWorkflowEvents: boolean;
+    enablePerformanceEvents: boolean;
+  };
+}
+
 export interface JoyhouseConfig {
   uploadDir: string;
   domain: string;
@@ -31,6 +51,7 @@ export interface JoyhouseConfig {
   httpsEnabled?: boolean; // 新增，控制是否启用 https
   logging?: LoggingConfig;
   cors?: CorsConfig;
+  monitoring?: MonitoringConfig; // 新增监控配置
 }
 
 export class JoyhouseConfigService {
@@ -49,8 +70,33 @@ export class JoyhouseConfigService {
       let dbName: string | undefined;
       let logging: LoggingConfig | undefined;
       let cors: CorsConfig | undefined;
+      let monitoring: MonitoringConfig | undefined;
+
+      // 默认监控配置
+      const defaultMonitoring: MonitoringConfig = {
+        enabled: true,
+        websocket: {
+          port: 3000,
+          namespace: '/workflow-monitor',
+          corsOrigin: '*',
+        },
+        performance: {
+          trackingEnabled: true,
+          retentionHours: 24,
+          warningThresholdMs: 5000,
+          criticalThresholdMs: 30000,
+        },
+        events: {
+          enableNodeEvents: true,
+          enableWorkflowEvents: true,
+          enablePerformanceEvents: true,
+        },
+      };
+
       try {
-        const config = yaml.load(fs.readFileSync(CONFIG_PATH, 'utf8')) as JoyhouseConfig;
+        const config = yaml.load(
+          fs.readFileSync(CONFIG_PATH, 'utf8'),
+        ) as JoyhouseConfig;
         uploadDir = uploadDir || config.uploadDir;
         domain = domain || config.domain;
         fileDomain = fileDomain || config.fileDomain;
@@ -62,10 +108,77 @@ export class JoyhouseConfigService {
         dbName = config.dbName;
         logging = config.logging;
         cors = config.cors;
-      } catch {}
+        monitoring = config.monitoring || defaultMonitoring;
+      } catch {
+        monitoring = defaultMonitoring;
+      }
+
+      // 环境变量覆盖监控配置
+      if (monitoring) {
+        monitoring.enabled =
+          process.env.MONITORING_ENABLED === 'true'
+            ? true
+            : process.env.MONITORING_ENABLED === 'false'
+              ? false
+              : monitoring.enabled;
+
+        monitoring.websocket.port = process.env.WEBSOCKET_PORT
+          ? parseInt(process.env.WEBSOCKET_PORT)
+          : monitoring.websocket.port;
+
+        monitoring.websocket.namespace =
+          process.env.WEBSOCKET_NAMESPACE || monitoring.websocket.namespace;
+
+        monitoring.websocket.corsOrigin =
+          process.env.WEBSOCKET_CORS_ORIGIN || monitoring.websocket.corsOrigin;
+
+        monitoring.performance.trackingEnabled =
+          process.env.PERFORMANCE_TRACKING_ENABLED === 'true'
+            ? true
+            : process.env.PERFORMANCE_TRACKING_ENABLED === 'false'
+              ? false
+              : monitoring.performance.trackingEnabled;
+
+        monitoring.performance.retentionHours = process.env
+          .PERFORMANCE_METRICS_RETENTION_HOURS
+          ? parseInt(process.env.PERFORMANCE_METRICS_RETENTION_HOURS)
+          : monitoring.performance.retentionHours;
+
+        monitoring.performance.warningThresholdMs = process.env
+          .PERFORMANCE_WARNING_THRESHOLD_MS
+          ? parseInt(process.env.PERFORMANCE_WARNING_THRESHOLD_MS)
+          : monitoring.performance.warningThresholdMs;
+
+        monitoring.performance.criticalThresholdMs = process.env
+          .PERFORMANCE_CRITICAL_THRESHOLD_MS
+          ? parseInt(process.env.PERFORMANCE_CRITICAL_THRESHOLD_MS)
+          : monitoring.performance.criticalThresholdMs;
+
+        monitoring.events.enableNodeEvents =
+          process.env.ENABLE_NODE_EVENTS === 'true'
+            ? true
+            : process.env.ENABLE_NODE_EVENTS === 'false'
+              ? false
+              : monitoring.events.enableNodeEvents;
+
+        monitoring.events.enableWorkflowEvents =
+          process.env.ENABLE_WORKFLOW_EVENTS === 'true'
+            ? true
+            : process.env.ENABLE_WORKFLOW_EVENTS === 'false'
+              ? false
+              : monitoring.events.enableWorkflowEvents;
+
+        monitoring.events.enablePerformanceEvents =
+          process.env.ENABLE_PERFORMANCE_EVENTS === 'true'
+            ? true
+            : process.env.ENABLE_PERFORMANCE_EVENTS === 'false'
+              ? false
+              : monitoring.events.enablePerformanceEvents;
+      }
+
       JoyhouseConfigService.config = {
-        uploadDir: uploadDir!,
-        domain: domain!,
+        uploadDir: uploadDir || './uploads',
+        domain: domain || 'http://localhost:3000',
         fileDomain,
         dbType,
         dbHost,
@@ -75,8 +188,15 @@ export class JoyhouseConfigService {
         dbName,
         logging,
         cors,
+        monitoring,
       };
     }
     return JoyhouseConfigService.config;
+  }
+
+  // 便捷方法获取监控配置
+  static getMonitoringConfig(): MonitoringConfig {
+    const config = this.loadConfig();
+    return config.monitoring!;
   }
 }

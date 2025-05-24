@@ -10,4 +10,4 @@ import { LlmProvider } from '../llm/llm-provider.entity';
   controllers: [BrainController],
   providers: [BrainService],
 })
-export class BrainModule {} 
+export class BrainModule {}

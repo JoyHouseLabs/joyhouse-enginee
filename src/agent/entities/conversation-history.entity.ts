@@ -1,10 +1,17 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+  ManyToOne,
+} from 'typeorm';
 import { Conversation } from './conversation.entity';
 
 export enum MessageRole {
   USER = 'user',
   ASSISTANT = 'assistant',
-  SYSTEM = 'system'
+  SYSTEM = 'system',
 }
 
 @Entity('conversation_history')
@@ -15,14 +22,14 @@ export class ConversationHistory {
   @Column({
     type: 'varchar',
     enum: MessageRole,
-    default: MessageRole.USER
+    default: MessageRole.USER,
   })
   role: MessageRole;
 
   @Column({ type: 'text' })
   content: string;
 
-  @ManyToOne(() => Conversation, conversation => conversation.history)
+  @ManyToOne(() => Conversation, (conversation) => conversation.history)
   conversation: Conversation;
 
   @CreateDateColumn()
@@ -30,4 +37,4 @@ export class ConversationHistory {
 
   @UpdateDateColumn()
   updatedAt: Date;
-} 
+}

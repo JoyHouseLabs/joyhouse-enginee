@@ -1,7 +1,21 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Query,
+} from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { TaskItemService } from './task-item.service';
-import { CreateTaskItemDto, UpdateTaskItemDto, TaskItemDto, TaskItemQueryDto } from './task-item.dto';
+import {
+  CreateTaskItemDto,
+  UpdateTaskItemDto,
+  TaskItemDto,
+  TaskItemQueryDto,
+} from './task-item.dto';
 
 @ApiTags('task-items')
 @Controller('task-items')
@@ -32,7 +46,10 @@ export class TaskItemController {
   @Patch(':id')
   @ApiOperation({ summary: '更新任务项' })
   @ApiResponse({ status: 200, type: TaskItemDto })
-  update(@Param('id') id: string, @Body() updateDto: UpdateTaskItemDto): Promise<TaskItemDto> {
+  update(
+    @Param('id') id: string,
+    @Body() updateDto: UpdateTaskItemDto,
+  ): Promise<TaskItemDto> {
     return this.taskItemService.update(id, updateDto);
   }
 
@@ -45,8 +62,14 @@ export class TaskItemController {
 
   @Get('group/:taskGroupId')
   @ApiOperation({ summary: 'Get all task items in a task group' })
-  @ApiResponse({ status: 200, description: 'Return all task items in the task group.', type: [TaskItemDto] })
-  async findByTaskGroup(@Param('taskGroupId') taskGroupId: string): Promise<TaskItemDto[]> {
+  @ApiResponse({
+    status: 200,
+    description: 'Return all task items in the task group.',
+    type: [TaskItemDto],
+  })
+  async findByTaskGroup(
+    @Param('taskGroupId') taskGroupId: string,
+  ): Promise<TaskItemDto[]> {
     return this.taskItemService.findByTaskGroup(taskGroupId);
   }
-} 
+}

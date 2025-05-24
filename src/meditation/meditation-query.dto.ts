@@ -1,16 +1,16 @@
-import { IsString, IsEnum, IsOptional } from 'class-validator'
-import { MeditationLevel } from './meditation.entity'
+import { IsString, IsEnum, IsOptional } from 'class-validator';
+import { MeditationLevel } from './meditation.entity';
 
 export class MeditationQueryDto {
   @IsString()
   @IsOptional()
-  userId?: string
+  userId?: string;
 
   @IsEnum(MeditationLevel)
   @IsOptional()
-  level?: MeditationLevel
+  level?: MeditationLevel;
 
   @IsString()
   @IsOptional()
-  search?: string
-} 
+  search?: string;
+}

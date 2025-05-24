@@ -1,4 +1,8 @@
-import { Injectable, ExecutionContext, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  ExecutionContext,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { JwtService } from '@nestjs/jwt';
 import { Reflector } from '@nestjs/core';
@@ -17,7 +21,10 @@ export class JwtAuthGuard {
     }
     const token = authHeader.slice(7);
     try {
-      const payload = jwt.verify(token, process.env.JWT_SECRET || 'joyhouse-secret');
+      const payload = jwt.verify(
+        token,
+        process.env.JWT_SECRET || 'joyhouse-secret',
+      );
       (request as any).user = payload;
       return true;
     } catch (e) {

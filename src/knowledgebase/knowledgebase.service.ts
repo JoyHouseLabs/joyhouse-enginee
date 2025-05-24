@@ -15,8 +15,15 @@ export class KnowledgebaseService {
     return this.kbRepo.findOneBy({ id, userId });
   }
 
-  async findAll(userId: string, page = 1, pageSize = 10, name?: string): Promise<{ data: Knowledgebase[]; total: number }> {
-    const qb = this.kbRepo.createQueryBuilder('kb').where('kb.userId = :userId', { userId });
+  async findAll(
+    userId: string,
+    page = 1,
+    pageSize = 10,
+    name?: string,
+  ): Promise<{ data: Knowledgebase[]; total: number }> {
+    const qb = this.kbRepo
+      .createQueryBuilder('kb')
+      .where('kb.userId = :userId', { userId });
     if (name) {
       qb.andWhere('kb.name LIKE :name', { name: `%${name}%` });
     }
@@ -27,7 +34,10 @@ export class KnowledgebaseService {
     return { data, total };
   }
 
-  async create(body: Partial<Knowledgebase>, userId: string): Promise<Knowledgebase> {
+  async create(
+    body: Partial<Knowledgebase>,
+    userId: string,
+  ): Promise<Knowledgebase> {
     const entity = this.kbRepo.create({
       ...body,
       id: ulid(),
@@ -39,10 +49,17 @@ export class KnowledgebaseService {
     return this.kbRepo.save(entity);
   }
 
-  async update(id: string, userId: string, body: Partial<Knowledgebase>): Promise<Knowledgebase | undefined> {
+  async update(
+    id: string,
+    userId: string,
+    body: Partial<Knowledgebase>,
+  ): Promise<Knowledgebase | undefined> {
     const kb = await this.kbRepo.findOneBy({ id, userId });
     if (!kb) throw new NotFoundException('知识库不存在');
-    Object.assign(kb, body, { embeddingModel: body.embeddingModel, updatedAt: new Date() });
+    Object.assign(kb, body, {
+      embeddingModel: body.embeddingModel,
+      updatedAt: new Date(),
+    });
     return this.kbRepo.save(kb);
   }
 

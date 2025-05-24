@@ -1,5 +1,13 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsOptional, IsBoolean, IsInt, IsUUID, IsObject, IsArray } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  IsBoolean,
+  IsInt,
+  IsUUID,
+  IsObject,
+  IsArray,
+} from 'class-validator';
 import { TaskItemDto } from './task-item.dto';
 
 export class TaskGroupDto {
@@ -42,7 +50,11 @@ export class TaskGroupDto {
   @ApiProperty({ description: '更新时间' })
   updatedAt: Date;
 
-  @ApiProperty({ description: '任务项列表', type: () => [TaskItemDto], required: false })
+  @ApiProperty({
+    description: '任务项列表',
+    type: () => [TaskItemDto],
+    required: false,
+  })
   taskItems?: TaskItemDto[];
 }
 
@@ -91,7 +103,10 @@ export class CreateTaskGroupDto {
   @IsOptional()
   rewardId?: string;
 
-  @ApiProperty({ description: '是否需要在所有任务完成后才发放奖励', default: false })
+  @ApiProperty({
+    description: '是否需要在所有任务完成后才发放奖励',
+    default: false,
+  })
   @IsBoolean()
   @IsOptional()
   requireAllTasksCompleted?: boolean;
@@ -119,4 +134,4 @@ export class TaskGroupQueryDto {
   @IsBoolean()
   @IsOptional()
   isActive?: boolean;
-} 
+}

@@ -6,13 +6,31 @@ export class Knowledgebase {
   @ApiProperty() @PrimaryColumn({ type: 'varchar', length: 26 }) id: string;
   @ApiProperty() @Column({ type: 'varchar', length: 26 }) userId: string;
   @ApiProperty() @Column({ type: 'varchar', length: 255 }) name: string;
-  @ApiPropertyOptional() @Column({ type: 'varchar', length: 255, nullable: true }) icon?: string;
-  @ApiPropertyOptional() @Column({ type: 'varchar', length: 1024, nullable: true }) description?: string;
-  @ApiPropertyOptional() @Column({ type: 'varchar', length: 1024, nullable: true }) typicalQuery?: string;
-  @ApiPropertyOptional() @Column({ type: 'boolean', default: false }) enableLlmParser?: boolean;
-  @ApiPropertyOptional() @Column({ type: 'text', nullable: true }) prompt?: string;
-  @ApiPropertyOptional() @Column({ type: 'text', nullable: true }) embedding?: string;
-  @ApiPropertyOptional() @Column({ type: 'varchar', length: 128, nullable: true }) embeddingModel?: string;
-  @ApiProperty() @Column({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' }) createdAt: Date;
-  @ApiProperty() @Column({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' }) updatedAt: Date;
+  @ApiPropertyOptional()
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  icon?: string;
+  @ApiPropertyOptional()
+  @Column({ type: 'varchar', length: 1024, nullable: true })
+  description?: string;
+  @ApiPropertyOptional()
+  @Column({ type: 'varchar', length: 1024, nullable: true })
+  typicalQuery?: string;
+  @ApiPropertyOptional()
+  @Column({ type: 'boolean', default: false })
+  enableLlmParser?: boolean;
+  @ApiPropertyOptional()
+  @Column({ type: 'text', nullable: true })
+  prompt?: string;
+  @ApiPropertyOptional()
+  @Column({ type: 'text', nullable: true })
+  embedding?: string;
+  @ApiPropertyOptional()
+  @Column({ type: 'varchar', length: 128, nullable: true })
+  embeddingModel?: string;
+  @ApiProperty()
+  @Column({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
+  createdAt: Date;
+  @ApiProperty()
+  @Column({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
+  updatedAt: Date;
 }

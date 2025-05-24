@@ -14,7 +14,11 @@ export class CreateTaskDto {
   @ApiProperty({ description: '用户ID' })
   user_id: string;
 
-  @ApiProperty({ description: '任务状态', enum: TaskStatus, default: TaskStatus.PENDING })
+  @ApiProperty({
+    description: '任务状态',
+    enum: TaskStatus,
+    default: TaskStatus.PENDING,
+  })
   status: TaskStatus;
 
   @ApiProperty({ description: '任务进度', default: 0 })

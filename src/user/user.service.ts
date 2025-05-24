@@ -19,7 +19,10 @@ export class UserService {
     return this.userRepo.findOneBy({ username });
   }
 
-  async findAll(page = 1, limit = 10): Promise<{ list: User[]; total: number }> {
+  async findAll(
+    page = 1,
+    limit = 10,
+  ): Promise<{ list: User[]; total: number }> {
     const [list, total] = await this.userRepo.findAndCount({
       skip: (page - 1) * limit,
       take: limit,
@@ -31,11 +34,14 @@ export class UserService {
   async update(id: string, dto: UpdateUserDto): Promise<User> {
     const user = await this.findById(id);
     if (!user) {
-      throw new HttpException({
-        code: 1001,
-        message: '用户不存在',
-        data: null
-      }, HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        {
+          code: 1001,
+          message: '用户不存在',
+          data: null,
+        },
+        HttpStatus.BAD_REQUEST,
+      );
     }
 
     Object.assign(user, dto);
@@ -46,27 +52,40 @@ export class UserService {
   async delete(id: string): Promise<void> {
     const user = await this.findById(id);
     if (!user) {
-      throw new HttpException({
-        code: 1001,
-        message: '用户不存在',
-        data: null
-      }, HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        {
+          code: 1001,
+          message: '用户不存在',
+          data: null,
+        },
+        HttpStatus.BAD_REQUEST,
+      );
     }
 
     await this.userRepo.remove(user);
   }
 
   // 设置用户属性（昵称、头像等）
-  async setUserProperty(userId: string, dto: { key?: string; value?: string }): Promise<void> {
+  async setUserProperty(
+    userId: string,
+    dto: { key?: string; value?: string },
+  ): Promise<void> {
     const user = await this.findById(userId);
     if (!user) throw new Error('用户不存在');
     let updated = false;
-    if (dto.key !== undefined && dto.value !== undefined && dto.key in ['nickname', 'avatar']) {
+    if (
+      dto.key !== undefined &&
+      dto.value !== undefined &&
+      dto.key in ['nickname', 'avatar']
+    ) {
       user[dto.key] = dto.value;
       updated = true;
     }
     if (dto.key === 'onboarded') {
-      user.onboarded = typeof dto.value === 'string' ? dto.value.toLowerCase() === 'true' : Boolean(dto.value);
+      user.onboarded =
+        typeof dto.value === 'string'
+          ? dto.value.toLowerCase() === 'true'
+          : Boolean(dto.value);
       updated = true;
     }
     if (updated) {
@@ -76,26 +95,36 @@ export class UserService {
   }
 
   // 修改密码（需旧密码）
-  async changePassword(userId: string, oldPassword: string, newPassword: string): Promise<void> {
+  async changePassword(
+    userId: string,
+    oldPassword: string,
+    newPassword: string,
+  ): Promise<void> {
     const user = await this.findById(userId);
     if (!user) {
-      throw new HttpException({
-        code: 1001,
-        message: '用户不存在',
-        data: null
-      }, HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        {
+          code: 1001,
+          message: '用户不存在',
+          data: null,
+        },
+        HttpStatus.BAD_REQUEST,
+      );
     }
-    
+
     const bcrypt = await import('bcryptjs');
     const ok = await bcrypt.compare(oldPassword, user.password);
     if (!ok) {
-      throw new HttpException({
-        code: 1002,
-        message: '旧密码不正确',
-        data: null
-      }, HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        {
+          code: 1002,
+          message: '旧密码不正确',
+          data: null,
+        },
+        HttpStatus.BAD_REQUEST,
+      );
     }
-    
+
     user.password = await bcrypt.hash(newPassword, 10);
     user.updatedAt = new Date();
     await this.userRepo.save(user);

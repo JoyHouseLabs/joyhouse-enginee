@@ -105,4 +105,4 @@ export class QuizService {
     const quiz = await this.findOne(id);
     await this.quizRepo.remove(quiz);
   }
-} 
+}

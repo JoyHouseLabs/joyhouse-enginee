@@ -1,10 +1,16 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 
 export enum RewardType {
-  POINTS = 'POINTS',      // 积分
-  COINS = 'COINS',        // 金币
-  DIAMONDS = 'DIAMONDS',  // 钻石
-  CUSTOM = 'CUSTOM'       // 自定义奖励
+  POINTS = 'POINTS', // 积分
+  COINS = 'COINS', // 金币
+  DIAMONDS = 'DIAMONDS', // 钻石
+  CUSTOM = 'CUSTOM', // 自定义奖励
 }
 
 @Entity()
@@ -23,21 +29,21 @@ export class Reward {
 
   @Column({
     type: 'varchar',
-    default: RewardType.POINTS
+    default: RewardType.POINTS,
   })
   type: RewardType;
 
   @Column({
     type: 'int',
     default: 0,
-    comment: '奖励数量'
+    comment: '奖励数量',
   })
   amount: number;
 
   @Column({
     type: 'boolean',
     default: true,
-    comment: '是否启用'
+    comment: '是否启用',
   })
   isActive: boolean;
 
@@ -49,4 +55,4 @@ export class Reward {
 
   @UpdateDateColumn()
   updatedAt: Date;
-} 
+}

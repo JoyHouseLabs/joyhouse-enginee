@@ -11,11 +11,21 @@ export class ReplyService {
     private readonly replyRepo: Repository<Reply>,
   ) {}
 
-  async findAll(userId: string, page = 1, pageSize = 10, target?: string, targetId?: string): Promise<{ data: Reply[]; total: number }> {
-    const qb = this.replyRepo.createQueryBuilder('reply').where('reply.userId = :userId', { userId });
+  async findAll(
+    userId: string,
+    page = 1,
+    pageSize = 10,
+    target?: string,
+    targetId?: string,
+  ): Promise<{ data: Reply[]; total: number }> {
+    const qb = this.replyRepo
+      .createQueryBuilder('reply')
+      .where('reply.userId = :userId', { userId });
     if (target) qb.andWhere('reply.target = :target', { target });
     if (targetId) qb.andWhere('reply.targetId = :targetId', { targetId });
-    qb.orderBy('reply.createdAt', 'DESC').skip((page - 1) * pageSize).take(pageSize);
+    qb.orderBy('reply.createdAt', 'DESC')
+      .skip((page - 1) * pageSize)
+      .take(pageSize);
     const [data, total] = await qb.getManyAndCount();
     return { data, total };
   }
@@ -26,11 +36,20 @@ export class ReplyService {
 
   async create(dto: ReplyCreateDto, userId: string): Promise<Reply> {
     const now = new Date();
-    const entity = this.replyRepo.create({ ...dto, userId, createdAt: now, updatedAt: now });
+    const entity = this.replyRepo.create({
+      ...dto,
+      userId,
+      createdAt: now,
+      updatedAt: now,
+    });
     return this.replyRepo.save(entity);
   }
 
-  async update(id: string, userId: string, patch: Partial<Reply>): Promise<Reply | null> {
+  async update(
+    id: string,
+    userId: string,
+    patch: Partial<Reply>,
+  ): Promise<Reply | null> {
     const reply = await this.replyRepo.findOneBy({ id, userId });
     if (!reply) return null;
     Object.assign(reply, patch, { updatedAt: new Date() });

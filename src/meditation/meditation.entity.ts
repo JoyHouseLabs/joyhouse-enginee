@@ -1,52 +1,60 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn } from 'typeorm'
-import { User } from '../user/user.entity'
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+  ManyToOne,
+  JoinColumn,
+} from 'typeorm';
+import { User } from '../user/user.entity';
 
 export enum MeditationLevel {
   BEGINNER = 'beginner',
   INTERMEDIATE = 'intermediate',
-  ADVANCED = 'advanced'
+  ADVANCED = 'advanced',
 }
 
 @Entity('meditations')
 export class Meditation {
   @PrimaryGeneratedColumn('uuid')
-  id: string
+  id: string;
 
   @Column({ length: 100 })
-  name: string
+  name: string;
 
   @Column({ length: 350, default: 'mdi:meditation' })
-  icon: string
+  icon: string;
 
   @Column('text')
-  description: string
+  description: string;
 
   @Column()
-  voice: string
+  voice: string;
 
   @Column('int')
-  minutes: number
+  minutes: number;
 
   @Column({
     type: 'varchar',
     length: 20,
-    default: MeditationLevel.BEGINNER
+    default: MeditationLevel.BEGINNER,
   })
-  level: MeditationLevel
+  level: MeditationLevel;
 
   @Column({ default: false })
-  loop: boolean
+  loop: boolean;
 
   @ManyToOne(() => User)
   @JoinColumn({ name: 'user_id' })
-  user: User
+  user: User;
 
   @Column({ name: 'user_id' })
-  userId: string
+  userId: string;
 
   @CreateDateColumn({ name: 'created_at' })
-  createdAt: Date
+  createdAt: Date;
 
   @UpdateDateColumn({ name: 'updated_at' })
-  updatedAt: Date
-} 
+  updatedAt: Date;
+}

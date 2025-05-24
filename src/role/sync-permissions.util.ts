@@ -20,7 +20,9 @@ export function scanAllControllerMethods(srcDir: string): ControllerMethod[] {
     if (!classMatch) continue;
     const controller = classMatch[1].replace('Controller', '').toLowerCase();
     // 匹配方法名
-    const methodMatches = [...content.matchAll(/\n\s*(?:async\s+)?(\w+)\s*\(/g)];
+    const methodMatches = [
+      ...content.matchAll(/\n\s*(?:async\s+)?(\w+)\s*\(/g),
+    ];
     for (const m of methodMatches) {
       const method = m[1];
       // 排除构造函数、私有方法等

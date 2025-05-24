@@ -5,8 +5,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from './user/user.entity';
 import { Note } from './note/note.entity';
 import { Wallet } from './wallet/wallet.entity';
-import { Storage } from './storage/storage.entity'
-import { LlmProvider } from './llm/llm-provider.entity'
+import { Storage } from './storage/storage.entity';
+import { LlmProvider } from './llm/llm-provider.entity';
 import { LlmModel } from './llm/llm-model.entity';
 import { UserModule } from './user/user.module';
 import { CrmUserModule } from './crm/user/crm.user.module';
@@ -19,16 +19,16 @@ import { RelayModule } from './relay/relay.module';
 import { ReplyModule } from './reply/reply.module';
 import { Knowledgebase } from './knowledgebase/knowledgebase.entity';
 import { Knowledgefile } from './knowledgebase/knowledgefile.entity';
-import { StorageDir } from './storage/storage-dir.entity'
-import { Permission } from './role/permission.entity'
-import { UserRole } from './role/user-role.entity'
-import { Role } from './role/role.entity'
+import { StorageDir } from './storage/storage-dir.entity';
+import { Permission } from './role/permission.entity';
+import { UserRole } from './role/user-role.entity';
+import { Role } from './role/role.entity';
 import { RoleModule } from './role/role.module';
-import { Meditation } from './meditation/meditation.entity'
-import { JailUser } from './user/jail-user.entity'
-import { Task } from './task/task.entity'
-import { TaskGroup } from './task/task-group.entity'
-import { TaskItem } from './task/task-item.entity'
+import { Meditation } from './meditation/meditation.entity';
+import { JailUser } from './user/jail-user.entity';
+import { Task } from './task/task.entity';
+import { TaskGroup } from './task/task-group.entity';
+import { TaskItem } from './task/task-item.entity';
 import { TaskModule } from './task/task.module';
 import { Reward } from './reward/reward.entity';
 import { UserReward } from './reward/user-reward.entity';
@@ -47,6 +47,7 @@ import { QuizModule } from './quiz/quiz.module';
 import { AgentModule } from './agent/agent.module';
 import { ToolModule } from './tool/tool.module';
 import { WorkflowModule } from './workflow/workflow.module';
+import { MultiAgentModule } from './multi-agent/multi-agent.module';
 
 @Module({
   imports: [
@@ -64,10 +65,10 @@ import { WorkflowModule } from './workflow/workflow.module';
       inject: [ConfigService],
     }),
     CqrsModule,
-    UserModule, 
-    NoteModule, 
+    UserModule,
+    NoteModule,
     RelayModule,
-    StorageModule, 
+    StorageModule,
     ReplyModule,
     LlmModule,
     KnowledgebaseModule,
@@ -83,12 +84,10 @@ import { WorkflowModule } from './workflow/workflow.module';
     AgentModule,
     ToolModule,
     WorkflowModule,
+    MultiAgentModule,
   ],
   controllers: [AppController],
-  providers: [
-    AppService,
-    JoyhouseLoggerService,
-  ],
+  providers: [AppService, JoyhouseLoggerService],
   exports: [JoyhouseLoggerService],
 })
 export class AppModule {}

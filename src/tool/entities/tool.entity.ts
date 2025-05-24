@@ -1,10 +1,17 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+  ManyToOne,
+} from 'typeorm';
 import { User } from '../../user/user.entity';
 
 export enum ToolType {
   HTTP = 'http',
   SSE = 'sse',
-  WEBSOCKET = 'websocket'
+  WEBSOCKET = 'websocket',
 }
 
 export enum HttpMethod {
@@ -12,7 +19,7 @@ export enum HttpMethod {
   POST = 'POST',
   PUT = 'PUT',
   DELETE = 'DELETE',
-  PATCH = 'PATCH'
+  PATCH = 'PATCH',
 }
 
 @Entity('tool')
@@ -41,7 +48,7 @@ export class Tool {
 
   @Column({
     type: 'text',
-    default: ToolType.HTTP
+    default: ToolType.HTTP,
   })
   type: ToolType;
 
@@ -51,7 +58,7 @@ export class Tool {
   @Column({
     type: 'text',
     default: HttpMethod.GET,
-    nullable: true
+    nullable: true,
   })
   method?: HttpMethod;
 
@@ -94,4 +101,4 @@ export class Tool {
 
   @UpdateDateColumn()
   updatedAt: Date;
-} 
+}

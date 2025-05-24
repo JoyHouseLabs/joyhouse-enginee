@@ -23,74 +23,114 @@ export class RoleService {
 
   // 获取用户所有角色
   async getUserRoles(userId: string): Promise<Role[]> {
-    const userRoles = await this.userRoleRepo.find({ where: { user_id: userId } });
-    const roleIds = userRoles.map(ur => ur.role_id);
+    const userRoles = await this.userRoleRepo.find({
+      where: { user_id: userId },
+    });
+    const roleIds = userRoles.map((ur) => ur.role_id);
     if (!roleIds.length) return [];
     return this.roleRepo.findByIds(roleIds);
   }
 
   // 获取接口允许的角色
   async getAllowedRoles(controller: string, method: string): Promise<Role[]> {
-    const perms = await this.permissionRepo.find({ where: { controller, method } });
-    const roleIds = perms.map(p => p.role_id);
+    const perms = await this.permissionRepo.find({
+      where: { controller, method },
+    });
+    const roleIds = perms.map((p) => p.role_id);
     if (!roleIds.length) return [];
     return this.roleRepo.findByIds(roleIds);
   }
 
   // 判断用户是否有权限访问接口
-  async userHasPermission(userId: string, controller: string, method: string): Promise<boolean> {
+  async userHasPermission(
+    userId: string,
+    controller: string,
+    method: string,
+  ): Promise<boolean> {
     const userRoles = await this.getUserRoles(userId);
     const allowedRoles = await this.getAllowedRoles(controller, method);
-    const userRoleIds = userRoles.map(r => r.id);
-    const allowedRoleIds = allowedRoles.map(r => r.id);
-    return userRoleIds.some(id => allowedRoleIds.includes(id));
+    const userRoleIds = userRoles.map((r) => r.id);
+    const allowedRoleIds = allowedRoles.map((r) => r.id);
+    return userRoleIds.some((id) => allowedRoleIds.includes(id));
   }
 
   // 角色管理
   async getAllRoles(): Promise<Role[]> {
     return this.roleRepo.find();
   }
-  async createRole(dto: { name: string; description?: string }, user_id?: string): Promise<Role> {
+  async createRole(
+    dto: { name: string; description?: string },
+    user_id?: string,
+  ): Promise<Role> {
     const entity = this.roleRepo.create(dto);
     const saved = await this.roleRepo.save(entity);
-    if (user_id) await this.logService.log(user_id, 'create_role', { role_id: saved.id }, dto);
+    if (user_id)
+      await this.logService.log(
+        user_id,
+        'create_role',
+        { role_id: saved.id },
+        dto,
+      );
     return saved;
   }
   async deleteRole(id: string, user_id?: string): Promise<void> {
     await this.roleRepo.delete(id);
-    if (user_id) await this.logService.log(user_id, 'delete_role', { role_id: id });
+    if (user_id)
+      await this.logService.log(user_id, 'delete_role', { role_id: id });
   }
 
   // 用户-角色管理
   async getUserRoleRelations(userId: string): Promise<UserRole[]> {
     return this.userRoleRepo.find({ where: { user_id: userId } });
   }
-  async assignRoleToUser(user_id: string, role_id: string, operator_id?: string): Promise<UserRole> {
+  async assignRoleToUser(
+    user_id: string,
+    role_id: string,
+    operator_id?: string,
+  ): Promise<UserRole> {
     const entity = this.userRoleRepo.create({ user_id, role_id });
     const saved = await this.userRoleRepo.save(entity);
-    if (operator_id) await this.logService.log(operator_id, 'assign_role_to_user', { user_id, role_id });
+    if (operator_id)
+      await this.logService.log(operator_id, 'assign_role_to_user', {
+        user_id,
+        role_id,
+      });
     return saved;
   }
   async removeUserRole(id: string, operator_id?: string): Promise<void> {
     const userRole = await this.userRoleRepo.findOne({ where: { id } });
     await this.userRoleRepo.delete(id);
-    if (operator_id) await this.logService.log(operator_id, 'remove_user_role', { id, userRole });
+    if (operator_id)
+      await this.logService.log(operator_id, 'remove_user_role', {
+        id,
+        userRole,
+      });
   }
 
   // 权限管理
   async getRolePermissions(roleId: string): Promise<Permission[]> {
     return this.permissionRepo.find({ where: { role_id: roleId } });
   }
-  async addPermission(dto: { role_id: string; controller: string; method: string }, user_id?: string): Promise<Permission> {
+  async addPermission(
+    dto: { role_id: string; controller: string; method: string },
+    user_id?: string,
+  ): Promise<Permission> {
     const entity = this.permissionRepo.create(dto);
     const saved = await this.permissionRepo.save(entity);
-    if (user_id) await this.logService.log(user_id, 'add_permission', { permission_id: saved.id }, dto);
+    if (user_id)
+      await this.logService.log(
+        user_id,
+        'add_permission',
+        { permission_id: saved.id },
+        dto,
+      );
     return saved;
   }
   async removePermission(id: string, user_id?: string): Promise<void> {
     const perm = await this.permissionRepo.findOne({ where: { id } });
     await this.permissionRepo.delete(id);
-    if (user_id) await this.logService.log(user_id, 'remove_permission', { id, perm });
+    if (user_id)
+      await this.logService.log(user_id, 'remove_permission', { id, perm });
   }
 
   /**
@@ -105,16 +145,30 @@ export class RoleService {
     for (const name of defaultRoleNames) {
       let role = await this.roleRepo.findOne({ where: { name } });
       if (!role) {
-        role = await this.roleRepo.save(this.roleRepo.create({ name, description: '自动同步创建' }));
+        role = await this.roleRepo.save(
+          this.roleRepo.create({ name, description: '自动同步创建' }),
+        );
       }
       roles.push(role);
     }
     let inserted = 0;
     for (const api of apiList) {
       for (const role of roles) {
-        const exist = await this.permissionRepo.findOne({ where: { controller: api.controller, method: api.method, role_id: role.id } });
+        const exist = await this.permissionRepo.findOne({
+          where: {
+            controller: api.controller,
+            method: api.method,
+            role_id: role.id,
+          },
+        });
         if (!exist) {
-          await this.permissionRepo.save(this.permissionRepo.create({ controller: api.controller, method: api.method, role_id: role.id }));
+          await this.permissionRepo.save(
+            this.permissionRepo.create({
+              controller: api.controller,
+              method: api.method,
+              role_id: role.id,
+            }),
+          );
           inserted++;
         }
       }

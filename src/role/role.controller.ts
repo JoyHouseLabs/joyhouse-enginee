@@ -1,5 +1,18 @@
-import { Controller, Get, Post, Delete, Body, Param, UseGuards } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  Controller,
+  Get,
+  Post,
+  Delete,
+  Body,
+  Param,
+  UseGuards,
+} from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { RoleService } from './role.service';
 import { Role } from './role.entity';
 import { UserRole } from './user-role.entity';
@@ -33,8 +46,12 @@ export class RoleController {
   @ApiOperation({ summary: '同步权限' })
   @ApiResponse({ status: 200, description: '返回新增的接口权限数量' })
   @Roles('admin')
-  async syncPermissions(@Body() dto: { defaultRoleNames: string[] }): Promise<{ inserted: number }> {
-    const inserted = await this.roleService.syncAllApiToPermission(dto.defaultRoleNames);
+  async syncPermissions(
+    @Body() dto: { defaultRoleNames: string[] },
+  ): Promise<{ inserted: number }> {
+    const inserted = await this.roleService.syncAllApiToPermission(
+      dto.defaultRoleNames,
+    );
     return { inserted };
   }
 
@@ -42,7 +59,9 @@ export class RoleController {
   @ApiOperation({ summary: '创建角色' })
   @ApiResponse({ status: 201, description: '成功创建角色', type: Role })
   @Roles('admin')
-  async createRole(@Body() dto: { name: string; description?: string; user_id?: string }): Promise<Role> {
+  async createRole(
+    @Body() dto: { name: string; description?: string; user_id?: string },
+  ): Promise<Role> {
     return this.roleService.createRole(dto, dto.user_id);
   }
 
@@ -50,14 +69,20 @@ export class RoleController {
   @ApiOperation({ summary: '删除角色' })
   @ApiResponse({ status: 200, description: '成功删除角色' })
   @Roles('admin')
-  async deleteRole(@Body() dto: { id: string; user_id?: string }): Promise<void> {
+  async deleteRole(
+    @Body() dto: { id: string; user_id?: string },
+  ): Promise<void> {
     return this.roleService.deleteRole(dto.id, dto.user_id);
   }
 
   // 用户-角色管理
   @Post('user/get')
   @ApiOperation({ summary: '获取用户角色' })
-  @ApiResponse({ status: 200, description: '返回用户角色列表', type: [UserRole] })
+  @ApiResponse({
+    status: 200,
+    description: '返回用户角色列表',
+    type: [UserRole],
+  })
   @Roles('admin')
   async getUserRoles(@Body() dto: { user_id: string }): Promise<UserRole[]> {
     return this.roleService.getUserRoleRelations(dto.user_id);
@@ -67,24 +92,38 @@ export class RoleController {
   @ApiOperation({ summary: '分配角色给用户' })
   @ApiResponse({ status: 201, description: '成功分配角色', type: UserRole })
   @Roles('admin')
-  async assignRoleToUser(@Body() dto: { user_id: string; role_id: string; operator_id?: string }): Promise<UserRole> {
-    return this.roleService.assignRoleToUser(dto.user_id, dto.role_id, dto.operator_id);
+  async assignRoleToUser(
+    @Body() dto: { user_id: string; role_id: string; operator_id?: string },
+  ): Promise<UserRole> {
+    return this.roleService.assignRoleToUser(
+      dto.user_id,
+      dto.role_id,
+      dto.operator_id,
+    );
   }
 
   @Post('user/remove')
   @ApiOperation({ summary: '移除用户角色' })
   @ApiResponse({ status: 200, description: '成功移除用户角色' })
   @Roles('admin')
-  async removeUserRole(@Body() dto: { id: string; operator_id?: string }): Promise<void> {
+  async removeUserRole(
+    @Body() dto: { id: string; operator_id?: string },
+  ): Promise<void> {
     return this.roleService.removeUserRole(dto.id, dto.operator_id);
   }
 
   // 权限管理
   @Post('permission/get')
   @ApiOperation({ summary: '获取角色权限' })
-  @ApiResponse({ status: 200, description: '返回角色权限列表', type: [Permission] })
+  @ApiResponse({
+    status: 200,
+    description: '返回角色权限列表',
+    type: [Permission],
+  })
   @Roles('admin')
-  async getRolePermissions(@Body() dto: { role_id: string }): Promise<Permission[]> {
+  async getRolePermissions(
+    @Body() dto: { role_id: string },
+  ): Promise<Permission[]> {
     return this.roleService.getRolePermissions(dto.role_id);
   }
 
@@ -92,7 +131,15 @@ export class RoleController {
   @ApiOperation({ summary: '添加权限' })
   @ApiResponse({ status: 201, description: '成功添加权限', type: Permission })
   @Roles('admin')
-  async addPermission(@Body() dto: { role_id: string; controller: string; method: string; user_id?: string }): Promise<Permission> {
+  async addPermission(
+    @Body()
+    dto: {
+      role_id: string;
+      controller: string;
+      method: string;
+      user_id?: string;
+    },
+  ): Promise<Permission> {
     return this.roleService.addPermission(dto, dto.user_id);
   }
 
@@ -100,7 +147,9 @@ export class RoleController {
   @ApiOperation({ summary: '移除权限' })
   @ApiResponse({ status: 200, description: '成功移除权限' })
   @Roles('admin')
-  async removePermission(@Body() dto: { id: string; user_id?: string }): Promise<void> {
+  async removePermission(
+    @Body() dto: { id: string; user_id?: string },
+  ): Promise<void> {
     return this.roleService.removePermission(dto.id, dto.user_id);
   }
 }

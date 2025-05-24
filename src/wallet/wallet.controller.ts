@@ -44,9 +44,15 @@ export class WalletController {
   @ApiResponse({ status: 200, description: '解密并返回钱包私钥和助记词' })
   async decryptWallet(@Req() req, @Body() dto: DecryptWalletDto) {
     const userId = req.user.sub;
-    const wallet = await this.walletService.findByUserId(userId, dto.mainchain || 'evm');
+    const wallet = await this.walletService.findByUserId(
+      userId,
+      dto.mainchain || 'evm',
+    );
     if (!wallet) throw new Error('钱包不存在');
-    const decrypted = await this.walletService.decryptWallet(wallet, dto.oldPassword);
+    const decrypted = await this.walletService.decryptWallet(
+      wallet,
+      dto.oldPassword,
+    );
     return {
       address: decrypted.address,
       mainchain: decrypted.mainchain,
@@ -60,9 +66,16 @@ export class WalletController {
   @ApiResponse({ status: 200, description: '更改钱包密码成功后返回新钱包' })
   async updateWalletPassword(@Req() req, @Body() dto: UpdateWalletPasswordDto) {
     const userId = req.user.sub;
-    const wallet = await this.walletService.findByUserId(userId, dto.mainchain || 'evm');
+    const wallet = await this.walletService.findByUserId(
+      userId,
+      dto.mainchain || 'evm',
+    );
     if (!wallet) throw new Error('钱包不存在');
-    const updated = await this.walletService.updatePassword(wallet, dto.oldPassword, dto.newPassword);
+    const updated = await this.walletService.updatePassword(
+      wallet,
+      dto.oldPassword,
+      dto.newPassword,
+    );
     return updated;
   }
 }

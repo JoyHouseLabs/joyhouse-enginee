@@ -24,9 +24,9 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   async validate(request: any, payload: any) {
     // 获取完整的 token
     const token = request.headers.authorization?.split(' ')[1];
-    
+
     // 检查 token 是否在黑名单中
-    if (token && await this.authService.isTokenBlacklisted(token)) {
+    if (token && (await this.authService.isTokenBlacklisted(token))) {
       throw new UnauthorizedException('Token 已被禁用');
     }
 
@@ -34,8 +34,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     if (!user) {
       throw new UnauthorizedException('用户不存在');
     }
-    
+
     const { password, ...result } = user;
     return result;
   }
-} 
+}

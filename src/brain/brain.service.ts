@@ -37,18 +37,20 @@ export class BrainService {
   }
 
   private async callOpenAI(model: LlmModel, content: string) {
-    const response = await fetch(`${model.provider.baseUrl}/v1/chat/completions`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${model.provider.apiKey}`,
-      },
-      body: JSON.stringify({
-        model: model.name,
-        messages: [
-          {
-            role: 'system',
-            content: `你是一个专业的心理咨询师，擅长帮助用户进行觉察和反思。请帮助分析用户输入的内容，并按照以下结构输出：
+    const response = await fetch(
+      `${model.provider.baseUrl}/v1/chat/completions`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${model.provider.apiKey}`,
+        },
+        body: JSON.stringify({
+          model: model.name,
+          messages: [
+            {
+              role: 'system',
+              content: `你是一个专业的心理咨询师，擅长帮助用户进行觉察和反思。请帮助分析用户输入的内容，并按照以下结构输出：
 
 事件：客观描述发生了什么，不包含主观评价
 
@@ -88,14 +90,15 @@ export class BrainService {
 - 用幽默掩饰失误是家族常见的应对方式
 - 防御机制虽然暂时缓解焦虑，但阻碍了直接承认错误的坦诚沟通
 - 下次可尝试：「刚才的数据我需要再确认，稍后同步给大家」的应对方式`,
-          },
-          {
-            role: 'user',
-            content: content,
-          },
-        ],
-      }),
-    });
+            },
+            {
+              role: 'user',
+              content: content,
+            },
+          ],
+        }),
+      },
+    );
     return response.json();
   }
 
@@ -163,7 +166,7 @@ ${content}`;
       event: '',
       feelings: '',
       defense: '',
-      analysis: ''
+      analysis: '',
     };
     let currentSection = '';
     let buffer: string[] = [];
@@ -231,4 +234,4 @@ ${content}`;
     yield { data: JSON.stringify({ defense: '示例防御' }) };
     yield { data: JSON.stringify({ analysis: '示例分析' }) };
   }
-} 
+}

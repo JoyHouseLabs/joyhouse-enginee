@@ -10,7 +10,7 @@ export const memeGeneratorWorkflowTemplate = {
       type: 'start',
       label: '开始',
       position: { x: 100, y: 100 },
-      data: {}
+      data: {},
     },
     {
       id: 'get-trending-news',
@@ -19,8 +19,8 @@ export const memeGeneratorWorkflowTemplate = {
       position: { x: 300, y: 100 },
       data: {
         toolId: '{{TRENDING_NEWS_TOOL_ID}}', // 需要替换为实际的工具ID
-        description: '获取当前热点新闻关键词'
-      }
+        description: '获取当前热点新闻关键词',
+      },
     },
     {
       id: 'get-weather',
@@ -30,8 +30,8 @@ export const memeGeneratorWorkflowTemplate = {
       data: {
         toolId: '{{WEATHER_TOOL_ID}}', // 需要替换为实际的工具ID
         location: '{{location}}', // 从变量中获取位置
-        description: '获取指定位置的天气信息'
-      }
+        description: '获取指定位置的天气信息',
+      },
     },
     {
       id: 'wait-btc-price',
@@ -41,8 +41,8 @@ export const memeGeneratorWorkflowTemplate = {
       data: {
         eventType: 'btc_price_change',
         eventCondition: 'eventData.price < 80000',
-        description: '等待BTC价格低于8万美金'
-      }
+        description: '等待BTC价格低于8万美金',
+      },
     },
     {
       id: 'user-approval',
@@ -52,8 +52,8 @@ export const memeGeneratorWorkflowTemplate = {
       data: {
         approvers: ['{{userId}}'],
         prompt: '是否继续生成meme图？',
-        description: '等待用户确认是否继续'
-      }
+        description: '等待用户确认是否继续',
+      },
     },
     {
       id: 'check-approval',
@@ -62,8 +62,8 @@ export const memeGeneratorWorkflowTemplate = {
       position: { x: 1100, y: 100 },
       data: {
         condition: 'approved === true',
-        description: '检查用户是否批准继续'
-      }
+        description: '检查用户是否批准继续',
+      },
     },
     {
       id: 'generate-meme-prompt',
@@ -84,8 +84,8 @@ export const memeGeneratorWorkflowTemplate = {
           
           return { memePrompt: prompt };
         `,
-        description: '结合热点词、天气和BTC价格生成meme提示词'
-      }
+        description: '结合热点词、天气和BTC价格生成meme提示词',
+      },
     },
     {
       id: 'generate-meme',
@@ -95,8 +95,8 @@ export const memeGeneratorWorkflowTemplate = {
       data: {
         agentId: '{{MEME_AGENT_ID}}', // 需要替换为实际的Agent ID
         message: '{{memePrompt}}',
-        description: '使用AI Agent生成meme图'
-      }
+        description: '使用AI Agent生成meme图',
+      },
     },
     {
       id: 'user-feedback',
@@ -106,8 +106,8 @@ export const memeGeneratorWorkflowTemplate = {
       data: {
         prompt: '请对生成的meme图进行评价或提出修改建议',
         timeout: 300000, // 5分钟超时
-        description: '等待用户对生成结果的反馈'
-      }
+        description: '等待用户对生成结果的反馈',
+      },
     },
     {
       id: 'check-satisfaction',
@@ -116,128 +116,128 @@ export const memeGeneratorWorkflowTemplate = {
       position: { x: 1900, y: 100 },
       data: {
         condition: 'satisfaction >= 8 || retryCount >= 3',
-        description: '检查用户满意度或重试次数'
-      }
+        description: '检查用户满意度或重试次数',
+      },
     },
     {
       id: 'end-success',
       type: 'end',
       label: '成功结束',
       position: { x: 2100, y: 50 },
-      data: {}
+      data: {},
     },
     {
       id: 'end-cancelled',
       type: 'end',
       label: '取消结束',
       position: { x: 1100, y: 200 },
-      data: {}
-    }
+      data: {},
+    },
   ] as WorkflowNode[],
-  
+
   edges: [
     {
       id: 'start-to-news',
       source: 'start',
       target: 'get-trending-news',
-      label: '开始获取数据'
+      label: '开始获取数据',
     },
     {
       id: 'news-to-weather',
       source: 'get-trending-news',
       target: 'get-weather',
-      label: '获取天气'
+      label: '获取天气',
     },
     {
       id: 'weather-to-btc',
       source: 'get-weather',
       target: 'wait-btc-price',
-      label: '等待BTC条件'
+      label: '等待BTC条件',
     },
     {
       id: 'btc-to-approval',
       source: 'wait-btc-price',
       target: 'user-approval',
-      label: '请求审批'
+      label: '请求审批',
     },
     {
       id: 'approval-to-check',
       source: 'user-approval',
       target: 'check-approval',
-      label: '检查结果'
+      label: '检查结果',
     },
     {
       id: 'approved-to-prompt',
       source: 'check-approval',
       target: 'generate-meme-prompt',
       label: '已批准',
-      condition: 'approved === true'
+      condition: 'approved === true',
     },
     {
       id: 'rejected-to-end',
       source: 'check-approval',
       target: 'end-cancelled',
       label: '已拒绝',
-      condition: 'approved === false'
+      condition: 'approved === false',
     },
     {
       id: 'prompt-to-meme',
       source: 'generate-meme-prompt',
       target: 'generate-meme',
-      label: '生成图片'
+      label: '生成图片',
     },
     {
       id: 'meme-to-feedback',
       source: 'generate-meme',
       target: 'user-feedback',
-      label: '等待反馈'
+      label: '等待反馈',
     },
     {
       id: 'feedback-to-check',
       source: 'user-feedback',
       target: 'check-satisfaction',
-      label: '检查满意度'
+      label: '检查满意度',
     },
     {
       id: 'satisfied-to-end',
       source: 'check-satisfaction',
       target: 'end-success',
       label: '满意/达到重试上限',
-      condition: 'satisfaction >= 8 || retryCount >= 3'
+      condition: 'satisfaction >= 8 || retryCount >= 3',
     },
     {
       id: 'retry-to-prompt',
       source: 'check-satisfaction',
       target: 'generate-meme-prompt',
       label: '重新生成',
-      condition: 'satisfaction < 8 && retryCount < 3'
-    }
+      condition: 'satisfaction < 8 && retryCount < 3',
+    },
   ] as WorkflowEdge[],
-  
+
   variables: {
     location: 'Beijing',
     retryCount: 0,
     maxRetries: 3,
-    userId: '{{USER_ID}}' // 需要替换为实际用户ID
+    userId: '{{USER_ID}}', // 需要替换为实际用户ID
   },
-  
+
   triggers: [
     {
       type: 'manual',
-      config: {}
+      config: {},
     },
     {
       type: 'schedule',
       config: {
-        cron: '0 9 * * *' // 每天早上9点自动执行
-      }
+        cron: '0 9 * * *', // 每天早上9点自动执行
+      },
     },
     {
       type: 'event',
       config: {
         eventType: 'trending_news',
-        eventCondition: 'keywords.length > 5' // 当热点词超过5个时触发
-      }
-    }
-  ]
-}; 
+        eventCondition: 'keywords.length > 5', // 当热点词超过5个时触发
+      },
+    },
+  ],
+};

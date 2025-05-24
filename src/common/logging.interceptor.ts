@@ -1,4 +1,9 @@
-import { Injectable, NestInterceptor, ExecutionContext, CallHandler } from '@nestjs/common';
+import {
+  Injectable,
+  NestInterceptor,
+  ExecutionContext,
+  CallHandler,
+} from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { JoyhouseLoggerService } from './logger.service';
@@ -20,21 +25,21 @@ export class LoggingInterceptor implements NestInterceptor {
           const responseTime = Date.now() - startTime;
           this.logger.log(
             `${method} ${originalUrl} ${responseTime}ms\n` +
-            `Request Body: ${JSON.stringify(body)}\n` +
-            `Response: ${JSON.stringify(data)}\n` +
-            `User-Agent: ${userAgent}`
+              `Request Body: ${JSON.stringify(body)}\n` +
+              `Response: ${JSON.stringify(data)}\n` +
+              `User-Agent: ${userAgent}`,
           );
         },
         error: (error: any) => {
           const responseTime = Date.now() - startTime;
           this.logger.error(
             `${method} ${originalUrl} ${responseTime}ms\n` +
-            `Request Body: ${JSON.stringify(body)}\n` +
-            `Error: ${error.message}\n` +
-            `User-Agent: ${userAgent}`
+              `Request Body: ${JSON.stringify(body)}\n` +
+              `Error: ${error.message}\n` +
+              `User-Agent: ${userAgent}`,
           );
         },
       }),
     );
   }
-} 
+}

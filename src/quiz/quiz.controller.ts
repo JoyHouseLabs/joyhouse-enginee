@@ -1,5 +1,19 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseGuards,
+} from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { QuizService } from './quiz.service';
 import { CreateQuizDto, UpdateQuizDto } from './dto/quiz.dto';
 import { Quiz } from './entities/quiz.entity';
@@ -46,4 +60,4 @@ export class QuizController {
   remove(@Param('id') id: string) {
     return this.quizService.remove(id);
   }
-} 
+}

@@ -19,7 +19,12 @@ export class OperationLogService {
     this.gateway.notify(saved);
   }
 
-  async list(dto: { user_id?: string; action?: string; skip?: number; take?: number }): Promise<OperationLog[]> {
+  async list(dto: {
+    user_id?: string;
+    action?: string;
+    skip?: number;
+    take?: number;
+  }): Promise<OperationLog[]> {
     const where: any = {};
     if (dto.user_id) where.user_id = dto.user_id;
     if (dto.action) where.action = dto.action;
@@ -31,4 +36,3 @@ export class OperationLogService {
     });
   }
 }
-

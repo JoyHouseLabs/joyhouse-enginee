@@ -1,4 +1,13 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany, ManyToOne, JoinColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+  OneToMany,
+  ManyToOne,
+  JoinColumn,
+} from 'typeorm';
 import { TaskItem } from './task-item.entity';
 import { Reward } from '../reward/reward.entity';
 
@@ -20,21 +29,21 @@ export class TaskGroup {
     type: 'varchar',
     length: 4096,
     nullable: true,
-    comment: 'JSON格式的额外参数'
+    comment: 'JSON格式的额外参数',
   })
   params: string | null;
 
   @Column({
     type: 'boolean',
     default: true,
-    comment: '是否启用'
+    comment: '是否启用',
   })
   isActive: boolean;
 
   @Column({
     type: 'int',
     default: 0,
-    comment: '排序权重，数字越大越靠前'
+    comment: '排序权重，数字越大越靠前',
   })
   weight: number;
 
@@ -42,7 +51,7 @@ export class TaskGroup {
     type: 'varchar',
     length: 4096,
     nullable: true,
-    comment: '触发条件（JSON格式）'
+    comment: '触发条件（JSON格式）',
   })
   trigger: string | null;
 
@@ -50,7 +59,7 @@ export class TaskGroup {
     type: 'varchar',
     length: 4096,
     nullable: true,
-    comment: '奖励配置（JSON格式）'
+    comment: '奖励配置（JSON格式）',
   })
   rewards: string | null;
 
@@ -64,7 +73,7 @@ export class TaskGroup {
   @Column({
     type: 'boolean',
     default: false,
-    comment: '是否需要在所有任务完成后才发放奖励'
+    comment: '是否需要在所有任务完成后才发放奖励',
   })
   requireAllTasksCompleted: boolean;
 
@@ -74,6 +83,6 @@ export class TaskGroup {
   @UpdateDateColumn()
   updatedAt: Date;
 
-  @OneToMany(() => TaskItem, taskItem => taskItem.taskGroup)
+  @OneToMany(() => TaskItem, (taskItem) => taskItem.taskGroup)
   taskItems: TaskItem[];
 }

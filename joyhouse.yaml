@@ -25,3 +25,20 @@ cors:
   origins: "*"
   credentials: true
   methods: "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS"
+
+# 工作流监控配置
+monitoring:
+  enabled: true
+  websocket:
+    port: 3000
+    namespace: "/workflow-monitor"
+    corsOrigin: "*"
+  performance:
+    trackingEnabled: true
+    retentionHours: 24
+    warningThresholdMs: 5000
+    criticalThresholdMs: 30000
+  events:
+    enableNodeEvents: true
+    enableWorkflowEvents: true
+    enablePerformanceEvents: true

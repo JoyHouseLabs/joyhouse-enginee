@@ -8,7 +8,15 @@ export class OperationLogController {
 
   // 查询操作日志，支持按user_id、action等过滤
   @Post('list')
-  async list(@Body() dto: { user_id?: string; action?: string; skip?: number; take?: number }): Promise<OperationLog[]> {
+  async list(
+    @Body()
+    dto: {
+      user_id?: string;
+      action?: string;
+      skip?: number;
+      take?: number;
+    },
+  ): Promise<OperationLog[]> {
     return this.logService.list(dto);
   }
 }

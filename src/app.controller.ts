@@ -7,11 +7,11 @@ export class AppController {
 
   @Get()
   root(): string {
-    return "welcome to joyhouse";
+    return 'welcome to joyhouse';
   }
 
-  @Get("/ping")
+  @Get('/ping')
   ping(): string {
-    return "pong";
+    return 'pong';
   }
 }

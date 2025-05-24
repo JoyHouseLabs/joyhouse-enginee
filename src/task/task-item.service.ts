@@ -3,7 +3,12 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { TaskItem } from './task-item.entity';
 import { TaskGroup } from './task-group.entity';
-import { CreateTaskItemDto, UpdateTaskItemDto, TaskItemDto, TaskItemQueryDto } from './task-item.dto';
+import {
+  CreateTaskItemDto,
+  UpdateTaskItemDto,
+  TaskItemDto,
+  TaskItemQueryDto,
+} from './task-item.dto';
 
 @Injectable()
 export class TaskItemService {
@@ -27,7 +32,10 @@ export class TaskItemService {
     return this.toTaskItemDto(saved);
   }
 
-  async update(id: string, updateDto: Partial<CreateTaskItemDto>): Promise<TaskItemDto> {
+  async update(
+    id: string,
+    updateDto: Partial<CreateTaskItemDto>,
+  ): Promise<TaskItemDto> {
     const item = await this.taskItemRepository.findOne({ where: { id } });
     if (!item) {
       throw new Error('Task item not found');
@@ -50,7 +58,9 @@ export class TaskItemService {
     const qb = this.taskItemRepository.createQueryBuilder('taskItem');
 
     if (query.taskGroupId) {
-      qb.andWhere('taskItem.taskGroupId = :taskGroupId', { taskGroupId: query.taskGroupId });
+      qb.andWhere('taskItem.taskGroupId = :taskGroupId', {
+        taskGroupId: query.taskGroupId,
+      });
     }
 
     if (query.type) {
@@ -58,7 +68,7 @@ export class TaskItemService {
     }
 
     const items = await qb.getMany();
-    return items.map(item => this.toTaskItemDto(item));
+    return items.map((item) => this.toTaskItemDto(item));
   }
 
   async remove(id: string): Promise<void> {
@@ -71,9 +81,9 @@ export class TaskItemService {
   async findByTaskGroup(taskGroupId: string): Promise<TaskItemDto[]> {
     const taskItems = await this.taskItemRepository.find({
       where: { taskGroupId },
-      relations: ['reward']
+      relations: ['reward'],
     });
 
-    return taskItems.map(item => this.toTaskItemDto(item));
+    return taskItems.map((item) => this.toTaskItemDto(item));
   }
-} 
+}

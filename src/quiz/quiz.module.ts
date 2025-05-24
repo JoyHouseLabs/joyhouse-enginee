@@ -7,11 +7,9 @@ import { QuizQuestion } from './entities/quiz-question.entity';
 import { QuizOption } from './entities/quiz-option.entity';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([Quiz, QuizQuestion, QuizOption]),
-  ],
+  imports: [TypeOrmModule.forFeature([Quiz, QuizQuestion, QuizOption])],
   controllers: [QuizController],
   providers: [QuizService],
   exports: [QuizService],
 })
-export class QuizModule {} 
+export class QuizModule {}

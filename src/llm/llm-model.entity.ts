@@ -26,11 +26,15 @@ export class LlmModel {
   user_id: string;
 
   @ApiProperty({ type: () => LlmProvider })
-  @ManyToOne(() => LlmProvider, provider => provider.models)
+  @ManyToOne(() => LlmProvider, (provider) => provider.models)
   provider: LlmProvider;
 
-  @ApiProperty() @Column({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' }) createdAt: Date;
-  @ApiProperty() @Column({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' }) updatedAt: Date;
+  @ApiProperty()
+  @Column({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
+  createdAt: Date;
+  @ApiProperty()
+  @Column({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
+  updatedAt: Date;
 
   @Column({ nullable: true })
   license: string;

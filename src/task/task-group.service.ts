@@ -3,7 +3,12 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { TaskGroup } from './task-group.entity';
 import { TaskItem } from './task-item.entity';
-import { CreateTaskGroupDto, UpdateTaskGroupDto, TaskGroupDto, TaskGroupQueryDto } from './task-group.dto';
+import {
+  CreateTaskGroupDto,
+  UpdateTaskGroupDto,
+  TaskGroupDto,
+  TaskGroupQueryDto,
+} from './task-group.dto';
 import { TaskItemDto } from './task-item.dto';
 
 @Injectable()
@@ -19,7 +24,7 @@ export class TaskGroupService {
     const dto = new TaskGroupDto();
     Object.assign(dto, taskGroup);
     if (taskGroup.taskItems) {
-      dto.taskItems = taskGroup.taskItems.map(item => {
+      dto.taskItems = taskGroup.taskItems.map((item) => {
         const itemDto = new TaskItemDto();
         Object.assign(itemDto, item);
         return itemDto;
@@ -37,7 +42,7 @@ export class TaskGroupService {
   async update(updateDto: UpdateTaskGroupDto): Promise<TaskGroupDto> {
     const taskGroup = await this.taskGroupRepository.findOne({
       where: { id: updateDto.id },
-      relations: ['taskItems']
+      relations: ['taskItems'],
     });
 
     if (!taskGroup) {
@@ -52,7 +57,7 @@ export class TaskGroupService {
   async findOne(id: string): Promise<TaskGroupDto> {
     const taskGroup = await this.taskGroupRepository.findOne({
       where: { id },
-      relations: ['taskItems', 'reward']
+      relations: ['taskItems', 'reward'],
     });
 
     if (!taskGroup) {
@@ -63,7 +68,8 @@ export class TaskGroupService {
   }
 
   async findAll(query: TaskGroupQueryDto): Promise<TaskGroupDto[]> {
-    const qb = this.taskGroupRepository.createQueryBuilder('taskGroup')
+    const qb = this.taskGroupRepository
+      .createQueryBuilder('taskGroup')
       .leftJoinAndSelect('taskGroup.taskItems', 'taskItems')
       .leftJoinAndSelect('taskGroup.reward', 'reward');
 
@@ -72,17 +78,19 @@ export class TaskGroupService {
     }
 
     if (query.isActive !== undefined) {
-      qb.andWhere('taskGroup.isActive = :isActive', { isActive: query.isActive });
+      qb.andWhere('taskGroup.isActive = :isActive', {
+        isActive: query.isActive,
+      });
     }
 
     const taskGroups = await qb.getMany();
-    return taskGroups.map(group => this.toTaskGroupDto(group));
+    return taskGroups.map((group) => this.toTaskGroupDto(group));
   }
 
   async remove(id: string): Promise<void> {
     const taskGroup = await this.taskGroupRepository.findOne({
       where: { id },
-      relations: ['taskItems']
+      relations: ['taskItems'],
     });
     if (!taskGroup) {
       throw new Error('Task group not found');
@@ -99,10 +107,13 @@ export class TaskGroupService {
     await this.taskGroupRepository.remove(taskGroup);
   }
 
-  async addTaskItem(groupId: string, taskItemId: string): Promise<TaskGroupDto> {
+  async addTaskItem(
+    groupId: string,
+    taskItemId: string,
+  ): Promise<TaskGroupDto> {
     const taskGroup = await this.taskGroupRepository.findOne({
       where: { id: groupId },
-      relations: ['taskItems']
+      relations: ['taskItems'],
     });
 
     if (!taskGroup) {
@@ -110,7 +121,7 @@ export class TaskGroupService {
     }
 
     const taskItem = await this.taskItemRepository.findOne({
-      where: { id: taskItemId }
+      where: { id: taskItemId },
     });
 
     if (!taskItem) {
@@ -123,9 +134,12 @@ export class TaskGroupService {
     return this.findOne(groupId);
   }
 
-  async removeTaskItem(groupId: string, taskItemId: string): Promise<TaskGroupDto> {
+  async removeTaskItem(
+    groupId: string,
+    taskItemId: string,
+  ): Promise<TaskGroupDto> {
     const taskItem = await this.taskItemRepository.findOne({
-      where: { id: taskItemId, taskGroupId: groupId }
+      where: { id: taskItemId, taskGroupId: groupId },
     });
 
     if (!taskItem) {
@@ -137,4 +151,4 @@ export class TaskGroupService {
 
     return this.findOne(groupId);
   }
-} 
+}

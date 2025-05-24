@@ -40,7 +40,10 @@ export class JailUserQueryDto {
   @IsString()
   operator?: string;
 
-  @ApiPropertyOptional({ description: '是否只查询有效的封禁记录', default: 'true' })
+  @ApiPropertyOptional({
+    description: '是否只查询有效的封禁记录',
+    default: 'true',
+  })
   @IsOptional()
   @IsString()
   activeOnly?: string = 'true';

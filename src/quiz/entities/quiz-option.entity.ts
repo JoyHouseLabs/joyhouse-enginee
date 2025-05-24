@@ -1,4 +1,11 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+  ManyToOne,
+} from 'typeorm';
 import { QuizQuestion } from './quiz-question.entity';
 
 @Entity('quiz_option')
@@ -15,7 +22,7 @@ export class QuizOption {
   @Column({ type: 'int', default: 0 })
   order: number;
 
-  @ManyToOne(() => QuizQuestion, question => question.options)
+  @ManyToOne(() => QuizQuestion, (question) => question.options)
   question: QuizQuestion;
 
   @CreateDateColumn()
@@ -23,4 +30,4 @@ export class QuizOption {
 
   @UpdateDateColumn()
   updatedAt: Date;
-} 
+}

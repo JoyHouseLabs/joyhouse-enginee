@@ -1,4 +1,11 @@
-import { Injectable, UnauthorizedException, ConflictException, BadRequestException, HttpException, HttpStatus } from '@nestjs/common';
+import {
+  Injectable,
+  UnauthorizedException,
+  ConflictException,
+  BadRequestException,
+  HttpException,
+  HttpStatus,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
@@ -27,7 +34,7 @@ export class AuthService {
 
   async validateUser(username: string, password: string): Promise<any> {
     const user = await this.userRepo.findOneBy({ username });
-    if (user && await bcrypt.compare(password, user.password)) {
+    if (user && (await bcrypt.compare(password, user.password))) {
       const { password, ...result } = user;
       return result;
     }
@@ -38,11 +45,14 @@ export class AuthService {
     // 检查用户名是否已存在
     const existingUser = await this.userRepo.findOneBy({ username });
     if (existingUser) {
-      throw new HttpException({
-        code: 1001,
-        message: '用户名已存在',
-        data: null
-      }, HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        {
+          code: 1001,
+          message: '用户名已存在',
+          data: null,
+        },
+        HttpStatus.BAD_REQUEST,
+      );
     }
 
     // 检查是否是第一个用户
@@ -58,7 +68,7 @@ export class AuthService {
       nickname,
       role: isFirstUser ? RoleType.ADMIN : RoleType.USER,
       isAdmin: isFirstUser,
-      onboarded: false
+      onboarded: false,
     });
 
     const savedUser = await this.userRepo.save(user);
@@ -82,8 +92,8 @@ export class AuthService {
         avatar: user.avatar,
         remark: user.remark,
         onboarded: user.onboarded,
-        isAdmin: user.isAdmin
-      }
+        isAdmin: user.isAdmin,
+      },
     };
   }
 
@@ -93,7 +103,19 @@ export class AuthService {
     message: string;
     sign: string;
     ts: number | string;
-  }): Promise<{ token: string; user: Pick<User, 'id' | 'username' | 'nickname' | 'avatar' | 'remark' | 'onboarded' | 'isAdmin'> }> {
+  }): Promise<{
+    token: string;
+    user: Pick<
+      User,
+      | 'id'
+      | 'username'
+      | 'nickname'
+      | 'avatar'
+      | 'remark'
+      | 'onboarded'
+      | 'isAdmin'
+    >;
+  }> {
     // 0. 地址规范化
     let standardizedAddress = dto.address;
     if (dto.mainchain === 'evm') {
@@ -118,43 +140,52 @@ export class AuthService {
     if (!valid) throw new UnauthorizedException('签名验证失败');
 
     // 2. 查找用户
-    let user = await this.userRepo.findOneBy({ username: standardizedAddress });
+    const user = await this.userRepo.findOneBy({
+      username: standardizedAddress,
+    });
     if (!user) {
       // 检查是否是第一个用户
       const userCount = await this.userRepo.count();
       const isFirstUser = userCount === 0;
-      
+
       // 3. 若不存在，创建用户
-      const strongPwd = Array(32).fill(0).map(() => Math.random().toString(36).slice(2)).join('').slice(0, 32);
+      const strongPwd = Array(32)
+        .fill(0)
+        .map(() => Math.random().toString(36).slice(2))
+        .join('')
+        .slice(0, 32);
       const hashed = await bcrypt.hash(strongPwd, 10);
       const username = standardizedAddress;
-      const nickname=standardizedAddress;
-       // 直接创建用户
+      const nickname = standardizedAddress;
+      // 直接创建用户
       const tuser = this.userRepo.create({
         username,
         password: hashed,
         nickname,
         role: isFirstUser ? RoleType.ADMIN : RoleType.USER,
-        onboarded: false
+        onboarded: false,
       });
 
-       const user = await this.userRepo.save(tuser);
-    
+      const user = await this.userRepo.save(tuser);
 
       // 可选：自动为新用户创建钱包
-      await this.walletService.createWalletForUser(user!.id, strongPwd, dto.mainchain);
+      await this.walletService.createWalletForUser(
+        user.id,
+        strongPwd,
+        dto.mainchain,
+      );
     }
     // 4. 签发token
     const token = this.jwtService.sign(
-      { 
-        sub: user!.id, 
+      {
+        sub: user!.id,
         username: user!.username,
-        isAdmin: user!.isAdmin
+        isAdmin: user!.isAdmin,
       },
-      { expiresIn: '7d' }
+      { expiresIn: '7d' },
     );
-    return { 
-      token, 
+    return {
+      token,
       user: {
         id: user!.id,
         username: user!.username,
@@ -162,12 +193,16 @@ export class AuthService {
         avatar: user!.avatar,
         remark: user!.remark,
         onboarded: user!.onboarded,
-        isAdmin: user!.isAdmin
-      }
+        isAdmin: user!.isAdmin,
+      },
     };
   }
 
-  async changePassword(userId: string, oldPassword: string, newPassword: string) {
+  async changePassword(
+    userId: string,
+    oldPassword: string,
+    newPassword: string,
+  ) {
     const user = await this.userRepo.findOneBy({ id: userId });
     if (!user) {
       throw new BadRequestException('用户不存在');
@@ -211,14 +246,14 @@ export class AuthService {
     try {
       // 验证 token 并获取过期时间
       const decoded = this.jwtService.verify(token);
-      
+
       // 将 token 加入黑名单
       const blacklistEntry = this.tokenBlacklistRepo.create({
         token,
         userId: decoded.sub,
         expiresAt: new Date(decoded.exp * 1000), // 将 JWT 过期时间转换为 Date
       });
-      
+
       await this.tokenBlacklistRepo.save(blacklistEntry);
     } catch (error) {
       throw new UnauthorizedException('无效的 token');
@@ -227,7 +262,7 @@ export class AuthService {
 
   async isTokenBlacklisted(token: string): Promise<boolean> {
     const blacklistedToken = await this.tokenBlacklistRepo.findOne({
-      where: { token }
+      where: { token },
     });
     return !!blacklistedToken;
   }
@@ -235,7 +270,7 @@ export class AuthService {
   async invalidateAllUserTokens(userId: string): Promise<void> {
     // 获取用户的所有有效 token
     const blacklistEntries = await this.tokenBlacklistRepo.find({
-      where: { userId }
+      where: { userId },
     });
 
     // 将所有 token 标记为过期
@@ -244,4 +279,4 @@ export class AuthService {
       await this.tokenBlacklistRepo.save(entry);
     }
   }
-} 
+}

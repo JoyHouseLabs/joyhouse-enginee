@@ -1,5 +1,10 @@
 import { Controller, Post, Body, UseGuards } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { WorkflowEventService } from '../services/workflow-event.service';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { EventEmitter2 } from '@nestjs/event-emitter';
@@ -25,7 +30,7 @@ export class WorkflowEventController {
   async triggerEvent(@Body() triggerEventDto: TriggerEventDto) {
     await this.workflowEventService.triggerEvent(
       triggerEventDto.eventType,
-      triggerEventDto.eventData
+      triggerEventDto.eventData,
     );
     return { message: 'Event triggered successfully' };
   }
@@ -44,7 +49,9 @@ export class WorkflowEventController {
   @Post('weather')
   @ApiOperation({ summary: '触发天气更新事件' })
   @ApiResponse({ description: '天气事件触发成功' })
-  async triggerWeather(@Body() data: { location: string; temperature: number; condition: string }) {
+  async triggerWeather(
+    @Body() data: { location: string; temperature: number; condition: string },
+  ) {
     this.eventEmitter.emit('weather.update', {
       ...data,
       timestamp: new Date(),
@@ -55,7 +62,9 @@ export class WorkflowEventController {
   @Post('trending-news')
   @ApiOperation({ summary: '触发热点新闻事件' })
   @ApiResponse({ description: '新闻事件触发成功' })
-  async triggerTrendingNews(@Body() data: { keywords: string[]; articles: any[] }) {
+  async triggerTrendingNews(
+    @Body() data: { keywords: string[]; articles: any[] },
+  ) {
     this.eventEmitter.emit('news.trending', {
       ...data,
       timestamp: new Date(),
@@ -66,11 +75,13 @@ export class WorkflowEventController {
   @Post('webhook')
   @ApiOperation({ summary: '模拟Webhook事件' })
   @ApiResponse({ description: 'Webhook事件触发成功' })
-  async triggerWebhook(@Body() data: { url: string; method: string; headers: any; body: any }) {
+  async triggerWebhook(
+    @Body() data: { url: string; method: string; headers: any; body: any },
+  ) {
     this.eventEmitter.emit('webhook.received', {
       ...data,
       timestamp: new Date(),
     });
     return { message: 'Webhook event triggered' };
   }
-} 
+}

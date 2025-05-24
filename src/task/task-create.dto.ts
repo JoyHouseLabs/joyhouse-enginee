@@ -1,5 +1,15 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsString, IsOptional, IsEnum, IsObject, IsDateString, IsNumber, IsDate, IsUUID } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsString,
+  IsOptional,
+  IsEnum,
+  IsObject,
+  IsDateString,
+  IsNumber,
+  IsDate,
+  IsUUID,
+} from 'class-validator';
 import { TaskStatus, TaskType } from './task-query.dto';
 
 export class TaskCreateDto {
@@ -18,11 +28,11 @@ export class TaskCreateDto {
   @IsString()
   description?: string;
 
-  @ApiProperty({ 
-    description: '任务状态', 
+  @ApiProperty({
+    description: '任务状态',
     enum: TaskStatus,
     example: TaskStatus.PENDING,
-    default: TaskStatus.PENDING
+    default: TaskStatus.PENDING,
   })
   @IsOptional()
   @IsEnum(TaskStatus)
@@ -32,20 +42,20 @@ export class TaskCreateDto {
   @IsNumber()
   progress: number;
 
-  @ApiProperty({ 
-    description: '任务类型', 
+  @ApiProperty({
+    description: '任务类型',
     enum: TaskType,
     example: TaskType.DAILY,
-    default: TaskType.CUSTOM
+    default: TaskType.CUSTOM,
   })
   @IsOptional()
   @IsEnum(TaskType)
   type?: TaskType = TaskType.CUSTOM;
 
-  @ApiProperty({ 
+  @ApiProperty({
     description: '额外参数（JSON格式）',
     required: false,
-    example: { key: 'value' }
+    example: { key: 'value' },
   })
   @IsOptional()
   @IsObject()

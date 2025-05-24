@@ -17,14 +17,14 @@ export class JoyhouseLoggerService implements LoggerService {
       console: true,
       maxSize: 10,
       maxFiles: 30,
-      dailyRotate: true
+      dailyRotate: true,
     };
-    
+
     const logConfig: LoggingConfig = {
       ...defaultLogConfig,
-      ...(config.logging || {})
+      ...(config.logging || {}),
     };
-    
+
     // 确保日志目录存在
     const logDir = join(process.cwd(), logConfig.dir);
     if (!fs.existsSync(logDir)) {
@@ -44,9 +44,9 @@ export class JoyhouseLoggerService implements LoggerService {
           maxFiles: logConfig.maxFiles,
           format: winston.format.combine(
             winston.format.timestamp(),
-            winston.format.json()
-          )
-        })
+            winston.format.json(),
+          ),
+        }),
       );
     }
 
@@ -59,15 +59,15 @@ export class JoyhouseLoggerService implements LoggerService {
             winston.format.timestamp(),
             winston.format.printf(({ timestamp, level, message }) => {
               return `[Joyhouse] ${timestamp} ${level}: ${message}`;
-            })
-          )
-        })
+            }),
+          ),
+        }),
       );
     }
 
     this.logger = winston.createLogger({
       level: logConfig.level,
-      transports
+      transports,
     });
   }
 
@@ -90,4 +90,4 @@ export class JoyhouseLoggerService implements LoggerService {
   verbose(message: string) {
     this.logger.verbose(message);
   }
-} 
+}

@@ -1,4 +1,13 @@
-import { Controller, Get, Post, Body, Param, Put, Delete, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Put,
+  Delete,
+  Query,
+} from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { CategoryService } from './category.service';
 import { CreateCategoryDto, UpdateCategoryDto } from './category.dto';
@@ -33,7 +42,10 @@ export class CategoryController {
   @Put(':id')
   @ApiOperation({ summary: '更新分类' })
   @ApiResponse({ status: 200, type: Category })
-  async update(@Param('id') id: string, @Body() dto: UpdateCategoryDto): Promise<Category> {
+  async update(
+    @Param('id') id: string,
+    @Body() dto: UpdateCategoryDto,
+  ): Promise<Category> {
     return this.categoryService.update(id, dto);
   }
 

@@ -8,7 +8,13 @@ import { StorageDir } from './storage-dir.entity';
 import { RoleModule } from '../role/role.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Storage, require('./storage-dir.entity').StorageDir]), RoleModule],
+  imports: [
+    TypeOrmModule.forFeature([
+      Storage,
+      require('./storage-dir.entity').StorageDir,
+    ]),
+    RoleModule,
+  ],
   providers: [StorageService],
   controllers: [StorageController],
   exports: [StorageService, TypeOrmModule],

@@ -1,4 +1,9 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+} from 'typeorm';
 
 @Entity('token_blacklist')
 export class TokenBlacklist {
@@ -16,4 +21,4 @@ export class TokenBlacklist {
 
   @CreateDateColumn()
   createdAt: Date;
-} 
+}

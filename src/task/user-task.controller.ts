@@ -36,7 +36,10 @@ export class UserTaskController {
   @Post('from-template/:itemId')
   @ApiOperation({ summary: '从模板创建任务' })
   @ApiResponse({ status: 201, type: TaskDto })
-  async createFromTemplate(@User('id') userId: string, @Param('itemId') itemId: string): Promise<TaskDto> {
+  async createFromTemplate(
+    @User('id') userId: string,
+    @Param('itemId') itemId: string,
+  ): Promise<TaskDto> {
     const taskItem = await this.userTaskService.taskItemService.findOne(itemId);
     if (!taskItem) {
       throw new Error('Task item not found');
@@ -65,4 +68,4 @@ export class UserTaskController {
   ) {
     return this.userTaskService.getUserTaskProgress(userId, taskGroupId);
   }
-} 
+}

@@ -11,7 +11,11 @@ export class WalletService {
     private readonly walletRepo: Repository<Wallet>,
   ) {}
 
-  async createWalletForUser(userId: string, password: string, mainchain: 'sol' | 'evm' = 'evm') {
+  async createWalletForUser(
+    userId: string,
+    password: string,
+    mainchain: 'sol' | 'evm' = 'evm',
+  ) {
     let address = '';
     let pubKey = '';
     let privKeyRaw = '';
@@ -55,7 +59,11 @@ export class WalletService {
     return { ...wallet, privateKey: privKey, seed };
   }
 
-  async updatePassword(wallet: Wallet, oldPassword: string, newPassword: string) {
+  async updatePassword(
+    wallet: Wallet,
+    oldPassword: string,
+    newPassword: string,
+  ) {
     const privKey = decrypt(JSON.parse(wallet.privateKey), oldPassword);
     const seed = decrypt(JSON.parse(wallet.seed), oldPassword);
     const newEncPriv = encrypt(privKey, newPassword);
@@ -65,7 +73,10 @@ export class WalletService {
     return this.walletRepo.save(wallet);
   }
 
-  async findByUserId(userId: string, mainchain: string): Promise<Wallet | null> {
+  async findByUserId(
+    userId: string,
+    mainchain: string,
+  ): Promise<Wallet | null> {
     return this.walletRepo.findOneBy({ userId, mainchain });
   }
 
@@ -79,11 +90,11 @@ export class WalletService {
    * @returns boolean (valid or not)
    */
   async verifySignature(params: {
-    mainchain: 'evm' | 'sol',
-    address: string,
-    message: string,
-    sign: string,
-    ts: number|string
+    mainchain: 'evm' | 'sol';
+    address: string;
+    message: string;
+    sign: string;
+    ts: number | string;
   }): Promise<boolean> {
     const { mainchain, address, message, sign } = params;
     if (mainchain === 'evm') {
@@ -112,7 +123,6 @@ export class WalletService {
         // Use nacl.sign.detached.verify for Solana signature verification
         const nacl = (await import('tweetnacl')).default;
         return nacl.sign.detached.verify(msgBuf, signature, pubKey.toBytes());
-
       } catch (e) {
         return false;
       }

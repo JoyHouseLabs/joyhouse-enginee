@@ -1,6 +1,25 @@
-import { Controller, Get, Post, Body, Param, Req, UseGuards, Query, UploadedFile, UseInterceptors } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Req,
+  UseGuards,
+  Query,
+  UploadedFile,
+  UseInterceptors,
+} from '@nestjs/common';
 import { JoyhouseConfigService } from '../common/joyhouse-config';
-import { ApiTags, ApiResponse, ApiBody, ApiParam, ApiBearerAuth, ApiQuery, ApiConsumes } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiResponse,
+  ApiBody,
+  ApiParam,
+  ApiBearerAuth,
+  ApiQuery,
+  ApiConsumes,
+} from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { KnowledgebaseService } from './knowledgebase.service';
 import { KnowledgefileService } from './knowledgefile.service';
@@ -16,9 +35,8 @@ import { JwtAuthGuard } from '../user/jwt-auth.guard';
 export class KnowledgebaseController {
   constructor(
     private readonly kbService: KnowledgebaseService,
-    private readonly kfService: KnowledgefileService
+    private readonly kfService: KnowledgefileService,
   ) {}
-
 
   /**
    * 上传文件接口，将文件信息写入 knowledgefile
@@ -31,17 +49,17 @@ export class KnowledgebaseController {
       type: 'object',
       properties: {
         file: { type: 'string', format: 'binary' },
-        knowledgebaseId: { type: 'string', description: '知识库ID' }
+        knowledgebaseId: { type: 'string', description: '知识库ID' },
       },
-      required: ['file', 'knowledgebaseId']
+      required: ['file', 'knowledgebaseId'],
     },
-    description: '上传文件到知识库，并写入 knowledgefile'
+    description: '上传文件到知识库，并写入 knowledgefile',
   })
   @ApiResponse({ status: 201, description: '文件上传并写入成功' })
   async uploadFile(
     @UploadedFile() file: Express.Multer.File,
     @Body('knowledgebaseId') knowledgebaseId: string,
-    @Req() req
+    @Req() req,
   ) {
     const fs = require('fs');
     const path = require('path');
@@ -58,16 +76,35 @@ export class KnowledgebaseController {
       filename,
       filepath,
       filesize: file.size,
-      url
+      url,
     };
-    const knowledgefile = await this.kfService.create(kf, userId, knowledgebaseId);
+    const knowledgefile = await this.kfService.create(
+      kf,
+      userId,
+      knowledgebaseId,
+    );
     return knowledgefile;
   }
 
   @Get('list')
-  @ApiQuery({ name: 'page', required: false, type: Number, description: '页码（默认1）' })
-  @ApiQuery({ name: 'pageSize', required: false, type: Number, description: '每页数量（默认10）' })
-  @ApiQuery({ name: 'name', required: false, type: String, description: '知识库名称模糊搜索' })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    type: Number,
+    description: '页码（默认1）',
+  })
+  @ApiQuery({
+    name: 'pageSize',
+    required: false,
+    type: Number,
+    description: '每页数量（默认10）',
+  })
+  @ApiQuery({
+    name: 'name',
+    required: false,
+    type: String,
+    description: '知识库名称模糊搜索',
+  })
   @ApiResponse({
     status: 200,
     description: '分页获取知识库',
@@ -86,23 +123,30 @@ export class KnowledgebaseController {
             embedding: '',
             embeddingModel: 'text-embedding-ada-002',
             createdAt: '2024-05-08T12:00:00.000Z',
-            updatedAt: '2024-05-08T12:00:00.000Z'
-          }
+            updatedAt: '2024-05-08T12:00:00.000Z',
+          },
         ],
         total: 1,
         total_page: 1,
-        pageSize: 10
-      }
-    }
+        pageSize: 10,
+      },
+    },
   })
-  async getAll(@Req() req, @Query() query: import('./knowledgebase-query.dto').KnowledgebaseQueryDto) {
+  async getAll(
+    @Req() req,
+    @Query() query: import('./knowledgebase-query.dto').KnowledgebaseQueryDto,
+  ) {
     const userId = req.user.sub;
     const { page = 1, pageSize = 10, name } = query;
     return this.kbService.findAll(userId, page, pageSize, name);
   }
 
   @Get(':id')
-  @ApiResponse({ status: 200, type: KnowledgebaseDto, description: '获取单条知识库' })
+  @ApiResponse({
+    status: 200,
+    type: KnowledgebaseDto,
+    description: '获取单条知识库',
+  })
   async getOne(@Param('id') id: string, @Req() req) {
     const userId = req.user.sub;
     return this.kbService.findById(id, userId);
@@ -121,9 +165,9 @@ export class KnowledgebaseController {
         enableLlmParser: false,
         prompt: '',
         embedding: '',
-        embeddingModel: 'text-embedding-ada-002'
-      }
-    }
+        embeddingModel: 'text-embedding-ada-002',
+      },
+    },
   })
   @ApiResponse({
     status: 201,
@@ -142,11 +186,14 @@ export class KnowledgebaseController {
         embedding: '',
         embeddingModel: 'text-embedding-ada-002',
         createdAt: '2024-05-08T12:00:00.000Z',
-        updatedAt: '2024-05-08T12:00:00.000Z'
-      }
-    }
+        updatedAt: '2024-05-08T12:00:00.000Z',
+      },
+    },
   })
-  async create(@Body() body: import('./knowledgebase-create.dto').KnowledgebaseCreateDto, @Req() req) {
+  async create(
+    @Body() body: import('./knowledgebase-create.dto').KnowledgebaseCreateDto,
+    @Req() req,
+  ) {
     const userId = req.user.sub;
     return this.kbService.create(body, userId);
   }
@@ -165,9 +212,9 @@ export class KnowledgebaseController {
         enableLlmParser: false,
         prompt: '',
         embedding: '',
-        embeddingModel: 'text-embedding-ada-002'
-      }
-    }
+        embeddingModel: 'text-embedding-ada-002',
+      },
+    },
   })
   @ApiResponse({
     status: 200,
@@ -186,11 +233,14 @@ export class KnowledgebaseController {
         embedding: '',
         embeddingModel: 'text-embedding-ada-002',
         createdAt: '2024-05-08T12:00:00.000Z',
-        updatedAt: '2024-05-08T12:00:00.000Z'
-      }
-    }
+        updatedAt: '2024-05-08T12:00:00.000Z',
+      },
+    },
   })
-  async update(@Body() body: import('./knowledgebase-update.dto').KnowledgebaseUpdateDto, @Req() req) {
+  async update(
+    @Body() body: import('./knowledgebase-update.dto').KnowledgebaseUpdateDto,
+    @Req() req,
+  ) {
     const userId = req.user.sub;
     return this.kbService.update(body.id, userId, body);
   }

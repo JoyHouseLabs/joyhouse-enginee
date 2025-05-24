@@ -1,5 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsOptional, IsBoolean, IsNumber, IsEnum, IsObject } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  IsBoolean,
+  IsNumber,
+  IsEnum,
+  IsObject,
+} from 'class-validator';
 import { RewardType } from './reward.entity';
 
 export class RewardDto {
@@ -113,4 +120,4 @@ export class RewardListResponseDto {
 
   @ApiProperty({ description: '每页数量' })
   limit: number;
-} 
+}

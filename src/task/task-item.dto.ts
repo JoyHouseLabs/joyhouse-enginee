@@ -1,5 +1,16 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsOptional, IsBoolean, IsInt, IsUUID, IsObject, IsEnum, IsArray, IsNumber, IsDate } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  IsBoolean,
+  IsInt,
+  IsUUID,
+  IsObject,
+  IsEnum,
+  IsArray,
+  IsNumber,
+  IsDate,
+} from 'class-validator';
 import { TaskType } from './task-query.dto';
 import { TaskItem } from './task-item.entity';
 import { TaskGroup } from './task-group.entity';
@@ -35,7 +46,11 @@ export class TaskItemDto {
   @ApiProperty({ description: '排序权重', default: 0 })
   weight: number;
 
-  @ApiProperty({ description: '前置任务ID列表', required: false, type: [String] })
+  @ApiProperty({
+    description: '前置任务ID列表',
+    required: false,
+    type: [String],
+  })
   prerequisites?: string[];
 
   @ApiProperty({ description: '奖励配置', required: false })
@@ -118,4 +133,4 @@ export class TaskItemQueryDto {
   @IsDate()
   @IsOptional()
   dueDate?: Date;
-} 
+}

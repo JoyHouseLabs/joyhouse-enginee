@@ -1,39 +1,47 @@
-import { IsString, IsNumber, IsEnum, IsOptional, Min, Length, IsBoolean } from 'class-validator'
-import { MeditationLevel } from './meditation.entity'
+import {
+  IsString,
+  IsNumber,
+  IsEnum,
+  IsOptional,
+  Min,
+  Length,
+  IsBoolean,
+} from 'class-validator';
+import { MeditationLevel } from './meditation.entity';
 
 export class UpdateMeditationDto {
   @IsString()
   @Length(1, 100)
   @IsOptional()
-  name?: string
+  name?: string;
 
   @IsString()
   @Length(1, 350)
   @IsOptional()
-  icon?: string
+  icon?: string;
 
   @IsString()
   @IsOptional()
-  description?: string
+  description?: string;
 
   @IsString()
   @IsOptional()
-  voice?: string
+  voice?: string;
 
   @IsNumber()
   @Min(1)
   @IsOptional()
-  minutes?: number
+  minutes?: number;
 
   @IsEnum(MeditationLevel)
   @IsOptional()
-  level?: MeditationLevel
+  level?: MeditationLevel;
 
   @IsString()
   @IsOptional()
-  userId?: string
+  userId?: string;
 
   @IsBoolean()
   @IsOptional()
-  loop?: boolean
-} 
+  loop?: boolean;
+}

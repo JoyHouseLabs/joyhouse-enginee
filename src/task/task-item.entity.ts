@@ -1,4 +1,12 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+  ManyToOne,
+  JoinColumn,
+} from 'typeorm';
 import { TaskGroup } from './task-group.entity';
 import { TaskType } from './task-query.dto';
 import { Reward } from '../reward/reward.entity';
@@ -26,7 +34,7 @@ export class TaskItem {
 
   @Column({
     type: 'varchar',
-    default: TaskType.CUSTOM
+    default: TaskType.CUSTOM,
   })
   type: TaskType;
 
@@ -36,14 +44,14 @@ export class TaskItem {
   @Column({
     type: 'boolean',
     default: true,
-    comment: '是否启用'
+    comment: '是否启用',
   })
   isActive: boolean;
 
   @Column({
     type: 'int',
     default: 0,
-    comment: '排序权重，数字越大越靠前'
+    comment: '排序权重，数字越大越靠前',
   })
   weight: number;
 
@@ -54,7 +62,7 @@ export class TaskItem {
     type: 'varchar',
     length: 4096,
     nullable: true,
-    comment: '奖励配置（JSON格式）'
+    comment: '奖励配置（JSON格式）',
   })
   rewards: string | null;
 
@@ -73,4 +81,4 @@ export class TaskItem {
 
   @UpdateDateColumn()
   updatedAt: Date;
-} 
+}

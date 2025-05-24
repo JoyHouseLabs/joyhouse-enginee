@@ -1,4 +1,14 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Query, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Delete,
+  Body,
+  Param,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { UserService } from './user.service';
 import { AuthService } from '../auth/auth.service';
@@ -10,7 +20,12 @@ import { JwtAuthGuard } from './jwt-auth.guard';
 import { RolesGuard } from '../role/roles.guard';
 import { Roles } from '../role/roles.decorator';
 import { MoreThan } from 'typeorm';
-import { UserDto, UpdateUserDto, UserQueryDto, UserListResponseDto } from './user.dto';
+import {
+  UserDto,
+  UpdateUserDto,
+  UserQueryDto,
+  UserListResponseDto,
+} from './user.dto';
 import { RoleType } from '../role/role.entity';
 
 @ApiTags('管理员')
@@ -108,4 +123,4 @@ export class AdminController {
       jailInfo: activeJail,
     };
   }
-} 
+}

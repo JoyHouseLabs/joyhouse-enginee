@@ -45,20 +45,22 @@ function validateCrontabPart(part: string, min: number, max: number): boolean {
 
   // 处理逗号分隔的列表
   if (part.includes(',')) {
-    return part.split(',').every(p => validateCrontabPart(p.trim(), min, max));
+    return part
+      .split(',')
+      .every((p) => validateCrontabPart(p.trim(), min, max));
   }
 
   // 处理范围
   if (part.includes('-')) {
-    const [start, end] = part.split('-').map(p => parseInt(p.trim()));
-    return !isNaN(start) && !isNaN(end) && 
-           start >= min && end <= max && 
-           start <= end;
+    const [start, end] = part.split('-').map((p) => parseInt(p.trim()));
+    return (
+      !isNaN(start) && !isNaN(end) && start >= min && end <= max && start <= end
+    );
   }
 
   // 处理步长
   if (part.includes('/')) {
-    const [value, step] = part.split('/').map(p => p.trim());
+    const [value, step] = part.split('/').map((p) => p.trim());
     if (value === '*') {
       const stepNum = parseInt(step);
       return !isNaN(stepNum) && stepNum > 0;
@@ -85,4 +87,4 @@ export function validateTaskParams(type: string, params: any): void {
       throw new BadRequestException('Invalid crontab expression');
     }
   }
-} 
+}

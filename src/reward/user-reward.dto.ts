@@ -11,10 +11,10 @@ export class UserRewardDto {
   @ApiProperty({ description: '奖励ID' })
   reward_id: string;
 
-  @ApiProperty({ 
+  @ApiProperty({
     description: '奖励类型',
     enum: RewardType,
-    example: RewardType.POINTS
+    example: RewardType.POINTS,
   })
   type: RewardType;
 
@@ -27,9 +27,9 @@ export class UserRewardDto {
   @ApiProperty({ description: '关联的任务ID', required: false })
   task_id?: string;
 
-  @ApiProperty({ 
+  @ApiProperty({
     description: '额外参数（JSON格式）',
-    required: false
+    required: false,
   })
   params?: Record<string, any>;
 
@@ -60,10 +60,10 @@ export class CreateUserRewardDto {
   @ApiProperty({ description: '奖励ID' })
   reward_id: string;
 
-  @ApiProperty({ 
+  @ApiProperty({
     description: '奖励类型',
     enum: RewardType,
-    example: RewardType.POINTS
+    example: RewardType.POINTS,
   })
   type: RewardType;
 
@@ -76,9 +76,9 @@ export class CreateUserRewardDto {
   @ApiProperty({ description: '关联的任务ID', required: false })
   task_id?: string;
 
-  @ApiProperty({ 
+  @ApiProperty({
     description: '额外参数（JSON格式）',
-    required: false
+    required: false,
   })
   params?: Record<string, any>;
 }
@@ -95,4 +95,4 @@ export class UserRewardQueryDto {
 
   @ApiProperty({ description: '关联的任务ID', required: false })
   task_id?: string;
-} 
+}

@@ -20,13 +20,13 @@ export class NoteService {
   }
 
   async findAll(
-    userId: string, 
-    page = 1, 
-    pageSize = 10, 
+    userId: string,
+    page = 1,
+    pageSize = 10,
     title?: string,
     content?: string,
     type?: NoteType,
-    isPublic?: boolean
+    isPublic?: boolean,
   ): Promise<{ data: Note[]; total: number }> {
     const qb = this.noteRepo.createQueryBuilder('note');
 
@@ -67,7 +67,11 @@ export class NoteService {
     return this.noteRepo.save(entity);
   }
 
-  async update(id: string, userId: string, patch: Partial<Note>): Promise<Note | undefined> {
+  async update(
+    id: string,
+    userId: string,
+    patch: Partial<Note>,
+  ): Promise<Note | undefined> {
     const note = await this.noteRepo.findOneBy({ id, userId });
     if (!note) return undefined;
     Object.assign(note, patch, { updatedAt: new Date() });

@@ -1,7 +1,28 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseGuards,
+  Query,
+} from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { WorkflowService } from './workflow.service';
-import { CreateWorkflowDto, UpdateWorkflowDto, ExecuteWorkflowDto, ContinueExecutionDto, ApprovalDto } from './dto/workflow.dto';
+import {
+  CreateWorkflowDto,
+  UpdateWorkflowDto,
+  ExecuteWorkflowDto,
+  ContinueExecutionDto,
+  ApprovalDto,
+} from './dto/workflow.dto';
 import { Workflow } from './entities/workflow.entity';
 import { WorkflowExecution } from './entities/workflow-execution.entity';
 import { WorkflowExecutionStep } from './entities/workflow-execution-step.entity';
@@ -19,7 +40,10 @@ export class WorkflowController {
   @Post()
   @ApiOperation({ summary: '创建工作流' })
   @ApiResponse({ type: Workflow })
-  create(@Body() createWorkflowDto: CreateWorkflowDto, @UserDecorator() user: User) {
+  create(
+    @Body() createWorkflowDto: CreateWorkflowDto,
+    @UserDecorator() user: User,
+  ) {
     return this.workflowService.create(createWorkflowDto, user);
   }
 
@@ -115,14 +139,20 @@ export class WorkflowController {
   @Get('executions/:executionId')
   @ApiOperation({ summary: '获取指定执行记录' })
   @ApiResponse({ type: WorkflowExecution })
-  getExecution(@Param('executionId') executionId: string, @UserDecorator() user: User) {
+  getExecution(
+    @Param('executionId') executionId: string,
+    @UserDecorator() user: User,
+  ) {
     return this.workflowService.getExecution(executionId, user);
   }
 
   @Get('executions/:executionId/steps')
   @ApiOperation({ summary: '获取执行步骤' })
   @ApiResponse({ type: [WorkflowExecutionStep] })
-  getExecutionSteps(@Param('executionId') executionId: string, @UserDecorator() user: User) {
+  getExecutionSteps(
+    @Param('executionId') executionId: string,
+    @UserDecorator() user: User,
+  ) {
     return this.workflowService.getExecutionSteps(executionId, user);
   }
 
@@ -134,7 +164,11 @@ export class WorkflowController {
     @Body() continueDto: ContinueExecutionDto,
     @UserDecorator() user: User,
   ) {
-    return this.workflowService.continueExecution(executionId, continueDto, user);
+    return this.workflowService.continueExecution(
+      executionId,
+      continueDto,
+      user,
+    );
   }
 
   @Post('executions/:executionId/approve')
@@ -151,7 +185,10 @@ export class WorkflowController {
   @Post('executions/:executionId/cancel')
   @ApiOperation({ summary: '取消执行' })
   @ApiResponse({ type: WorkflowExecution })
-  cancelExecution(@Param('executionId') executionId: string, @UserDecorator() user: User) {
+  cancelExecution(
+    @Param('executionId') executionId: string,
+    @UserDecorator() user: User,
+  ) {
     return this.workflowService.cancelExecution(executionId, user);
   }
-} 
+}

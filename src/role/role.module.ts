@@ -9,7 +9,10 @@ import { RoleController } from './role.controller';
 import { OperationLogModule } from '../audit/operation-log.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Role, UserRole, Permission]), OperationLogModule],
+  imports: [
+    TypeOrmModule.forFeature([Role, UserRole, Permission]),
+    OperationLogModule,
+  ],
   controllers: [RoleController],
   providers: [RoleService, RoleGuard],
   exports: [RoleService, RoleGuard],

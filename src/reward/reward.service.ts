@@ -3,7 +3,12 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Like } from 'typeorm';
 import { Reward } from './reward.entity';
 import { UserReward } from './user-reward.entity';
-import { CreateRewardDto, UpdateRewardDto, RewardQueryDto, RewardDto } from './reward.dto';
+import {
+  CreateRewardDto,
+  UpdateRewardDto,
+  RewardQueryDto,
+  RewardDto,
+} from './reward.dto';
 import { CreateUserRewardDto, UserRewardDto } from './user-reward.dto';
 
 @Injectable()
@@ -69,10 +74,15 @@ export class RewardService {
     return this.toRewardDto(saved);
   }
 
-  async findAll(query: RewardQueryDto): Promise<{ list: RewardDto[]; total: number; page: number; limit: number }> {
+  async findAll(query: RewardQueryDto): Promise<{
+    list: RewardDto[];
+    total: number;
+    page: number;
+    limit: number;
+  }> {
     const page = parseInt(query.page || '1', 10);
     const limit = parseInt(query.limit || '20', 10);
-    
+
     if (isNaN(page) || page < 1 || isNaN(limit) || limit < 1) {
       throw new Error('Invalid page or limit parameters');
     }
@@ -96,7 +106,7 @@ export class RewardService {
     });
 
     return {
-      list: rewards.map(reward => this.toRewardDto(reward)),
+      list: rewards.map((reward) => this.toRewardDto(reward)),
       total,
       page,
       limit,
@@ -138,7 +148,9 @@ export class RewardService {
 
   async grantReward(dto: CreateUserRewardDto): Promise<UserRewardDto> {
     // 验证奖励是否存在且启用
-    const reward = await this.rewardRepo.findOne({ where: { id: dto.reward_id } });
+    const reward = await this.rewardRepo.findOne({
+      where: { id: dto.reward_id },
+    });
     if (!reward) {
       throw new Error('Reward not found');
     }
@@ -163,10 +175,18 @@ export class RewardService {
     return this.toUserRewardDto(saved);
   }
 
-  async getUserRewards(userId: string, query: { page?: string; limit?: string; type?: string; task_id?: string }): Promise<{ list: UserRewardDto[]; total: number; page: number; limit: number }> {
+  async getUserRewards(
+    userId: string,
+    query: { page?: string; limit?: string; type?: string; task_id?: string },
+  ): Promise<{
+    list: UserRewardDto[];
+    total: number;
+    page: number;
+    limit: number;
+  }> {
     const page = parseInt(query.page || '1', 10);
     const limit = parseInt(query.limit || '20', 10);
-    
+
     if (isNaN(page) || page < 1 || isNaN(limit) || limit < 1) {
       throw new Error('Invalid page or limit parameters');
     }
@@ -188,10 +208,10 @@ export class RewardService {
     });
 
     return {
-      list: userRewards.map(userReward => this.toUserRewardDto(userReward)),
+      list: userRewards.map((userReward) => this.toUserRewardDto(userReward)),
       total,
       page,
       limit,
     };
   }
-} 
+}

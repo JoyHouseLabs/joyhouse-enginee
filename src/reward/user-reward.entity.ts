@@ -18,7 +18,7 @@ export class UserReward {
 
   @Column({
     type: 'varchar',
-    default: RewardType.POINTS
+    default: RewardType.POINTS,
   })
   type: RewardType;
 
@@ -44,4 +44,4 @@ export class UserReward {
   @ManyToOne(() => Reward)
   @JoinColumn({ name: 'reward_id' })
   reward: Reward;
-} 
+}

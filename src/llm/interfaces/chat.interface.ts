@@ -22,4 +22,4 @@ export interface ChatResponse {
     completionTokens: number;
     totalTokens: number;
   };
-} 
+}

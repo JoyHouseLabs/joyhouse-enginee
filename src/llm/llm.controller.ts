@@ -1,5 +1,20 @@
-import { Body, Controller, Get, Param, Post, Req, UseGuards, Query } from '@nestjs/common';
-import { ApiTags, ApiResponse, ApiBearerAuth, ApiBody, ApiParam } from '@nestjs/swagger';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Req,
+  UseGuards,
+  Query,
+} from '@nestjs/common';
+import {
+  ApiTags,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiBody,
+  ApiParam,
+} from '@nestjs/swagger';
 import { JwtAuthGuard } from '../user/jwt-auth.guard';
 import { LlmService } from './llm.service';
 import { LlmProvider } from './llm-provider.entity';
@@ -22,16 +37,23 @@ export class LlmController {
   async findAllProviders(@Req() req, @Query() query: LlmProviderQueryDto) {
     // 管理员可看全部
     const userId = req.user.isAdmin ? undefined : req.user.sub;
-    const result = await this.llmService.findProvidersPaged(userId, query.page ?? 1, query.limit ?? 20, query.name);
-    
+    const result = await this.llmService.findProvidersPaged(
+      userId,
+      query.page ?? 1,
+      query.limit ?? 20,
+      query.name,
+    );
+
     // 为每个 provider 添加模型数量
     const providersWithModelCount = await Promise.all(
       result.list.map(async (provider) => {
-        const modelCount = await this.llmService.countModelsByProvider(provider.id);
+        const modelCount = await this.llmService.countModelsByProvider(
+          provider.id,
+        );
         return { ...provider, modelCount };
-      })
+      }),
     );
-    
+
     return { ...result, list: providersWithModelCount };
   }
 
@@ -53,12 +75,18 @@ export class LlmController {
   @ApiBody({ type: LlmProviderUpdateDto })
   updateProvider(@Req() req, @Body() dto: LlmProviderUpdateDto) {
     const { id, ...rest } = dto;
-    return this.llmService.updateProvider(id, { ...rest, user_id: req.user.sub });
+    return this.llmService.updateProvider(id, {
+      ...rest,
+      user_id: req.user.sub,
+    });
   }
 
   @Post('provider/delete')
   @ApiResponse({ status: 200, description: '删除 provider，返回是否成功' })
-  async deleteProvider(@Body() body: { id: string }, @Req() req): Promise<{ success: boolean }> {
+  async deleteProvider(
+    @Body() body: { id: string },
+    @Req() req,
+  ): Promise<{ success: boolean }> {
     const userId = req.user.sub;
     const result = await this.llmService.deleteProvider(body.id, userId);
     return { success: !!result.affected };
@@ -76,7 +104,13 @@ export class LlmController {
     // 管理员可看全部
     const userId = req.user.isAdmin ? undefined : req.user.sub;
     // 支持通过provider_id筛选模型
-    return this.llmService.findModelsPaged(userId, query.page ?? 1, query.limit ?? 20, query.name, query.provider);
+    return this.llmService.findModelsPaged(
+      userId,
+      query.page ?? 1,
+      query.limit ?? 20,
+      query.name,
+      query.provider,
+    );
   }
 
   @Get('model/:id')
@@ -91,7 +125,11 @@ export class LlmController {
   createModel(@Req() req, @Body() dto: LlmModelCreateDto) {
     // 将 providerId 传递给 service，service 负责查找并赋值
     const { provider, ...rest } = dto;
-    return this.llmService.createModel({ ...rest, providerId: provider, user_id: req.user.sub });
+    return this.llmService.createModel({
+      ...rest,
+      providerId: provider,
+      user_id: req.user.sub,
+    });
   }
 
   @Post('model/update')
@@ -99,22 +137,42 @@ export class LlmController {
   @ApiBody({ type: LlmModelUpdateDto })
   updateModel(@Req() req, @Body() dto: LlmModelUpdateDto) {
     const { id, provider, ...rest } = dto;
-    return this.llmService.updateModel(id, { ...rest, providerId: provider, user_id: req.user.sub });
+    return this.llmService.updateModel(id, {
+      ...rest,
+      providerId: provider,
+      user_id: req.user.sub,
+    });
   }
 
   @Post('model/delete')
-  @ApiBody({ schema: { properties: { id: { type: 'string', description: '要删除的模型 ID' } }, required: ['id'] } })
+  @ApiBody({
+    schema: {
+      properties: { id: { type: 'string', description: '要删除的模型 ID' } },
+      required: ['id'],
+    },
+  })
   @ApiResponse({ status: 200, description: '删除模型，返回是否成功' })
-  async deleteModel(@Body() body: { id: string }, @Req() req): Promise<{ success: boolean }> {
+  async deleteModel(
+    @Body() body: { id: string },
+    @Req() req,
+  ): Promise<{ success: boolean }> {
     const userId = req.user.sub;
     const result = await this.llmService.deleteModel(body.id, userId);
     return { success: !!result.affected };
   }
 
   @Post('model/set-default')
-  @ApiBody({ schema: { properties: { id: { type: 'string', description: '要设为默认的模型ID' } }, required: ['id'] } })
+  @ApiBody({
+    schema: {
+      properties: { id: { type: 'string', description: '要设为默认的模型ID' } },
+      required: ['id'],
+    },
+  })
   @ApiResponse({ status: 200, description: '设置默认模型，返回是否成功' })
-  async setDefaultModel(@Req() req, @Body() body: { id: string }): Promise<{ success: boolean }> {
+  async setDefaultModel(
+    @Req() req,
+    @Body() body: { id: string },
+  ): Promise<{ success: boolean }> {
     const userId = req.user.sub;
     const result = await this.llmService.setDefaultModel(body.id, userId);
     return { success: result };

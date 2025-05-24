@@ -6,4 +6,4 @@ export class ChatRequestDto {
   @IsString()
   @IsNotEmpty()
   message: string;
-} 
+}

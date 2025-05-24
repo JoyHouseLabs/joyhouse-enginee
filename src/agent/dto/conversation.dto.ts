@@ -32,4 +32,4 @@ export class UpdateMessageDto {
   @ApiProperty()
   @IsString()
   content: string;
-} 
+}

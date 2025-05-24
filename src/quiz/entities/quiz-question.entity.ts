@@ -1,11 +1,19 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, OneToMany } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+  ManyToOne,
+  OneToMany,
+} from 'typeorm';
 import { Quiz } from './quiz.entity';
 import { QuizOption } from './quiz-option.entity';
 
 export enum QuestionType {
   SINGLE_CHOICE = 'single_choice',
   MULTIPLE_CHOICE = 'multiple_choice',
-  ESSAY = 'essay'
+  ESSAY = 'essay',
 }
 
 @Entity('quiz_question')
@@ -18,7 +26,7 @@ export class QuizQuestion {
 
   @Column({
     type: 'varchar',
-    default: QuestionType.SINGLE_CHOICE
+    default: QuestionType.SINGLE_CHOICE,
   })
   type: QuestionType;
 
@@ -31,10 +39,10 @@ export class QuizQuestion {
   @Column({ type: 'text', nullable: true })
   referenceAnswer?: string;
 
-  @ManyToOne(() => Quiz, quiz => quiz.questions)
+  @ManyToOne(() => Quiz, (quiz) => quiz.questions)
   quiz: Quiz;
 
-  @OneToMany(() => QuizOption, option => option.question)
+  @OneToMany(() => QuizOption, (option) => option.question)
   options: QuizOption[];
 
   @CreateDateColumn()
@@ -42,4 +50,4 @@ export class QuizQuestion {
 
   @UpdateDateColumn()
   updatedAt: Date;
-} 
+}

@@ -36,12 +36,16 @@ export class LlmProvider {
   createdAt: Date;
 
   @ApiProperty()
-  @Column({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP', onUpdate: 'CURRENT_TIMESTAMP' })
+  @Column({
+    type: 'datetime',
+    default: () => 'CURRENT_TIMESTAMP',
+    onUpdate: 'CURRENT_TIMESTAMP',
+  })
   updatedAt: Date;
 
   @Column()
   user_id: string;
 
-  @OneToMany(() => LlmModel, model => model.provider)
+  @OneToMany(() => LlmModel, (model) => model.provider)
   models: LlmModel[];
 }

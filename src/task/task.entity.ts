@@ -21,7 +21,7 @@ export class Task {
 
   @Column({
     type: 'varchar',
-    default: TaskStatus.PENDING
+    default: TaskStatus.PENDING,
   })
   status: TaskStatus;
 
@@ -30,7 +30,7 @@ export class Task {
 
   @Column({
     type: 'varchar',
-    default: TaskType.CUSTOM
+    default: TaskType.CUSTOM,
   })
   type: TaskType;
 

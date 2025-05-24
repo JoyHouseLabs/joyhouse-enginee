@@ -1,4 +1,12 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, OneToMany } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+  ManyToOne,
+  OneToMany,
+} from 'typeorm';
 import { User } from '../../user/user.entity';
 import { Agent } from './agent.entity';
 import { ConversationHistory } from './conversation-history.entity';
@@ -14,10 +22,10 @@ export class Conversation {
   @ManyToOne(() => User)
   user: User;
 
-  @ManyToOne(() => Agent, agent => agent.conversations)
+  @ManyToOne(() => Agent, (agent) => agent.conversations)
   agent: Agent;
 
-  @OneToMany(() => ConversationHistory, history => history.conversation)
+  @OneToMany(() => ConversationHistory, (history) => history.conversation)
   history: ConversationHistory[];
 
   @CreateDateColumn()
@@ -25,4 +33,4 @@ export class Conversation {
 
   @UpdateDateColumn()
   updatedAt: Date;
-} 
+}

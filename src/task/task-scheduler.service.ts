@@ -1,4 +1,9 @@
-import { Injectable, OnModuleInit, OnModuleDestroy, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  OnModuleInit,
+  OnModuleDestroy,
+  Logger,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Cron, SchedulerRegistry } from '@nestjs/schedule';
@@ -60,7 +65,7 @@ export class TaskSchedulerService implements OnModuleInit, OnModuleDestroy {
       },
       null,
       false,
-      this.timezone
+      this.timezone,
     );
 
     this.systemMonitorJob.start();
@@ -73,21 +78,23 @@ export class TaskSchedulerService implements OnModuleInit, OnModuleDestroy {
       const totalMem = os.totalmem();
       const freeMem = os.freemem();
       const usedMem = totalMem - freeMem;
-      const memoryUsage = (usedMem / totalMem * 100).toFixed(2);
+      const memoryUsage = ((usedMem / totalMem) * 100).toFixed(2);
 
       // 获取 CPU 使用情况
       const cpus = os.cpus();
-      const cpuUsage = cpus.map(cpu => {
+      const cpuUsage = cpus.map((cpu) => {
         const total = Object.values(cpu.times).reduce((acc, tv) => acc + tv, 0);
         const idle = cpu.times.idle;
-        return ((total - idle) / total * 100).toFixed(2);
+        return (((total - idle) / total) * 100).toFixed(2);
       });
 
       // 获取系统负载
       const loadAvg = os.loadavg();
 
       this.logger.log('\n=== System Metrics ===');
-      this.logger.log(`Memory Usage: ${memoryUsage}% (${this.formatBytes(usedMem)} / ${this.formatBytes(totalMem)})`);
+      this.logger.log(
+        `Memory Usage: ${memoryUsage}% (${this.formatBytes(usedMem)} / ${this.formatBytes(totalMem)})`,
+      );
       this.logger.log(`CPU Usage: ${cpuUsage.join('%, ')}%`);
       this.logger.log(`System Load: ${loadAvg.join(', ')}`);
       this.logger.log('=====================\n');
@@ -113,8 +120,8 @@ export class TaskSchedulerService implements OnModuleInit, OnModuleDestroy {
     const tasks = await this.taskRepo.find({
       where: {
         type: TaskType.CRON,
-        status: TaskStatus.PENDING
-      }
+        status: TaskStatus.PENDING,
+      },
     });
 
     this.logger.log(`Found ${tasks.length} pending cron tasks`);
@@ -128,7 +135,8 @@ export class TaskSchedulerService implements OnModuleInit, OnModuleDestroy {
       return;
     }
 
-    const params = typeof task.params === 'string' ? JSON.parse(task.params) : task.params;
+    const params =
+      typeof task.params === 'string' ? JSON.parse(task.params) : task.params;
     if (!params.crontab) {
       this.logger.warn(`Task ${task.id} has no crontab expression`);
       return;
@@ -146,24 +154,28 @@ export class TaskSchedulerService implements OnModuleInit, OnModuleDestroy {
     const job = new CronJob(
       params.crontab,
       () => {
-        this.executeTask(task).catch(error => {
+        this.executeTask(task).catch((error) => {
           this.logger.error(`Failed to execute task ${task.id}:`, error);
         });
       },
       null,
       false, // 不立即启动
-      this.timezone // 指定时区
+      this.timezone, // 指定时区
     );
 
     this.schedulerRegistry.addCronJob(task.id, job);
     job.start();
 
-    this.logger.log(`Scheduled task ${task.id} with crontab: ${params.crontab}`);
-    
+    this.logger.log(
+      `Scheduled task ${task.id} with crontab: ${params.crontab}`,
+    );
+
     // 在 macOS 上，记录下一次执行时间
     if (this.platform === 'darwin') {
       const nextDate = job.nextDate();
-      this.logger.log(`Next execution for task ${task.id} will be at: ${nextDate.toLocaleString()}`);
+      this.logger.log(
+        `Next execution for task ${task.id} will be at: ${nextDate.toLocaleString()}`,
+      );
     }
   }
 
@@ -187,7 +199,7 @@ export class TaskSchedulerService implements OnModuleInit, OnModuleDestroy {
     try {
       // 更新任务状态为进行中
       await this.taskRepo.update(task.id, {
-        status: TaskStatus.IN_PROGRESS
+        status: TaskStatus.IN_PROGRESS,
       });
 
       // TODO: 执行具体的任务逻辑
@@ -195,7 +207,7 @@ export class TaskSchedulerService implements OnModuleInit, OnModuleDestroy {
 
       // 更新任务状态为已完成
       await this.taskRepo.update(task.id, {
-        status: TaskStatus.COMPLETED
+        status: TaskStatus.COMPLETED,
       });
 
       const duration = Date.now() - startTime;
@@ -204,8 +216,8 @@ export class TaskSchedulerService implements OnModuleInit, OnModuleDestroy {
       this.logger.error(`Failed to execute task ${task.id}:`, e);
       // 更新任务状态为已取消
       await this.taskRepo.update(task.id, {
-        status: TaskStatus.CANCELLED
+        status: TaskStatus.CANCELLED,
       });
     }
   }
-} 
+}

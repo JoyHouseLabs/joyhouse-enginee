@@ -1,10 +1,24 @@
-import { Controller, Get, Query, Post, Body, Param, Req, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Query,
+  Post,
+  Body,
+  Param,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiTags, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Like, MoreThan } from 'typeorm';
 import { User } from '../../user/user.entity';
 import { UserDto } from '../../user/user.dto';
-import { CrmUserQueryDto, JailUserDto, JailUserQueryDto, UnjailUserDto } from './user-query.dto';
+import {
+  CrmUserQueryDto,
+  JailUserDto,
+  JailUserQueryDto,
+  UnjailUserDto,
+} from './user-query.dto';
 import { JailUser } from '../../user/jail-user.entity';
 import { JwtAuthGuard } from '../../user/jwt-auth.guard';
 
@@ -25,7 +39,7 @@ export class CrmUserController {
   async findAll(@Query() query: CrmUserQueryDto) {
     const page = parseInt(query.page || '1', 10);
     const limit = parseInt(query.limit || '20', 10);
-    
+
     if (isNaN(page) || page < 1 || isNaN(limit) || limit < 1) {
       throw new Error('Invalid page or limit parameters');
     }
@@ -51,7 +65,7 @@ export class CrmUserController {
   async findAllJailUsers(@Query() query: JailUserQueryDto) {
     const page = parseInt(query.page || '1', 10);
     const limit = parseInt(query.limit || '20', 10);
-    
+
     if (isNaN(page) || page < 1 || isNaN(limit) || limit < 1) {
       throw new Error('Invalid page or limit parameters');
     }
@@ -73,21 +87,23 @@ export class CrmUserController {
       take: limit,
       order: { createdAt: 'DESC' },
       relations: {
-        user: true
+        user: true,
       },
     });
 
     // Transform the response to include user information without sensitive data
-    const list = jailUsers.map(jailUser => ({
+    const list = jailUsers.map((jailUser) => ({
       ...jailUser,
-      user: jailUser.user ? {
-        id: jailUser.user.id,
-        username: jailUser.user.username,
-        nickname: jailUser.user.nickname,
-        avatar: jailUser.user.avatar,
-        createdAt: jailUser.user.createdAt,
-        updatedAt: jailUser.user.updatedAt
-      } : null
+      user: jailUser.user
+        ? {
+            id: jailUser.user.id,
+            username: jailUser.user.username,
+            nickname: jailUser.user.nickname,
+            avatar: jailUser.user.avatar,
+            createdAt: jailUser.user.createdAt,
+            updatedAt: jailUser.user.updatedAt,
+          }
+        : null,
     }));
 
     return { list, total, page, limit };
@@ -141,7 +157,7 @@ export class CrmUserController {
     jailUser.operation = 'unjail';
     jailUser.operator = operatorId;
     jailUser.reason = body.reason;
-    
+
     await this.jailUserRepo.save(jailUser);
     return { message: 'User has been unjailed', record: jailUser };
   }
@@ -159,23 +175,27 @@ export class CrmUserController {
       },
       order: { createdAt: 'DESC' },
       relations: {
-        user: true
-      }
+        user: true,
+      },
     });
 
     return {
       isJailed: !!activeJail,
-      jailInfo: activeJail ? {
-        ...activeJail,
-        user: activeJail.user ? {
-          id: activeJail.user.id,
-          username: activeJail.user.username,
-          nickname: activeJail.user.nickname,
-          avatar: activeJail.user.avatar,
-          createdAt: activeJail.user.createdAt,
-          updatedAt: activeJail.user.updatedAt
-        } : null
-      } : null
+      jailInfo: activeJail
+        ? {
+            ...activeJail,
+            user: activeJail.user
+              ? {
+                  id: activeJail.user.id,
+                  username: activeJail.user.username,
+                  nickname: activeJail.user.nickname,
+                  avatar: activeJail.user.avatar,
+                  createdAt: activeJail.user.createdAt,
+                  updatedAt: activeJail.user.updatedAt,
+                }
+              : null,
+          }
+        : null,
     };
   }
 }

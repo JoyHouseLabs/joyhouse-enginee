@@ -5,7 +5,7 @@ export enum TaskStatus {
   PENDING = 'pending',
   IN_PROGRESS = 'in_progress',
   COMPLETED = 'completed',
-  CANCELLED = 'cancelled'
+  CANCELLED = 'cancelled',
 }
 
 export enum TaskType {
@@ -13,7 +13,7 @@ export enum TaskType {
   WEEKLY = 'weekly',
   MONTHLY = 'monthly',
   CUSTOM = 'custom',
-  CRON = 'cron'
+  CRON = 'cron',
 }
 
 export class TaskQueryDto {
@@ -32,19 +32,19 @@ export class TaskQueryDto {
   @IsString()
   name?: string;
 
-  @ApiPropertyOptional({ 
+  @ApiPropertyOptional({
     description: '任务状态',
     enum: TaskStatus,
-    example: TaskStatus.PENDING
+    example: TaskStatus.PENDING,
   })
   @IsOptional()
   @IsEnum(TaskStatus)
   status?: TaskStatus;
 
-  @ApiPropertyOptional({ 
+  @ApiPropertyOptional({
     description: '任务类型',
     enum: TaskType,
-    example: TaskType.DAILY
+    example: TaskType.DAILY,
   })
   @IsOptional()
   @IsEnum(TaskType)

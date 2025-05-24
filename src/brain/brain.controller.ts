@@ -1,4 +1,12 @@
-import { Controller, Post, Body, Sse, MessageEvent, Req, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Sse,
+  MessageEvent,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import { BrainService } from './brain.service';
 import { JwtAuthGuard } from '../user/jwt-auth.guard';
 
@@ -15,7 +23,10 @@ export class BrainController {
 
   // 流式 SSE 调用
   @Sse('structure/stream')
-  streamStructureContent(@Req() req, @Body('content') content: string): AsyncIterable<MessageEvent> {
+  streamStructureContent(
+    @Req() req,
+    @Body('content') content: string,
+  ): AsyncIterable<MessageEvent> {
     return this.brainService.streamStructureContent(content, req.user.sub);
   }
-} 
+}

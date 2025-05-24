@@ -6,4 +6,4 @@ export class NoteDeleteDto {
   @IsString()
   @IsNotEmpty()
   id: string;
-} 
+}

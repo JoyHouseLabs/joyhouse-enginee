@@ -1,5 +1,14 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsEnum, IsOptional, IsObject, IsBoolean, IsUrl, IsArray, ValidateNested } from 'class-validator';
+import {
+  IsString,
+  IsEnum,
+  IsOptional,
+  IsObject,
+  IsBoolean,
+  IsUrl,
+  IsArray,
+  ValidateNested,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 import { ToolType, HttpMethod } from '../entities/tool.entity';
 
@@ -32,15 +41,18 @@ export class CreateToolDto {
   @IsOptional()
   description?: string;
 
-  @ApiProperty({ description: '工具调用提示词，用于帮助大模型理解何时使用此工具', required: false })
+  @ApiProperty({
+    description: '工具调用提示词，用于帮助大模型理解何时使用此工具',
+    required: false,
+  })
   @IsString()
   @IsOptional()
   prompt?: string;
 
-  @ApiProperty({ 
+  @ApiProperty({
     description: 'Few-shot 示例，用于帮助大模型理解工具的使用方式',
     type: [FewShotExampleDto],
-    required: false 
+    required: false,
   })
   @IsArray()
   @ValidateNested({ each: true })
@@ -103,4 +115,4 @@ export class CreateToolDto {
   isPublic?: boolean;
 }
 
-export class UpdateToolDto extends CreateToolDto {} 
+export class UpdateToolDto extends CreateToolDto {}

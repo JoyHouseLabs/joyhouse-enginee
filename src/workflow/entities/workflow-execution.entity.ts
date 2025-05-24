@@ -1,4 +1,12 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, OneToMany } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+  ManyToOne,
+  OneToMany,
+} from 'typeorm';
 import { User } from '../../user/user.entity';
 import { Workflow } from './workflow.entity';
 import { WorkflowExecutionStep } from './workflow-execution-step.entity';
@@ -11,7 +19,7 @@ export enum ExecutionStatus {
   WAITING_APPROVAL = 'waiting_approval',
   COMPLETED = 'completed',
   FAILED = 'failed',
-  CANCELLED = 'cancelled'
+  CANCELLED = 'cancelled',
 }
 
 @Entity('workflow_execution')
@@ -21,7 +29,7 @@ export class WorkflowExecution {
 
   @Column({
     type: 'text',
-    default: ExecutionStatus.PENDING
+    default: ExecutionStatus.PENDING,
   })
   status: ExecutionStatus;
 
@@ -52,13 +60,13 @@ export class WorkflowExecution {
   @Column({ type: 'json', nullable: true })
   triggerData?: any;
 
-  @ManyToOne(() => Workflow, workflow => workflow.executions)
+  @ManyToOne(() => Workflow, (workflow) => workflow.executions)
   workflow: Workflow;
 
   @ManyToOne(() => User)
   user: User;
 
-  @OneToMany(() => WorkflowExecutionStep, step => step.execution)
+  @OneToMany(() => WorkflowExecutionStep, (step) => step.execution)
   steps: WorkflowExecutionStep[];
 
   @CreateDateColumn()
@@ -66,4 +74,4 @@ export class WorkflowExecution {
 
   @UpdateDateColumn()
   updatedAt: Date;
-} 
+}

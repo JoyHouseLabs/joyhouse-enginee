@@ -1,5 +1,14 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsOptional, IsBoolean, IsArray, ValidateNested, IsEnum, IsInt, Min } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  IsBoolean,
+  IsArray,
+  ValidateNested,
+  IsEnum,
+  IsInt,
+  Min,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 import { QuestionType } from '../entities/quiz-question.entity';
 
@@ -71,4 +80,4 @@ export class UpdateQuizDto extends CreateQuizDto {
   @ApiProperty()
   @IsBoolean()
   isPublished: boolean;
-} 
+}

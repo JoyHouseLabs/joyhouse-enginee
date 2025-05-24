@@ -17,7 +17,12 @@ export class RelayService {
     return this.relayRepo.findOneBy({ id });
   }
 
-  async findAll(page = 1, pageSize = 10, name?: string, userId?: string): Promise<{ data: Relay[]; total: number }> {
+  async findAll(
+    page = 1,
+    pageSize = 10,
+    name?: string,
+    userId?: string,
+  ): Promise<{ data: Relay[]; total: number }> {
     const qb = this.relayRepo.createQueryBuilder('relay');
     if (userId) {
       qb.where('relay.userId = :userId', { userId });

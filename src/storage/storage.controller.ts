@@ -1,6 +1,22 @@
-import { Controller, Post, UploadedFile, UseInterceptors, Req, Body, Get, Delete, Param } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  UploadedFile,
+  UseInterceptors,
+  Req,
+  Body,
+  Get,
+  Delete,
+  Param,
+} from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiTags, ApiBearerAuth, ApiConsumes, ApiBody, ApiResponse } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiBearerAuth,
+  ApiConsumes,
+  ApiBody,
+  ApiResponse,
+} from '@nestjs/swagger';
 import { StorageService } from './storage.service';
 import { StorageUploadResponseDto } from './storage.dto';
 import * as fs from 'fs';
@@ -24,14 +40,14 @@ export class StorageController {
   @Post('dir/rename')
   @ApiBearerAuth()
   @ApiResponse({ status: 200, description: '目录重命名成功' })
-  async renameDir(@Body() body: { id: string, name: string }): Promise<void> {
+  async renameDir(@Body() body: { id: string; name: string }): Promise<void> {
     return this.storageService.renameDir(body.id, body.name);
   }
 
   @Post('file/rename')
   @ApiBearerAuth()
   @ApiResponse({ status: 200, description: '文件重命名成功' })
-  async renameFile(@Body() body: { id: string, name: string }): Promise<void> {
+  async renameFile(@Body() body: { id: string; name: string }): Promise<void> {
     return this.storageService.renameFile(body.id, body.name);
   }
 
@@ -74,10 +90,26 @@ export class StorageController {
   @UseGuards(JwtAuthGuard, RoleGuard)
   @ApiBearerAuth()
   @ApiConsumes('multipart/form-data')
-  @ApiBody({ schema: { type: 'object', required: ['file'], properties: { file: { type: 'string', format: 'binary' }, storage_dir_id: { type: 'string' } } } })
-  @ApiResponse({ status: 201, type: StorageUploadResponseDto, description: '上传成功' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      required: ['file'],
+      properties: {
+        file: { type: 'string', format: 'binary' },
+        storage_dir_id: { type: 'string' },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 201,
+    type: StorageUploadResponseDto,
+    description: '上传成功',
+  })
   @UseInterceptors(FileInterceptor('file'))
-  async uploadFile(@UploadedFile() file: Express.Multer.File, @Req() req): Promise<StorageUploadResponseDto> {
+  async uploadFile(
+    @UploadedFile() file: Express.Multer.File,
+    @Req() req,
+  ): Promise<StorageUploadResponseDto> {
     // 统一用 JoyhouseConfigService 获取配置
     const uploadDir = JoyhouseConfigService.loadConfig().uploadDir;
     const domain = JoyhouseConfigService.loadConfig().fileDomain;
@@ -88,7 +120,7 @@ export class StorageController {
     fs.writeFileSync(filepath, file.buffer);
     const url = `${domain}/${filepath}`.replace(/\\/g, '/');
     let storage_dir_id = req.body?.storage_dir_id || undefined;
-    if (!storage_dir_id || storage_dir_id == "home") storage_dir_id = '';
+    if (!storage_dir_id || storage_dir_id == 'home') storage_dir_id = '';
 
     const entity = await this.storageService.saveFile({
       filename,
@@ -113,9 +145,12 @@ export class StorageController {
   @Post('createDir')
   @ApiBearerAuth()
   @ApiResponse({ status: 201, type: StorageDir, description: '目录创建成功' })
-  async createDir(@Body() dto: CreateStorageDirDto, @Req() req): Promise<StorageDir> {
+  async createDir(
+    @Body() dto: CreateStorageDirDto,
+    @Req() req,
+  ): Promise<StorageDir> {
     // parent 字段默认为空字符串
-    if (!dto.parent || dto.parent == "home") dto.parent = '';
+    if (!dto.parent || dto.parent == 'home') dto.parent = '';
     dto.user_id = req.user.sub; // 自动注入当前登录用户id
     return this.storageService.createDir(dto);
   }

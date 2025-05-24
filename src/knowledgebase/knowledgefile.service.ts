@@ -15,8 +15,18 @@ export class KnowledgefileService {
     return this.kfRepo.findOneBy({ id, userId });
   }
 
-  async findAll(knowledgebaseId: string, userId: string, page = 1, pageSize = 10): Promise<{ data: Knowledgefile[]; total: number }> {
-    const qb = this.kfRepo.createQueryBuilder('kf').where('kf.knowledgebaseId = :knowledgebaseId AND kf.userId = :userId', { knowledgebaseId, userId });
+  async findAll(
+    knowledgebaseId: string,
+    userId: string,
+    page = 1,
+    pageSize = 10,
+  ): Promise<{ data: Knowledgefile[]; total: number }> {
+    const qb = this.kfRepo
+      .createQueryBuilder('kf')
+      .where('kf.knowledgebaseId = :knowledgebaseId AND kf.userId = :userId', {
+        knowledgebaseId,
+        userId,
+      });
     qb.orderBy('kf.createdAt', 'DESC')
       .skip((page - 1) * pageSize)
       .take(pageSize);
@@ -24,7 +34,11 @@ export class KnowledgefileService {
     return { data, total };
   }
 
-  async create(kf: Partial<Knowledgefile>, userId: string, knowledgebaseId: string): Promise<Knowledgefile> {
+  async create(
+    kf: Partial<Knowledgefile>,
+    userId: string,
+    knowledgebaseId: string,
+  ): Promise<Knowledgefile> {
     const entity = this.kfRepo.create({
       ...kf,
       id: ulid(),
@@ -37,7 +51,11 @@ export class KnowledgefileService {
     return this.kfRepo.save(entity);
   }
 
-  async update(id: string, userId: string, patch: Partial<Knowledgefile>): Promise<Knowledgefile | undefined> {
+  async update(
+    id: string,
+    userId: string,
+    patch: Partial<Knowledgefile>,
+  ): Promise<Knowledgefile | undefined> {
     const kf = await this.kfRepo.findOneBy({ id, userId });
     if (!kf) return undefined;
     Object.assign(kf, patch, { updatedAt: new Date() });

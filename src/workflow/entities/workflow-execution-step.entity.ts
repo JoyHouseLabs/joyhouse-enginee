@@ -1,4 +1,11 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+  ManyToOne,
+} from 'typeorm';
 import { WorkflowExecution } from './workflow-execution.entity';
 
 export enum StepStatus {
@@ -7,7 +14,7 @@ export enum StepStatus {
   COMPLETED = 'completed',
   FAILED = 'failed',
   SKIPPED = 'skipped',
-  WAITING = 'waiting'
+  WAITING = 'waiting',
 }
 
 @Entity('workflow_execution_step')
@@ -26,7 +33,7 @@ export class WorkflowExecutionStep {
 
   @Column({
     type: 'text',
-    default: StepStatus.PENDING
+    default: StepStatus.PENDING,
   })
   status: StepStatus;
 
@@ -51,7 +58,7 @@ export class WorkflowExecutionStep {
   @Column({ type: 'json', nullable: true })
   metadata?: Record<string, any>;
 
-  @ManyToOne(() => WorkflowExecution, execution => execution.steps)
+  @ManyToOne(() => WorkflowExecution, (execution) => execution.steps)
   execution: WorkflowExecution;
 
   @CreateDateColumn()
@@ -59,4 +66,4 @@ export class WorkflowExecutionStep {
 
   @UpdateDateColumn()
   updatedAt: Date;
-} 
+}

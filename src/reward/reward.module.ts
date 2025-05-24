@@ -8,12 +8,9 @@ import { RewardController } from './reward.controller';
 import { RoleModule } from '../role/role.module';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([Reward, UserReward]),
-    RoleModule,
-  ],
+  imports: [TypeOrmModule.forFeature([Reward, UserReward]), RoleModule],
   controllers: [RewardController],
   providers: [RewardService, UserRewardService],
-  exports: [RewardService, UserRewardService]
+  exports: [RewardService, UserRewardService],
 })
-export class RewardModule {} 
+export class RewardModule {}

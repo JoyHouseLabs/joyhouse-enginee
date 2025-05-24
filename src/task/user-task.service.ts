@@ -39,12 +39,15 @@ export class UserTaskService {
       dueDate: taskItemDto.dueDate || null,
       createdAt: taskItemDto.createdAt || new Date(),
       updatedAt: taskItemDto.updatedAt || new Date(),
-      taskGroup: taskItemDto.taskGroup
+      taskGroup: taskItemDto.taskGroup,
     });
     return taskItem;
   }
 
-  async createTaskFromTemplate(userId: string, template: TaskItemDto): Promise<Task> {
+  async createTaskFromTemplate(
+    userId: string,
+    template: TaskItemDto,
+  ): Promise<Task> {
     const taskItem = this.toTaskItem(template);
     const task = new Task();
     task.id = (await import('ulid')).ulid();
@@ -89,7 +92,7 @@ export class UserTaskService {
           dueDate: taskItem.dueDate || null,
           createdAt: taskItem.createdAt || new Date(),
           updatedAt: taskItem.updatedAt || new Date(),
-          taskGroup: group
+          taskGroup: group,
         });
         const task = await this.createTaskFromTemplate(userId, taskItemDto);
         tasks.push(task);
@@ -99,7 +102,11 @@ export class UserTaskService {
     return tasks;
   }
 
-  async updateTaskProgress(taskId: string, userId: string, progress: number): Promise<Task> {
+  async updateTaskProgress(
+    taskId: string,
+    userId: string,
+    progress: number,
+  ): Promise<Task> {
     const task = await this.taskRepository.findOne({
       where: { id: taskId, user_id: userId },
     });
@@ -125,8 +132,12 @@ export class UserTaskService {
     }
   }
 
-  async getUserTaskProgress(userId: string, taskGroupId?: string): Promise<Task[]> {
-    const query = this.taskRepository.createQueryBuilder('task')
+  async getUserTaskProgress(
+    userId: string,
+    taskGroupId?: string,
+  ): Promise<Task[]> {
+    const query = this.taskRepository
+      .createQueryBuilder('task')
       .where('task.user_id = :userId', { userId });
 
     if (taskGroupId) {
@@ -135,4 +146,4 @@ export class UserTaskService {
 
     return query.getMany();
   }
-} 
+}

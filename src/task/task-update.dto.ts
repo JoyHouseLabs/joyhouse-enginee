@@ -1,5 +1,15 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsString, IsOptional, IsEnum, IsObject, IsDateString, IsNumber, IsDate, IsUUID } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsString,
+  IsOptional,
+  IsEnum,
+  IsObject,
+  IsDateString,
+  IsNumber,
+  IsDate,
+  IsUUID,
+} from 'class-validator';
 import { TaskStatus, TaskType } from './task-query.dto';
 
 export class TaskUpdateDto {
@@ -23,11 +33,11 @@ export class TaskUpdateDto {
   @IsString()
   description?: string;
 
-  @ApiProperty({ 
-    description: '任务状态', 
+  @ApiProperty({
+    description: '任务状态',
     enum: TaskStatus,
     example: TaskStatus.PENDING,
-    required: false 
+    required: false,
   })
   @IsOptional()
   @IsEnum(TaskStatus)
@@ -38,20 +48,20 @@ export class TaskUpdateDto {
   @IsOptional()
   progress?: number;
 
-  @ApiProperty({ 
-    description: '任务类型', 
+  @ApiProperty({
+    description: '任务类型',
     enum: TaskType,
     example: TaskType.DAILY,
-    required: false 
+    required: false,
   })
   @IsOptional()
   @IsEnum(TaskType)
   type?: TaskType;
 
-  @ApiProperty({ 
+  @ApiProperty({
     description: '额外参数（JSON格式）',
     required: false,
-    example: { key: 'value' }
+    example: { key: 'value' },
   })
   @IsOptional()
   @IsObject()
@@ -67,18 +77,18 @@ export class TaskUpdateDto {
   @IsOptional()
   taskGroupId?: string;
 
-  @ApiProperty({ 
+  @ApiProperty({
     description: '任务截止时间',
     required: false,
-    example: '2024-01-01T23:59:59.000Z'
+    example: '2024-01-01T23:59:59.000Z',
   })
   @IsOptional()
   @IsDate()
   dueDate?: Date;
 
-  @ApiProperty({ 
+  @ApiProperty({
     description: '任务执行过程中的错误信息',
-    required: false
+    required: false,
   })
   @IsOptional()
   @IsString()

@@ -1,4 +1,11 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+  OneToMany,
+} from 'typeorm';
 import { QuizQuestion } from './quiz-question.entity';
 
 @Entity('quiz')
@@ -15,7 +22,7 @@ export class Quiz {
   @Column({ default: false })
   isPublished: boolean;
 
-  @OneToMany(() => QuizQuestion, question => question.quiz)
+  @OneToMany(() => QuizQuestion, (question) => question.quiz)
   questions: QuizQuestion[];
 
   @CreateDateColumn()
@@ -23,4 +30,4 @@ export class Quiz {
 
   @UpdateDateColumn()
   updatedAt: Date;
-} 
+}

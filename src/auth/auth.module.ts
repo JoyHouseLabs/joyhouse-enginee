@@ -23,10 +23,10 @@ import { UserModule } from '../user/user.module';
     }),
     WalletModule,
     StorageModule,
-    forwardRef(() => UserModule)
+    forwardRef(() => UserModule),
   ],
   providers: [AuthService, LocalStrategy, JwtStrategy],
   controllers: [AuthController],
   exports: [AuthService],
 })
-export class AuthModule {} 
+export class AuthModule {}

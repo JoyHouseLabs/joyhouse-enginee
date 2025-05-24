@@ -1,7 +1,28 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Query, UseGuards } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Delete,
+  Body,
+  Param,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { RewardService } from './reward.service';
-import { CreateRewardDto, UpdateRewardDto, RewardQueryDto, RewardDto, RewardListResponseDto } from './reward.dto';
+import {
+  CreateRewardDto,
+  UpdateRewardDto,
+  RewardQueryDto,
+  RewardDto,
+  RewardListResponseDto,
+} from './reward.dto';
 import { CreateUserRewardDto, UserRewardDto } from './user-reward.dto';
 import { JwtAuthGuard } from '../user/jwt-auth.guard';
 import { RoleGuard } from '../role/role.guard';
@@ -25,7 +46,10 @@ export class RewardController {
   @ApiBearerAuth()
   @ApiOperation({ summary: '更新奖励' })
   @ApiResponse({ status: 200, description: '成功更新奖励', type: RewardDto })
-  async update(@Param('id') id: string, @Body() updateDto: UpdateRewardDto): Promise<RewardDto> {
+  async update(
+    @Param('id') id: string,
+    @Body() updateDto: UpdateRewardDto,
+  ): Promise<RewardDto> {
     updateDto.id = id;
     return this.rewardService.update(updateDto);
   }
@@ -41,8 +65,14 @@ export class RewardController {
   @Get()
   @ApiBearerAuth()
   @ApiOperation({ summary: '获取奖励列表' })
-  @ApiResponse({ status: 200, description: '返回奖励列表', type: RewardListResponseDto })
-  async findAll(@Query() query: RewardQueryDto): Promise<RewardListResponseDto> {
+  @ApiResponse({
+    status: 200,
+    description: '返回奖励列表',
+    type: RewardListResponseDto,
+  })
+  async findAll(
+    @Query() query: RewardQueryDto,
+  ): Promise<RewardListResponseDto> {
     return this.rewardService.findAll(query);
   }
 
@@ -68,8 +98,9 @@ export class RewardController {
   @ApiResponse({ status: 200, type: [UserRewardDto] })
   async getUserRewards(
     @Param('userId') userId: string,
-    @Query() query: { page?: string; limit?: string; type?: string; task_id?: string },
+    @Query()
+    query: { page?: string; limit?: string; type?: string; task_id?: string },
   ) {
     return this.rewardService.getUserRewards(userId, query);
   }
-} 
+}

@@ -1,5 +1,20 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Sse } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseGuards,
+  Sse,
+} from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { ToolService } from './tool.service';
 import { CreateToolDto, UpdateToolDto } from './dto/tool.dto';
 import { Tool, ToolType } from './entities/tool.entity';
@@ -90,18 +105,18 @@ export class ToolController {
     @UserDecorator() user: User,
   ): Promise<Observable<MessageEvent>> {
     const tool = await this.toolService.findOne(id, user);
-    
+
     if (tool.type === ToolType.HTTP) {
       throw new Error('HTTP tools do not support streaming');
     }
 
     const stream = await this.toolService.execute(id, params, user);
     return stream.pipe(
-      map(data => ({
+      map((data) => ({
         data: JSON.stringify(data),
         type: 'message',
         id: Date.now().toString(),
       })),
     );
   }
-} 
+}
