@@ -41,30 +41,27 @@ import { JoyhouseLoggerService } from './common/logger.service';
 import { BrainModule } from './brain/brain.module';
 import { MeditationModule } from './meditation/meditation.module';
 import { OperationLog } from './audit/operation-log.entity';
-import { ConfigModule } from './config/config.module';
-import { ConfigService } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthModule } from './auth/auth.module';
 import { QuizModule } from './quiz/quiz.module';
+import { AgentModule } from './agent/agent.module';
+import { ToolModule } from './tool/tool.module';
+import { WorkflowModule } from './workflow/workflow.module';
 
 @Module({
   imports: [
-    ConfigModule,
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
+      useFactory: (configService: ConfigService) => ({
+        type: 'sqlite',
+        database: configService.get('DATABASE_PATH', 'database.sqlite'),
+        entities: [__dirname + '/**/*.entity{.ts,.js}'],
+        synchronize: true,
+      }),
       inject: [ConfigService],
-      useFactory: (configService: ConfigService) => {
-        const dbConfig = configService.get('database');
-        return {
-          type: dbConfig.type === 'postgresql' ? 'postgres' : 'sqlite',
-          host: dbConfig.host,
-          port: dbConfig.port,
-          username: dbConfig.username,
-          password: dbConfig.password,
-          database: dbConfig.database,
-          entities: [__dirname + '/**/*.entity{.ts,.js}'],
-          synchronize: configService.get('nodeEnv') === 'development',
-        };
-      },
     }),
     CqrsModule,
     UserModule, 
@@ -83,6 +80,9 @@ import { QuizModule } from './quiz/quiz.module';
     OperationLogModule,
     AuthModule,
     QuizModule,
+    AgentModule,
+    ToolModule,
+    WorkflowModule,
   ],
   controllers: [AppController],
   providers: [

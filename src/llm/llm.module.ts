@@ -10,6 +10,6 @@ import { LlmController } from './llm.controller';
   imports: [TypeOrmModule.forFeature([LlmProvider, LlmModel])],
   providers: [LlmService],
   controllers: [LlmController],
-  exports: [TypeOrmModule],
+  exports: [LlmService],
 })
 export class LlmModule {}
