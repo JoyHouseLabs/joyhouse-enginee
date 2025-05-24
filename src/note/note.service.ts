@@ -25,10 +25,16 @@ export class NoteService {
     pageSize = 10, 
     title?: string,
     content?: string,
-    type?: NoteType
+    type?: NoteType,
+    isPublic?: boolean
   ): Promise<{ data: Note[]; total: number }> {
-    const qb = this.noteRepo.createQueryBuilder('note')
-      .where('note.userId = :userId', { userId });
+    const qb = this.noteRepo.createQueryBuilder('note');
+
+    if (isPublic) {
+      qb.where('note.who_can_see = :visibility', { visibility: 'public' });
+    } else {
+      qb.where('note.userId = :userId', { userId });
+    }
 
     if (title) {
       qb.andWhere('note.title LIKE :title', { title: `%${title}%` });

@@ -2,6 +2,7 @@ import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './user.entity';
+import { UpdateUserDto } from './user.dto';
 
 @Injectable()
 export class UserService {
@@ -18,16 +19,41 @@ export class UserService {
     return this.userRepo.findOneBy({ username });
   }
 
-  async register(user: Partial<User>): Promise<User> {
-    const { password, ...rest } = user;
-    const entity = this.userRepo.create({
-      ...rest,
-      id: (await import('ulid')).ulid(),
-      password, // 密码应在 service 层 hash
-      createdAt: new Date(),
-      updatedAt: new Date(),
+  async findAll(page = 1, limit = 10): Promise<{ list: User[]; total: number }> {
+    const [list, total] = await this.userRepo.findAndCount({
+      skip: (page - 1) * limit,
+      take: limit,
+      order: { createdAt: 'DESC' },
     });
-    return this.userRepo.save(entity);
+    return { list, total };
+  }
+
+  async update(id: string, dto: UpdateUserDto): Promise<User> {
+    const user = await this.findById(id);
+    if (!user) {
+      throw new HttpException({
+        code: 1001,
+        message: '用户不存在',
+        data: null
+      }, HttpStatus.BAD_REQUEST);
+    }
+
+    Object.assign(user, dto);
+    user.updatedAt = new Date();
+    return this.userRepo.save(user);
+  }
+
+  async delete(id: string): Promise<void> {
+    const user = await this.findById(id);
+    if (!user) {
+      throw new HttpException({
+        code: 1001,
+        message: '用户不存在',
+        data: null
+      }, HttpStatus.BAD_REQUEST);
+    }
+
+    await this.userRepo.remove(user);
   }
 
   // 设置用户属性（昵称、头像等）

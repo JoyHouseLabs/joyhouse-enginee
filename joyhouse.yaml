@@ -1,45 +1,27 @@
-# 文件上传配置
-uploadDir: uploads
-# 服务域名（用于拼接url返回给前端）
-domain: http://localhost:3000
-fileDomain: http://localhost:1666
-# 数据库类型，可选 sqlite 或 postgresql
+# 数据库配置
 dbType: sqlite
-# 是否启用 https（true/false）
-httpsEnabled: false
-# PostgreSQL 配置
-# 仅在 dbType 为 postgresql 时需要
-# 示例：
 dbHost: localhost
 dbPort: 5432
-dbUser: your_username
-dbPassword: your_password
-#dbName: your_database
+dbUser: postgres
+dbPassword: postgres
+dbName: joyhouse
+
+# 上传配置
+uploadDir: ./uploads
+domain: http://localhost:3000
+fileDomain: http://localhost:3000/files
 
 # 日志配置
 logging:
-  # 日志文件目录
-  dir: logs
-  # 日志级别: debug, info, warn, error
+  dir: ./logs
   level: info
-  # 是否输出到控制台
   console: true
-  # 日志文件最大大小（单位：MB）
-  maxSize: 10
-  # 保留的最大文件数
-  maxFiles: 30
-  # 是否按日期分割日志文件
+  maxSize: 10485760  # 10MB
+  maxFiles: 5
   dailyRotate: true
 
-# CORS 配置
+# CORS配置
 cors:
-  # 允许的源（域名），可以是字符串或字符串数组
-  origins:
-    - http://localhost:5173
-    - http://localhost:3000
-    - http://localhost:1666
-
-  # 是否允许携带认证信息
+  origins: "*"
   credentials: true
-  # 允许的请求方法
-  methods: GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS
+  methods: "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS"

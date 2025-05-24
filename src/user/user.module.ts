@@ -1,21 +1,23 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from './user.entity';
 import { UserService } from './user.service';
 import { UserController } from './user.controller';
-import { AuthService } from './auth.service';
-import { AuthController } from './auth.controller';
+import { AdminController } from './admin.controller';
+import { JailUser } from './jail-user.entity';
 import { WalletModule } from '../wallet/wallet.module';
 import { StorageModule } from '../storage/storage.module';
+import { AuthModule } from '../auth/auth.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User]),
+    TypeOrmModule.forFeature([User, JailUser]),
     WalletModule,
-    StorageModule
+    StorageModule,
+    forwardRef(() => AuthModule)
   ],
-  providers: [UserService, AuthService],
-  controllers: [UserController, AuthController],
-  exports: [UserService, AuthService],
+  providers: [UserService],
+  controllers: [UserController, AdminController],
+  exports: [UserService],
 })
 export class UserModule {}

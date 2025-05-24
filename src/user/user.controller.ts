@@ -1,76 +1,54 @@
-import { Controller, Get, Req, UseGuards, Patch, Body, Post, Put } from '@nestjs/common';
-import { WalletService } from '../wallet/wallet.service';
-import { ApiTags, ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
+import { Controller, Get, Post, Put, Delete, Body, Param, Query, UseGuards } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { UserService } from './user.service';
-import { UserDto } from './user.dto';
-import { ChangePasswordDto, WalletSignatureSetPasswordDto, SetUserPropertyDto } from '../dto/auth.dto';
-import { JwtAuthGuard } from './jwt-auth.guard';
+import { UserDto, UpdateUserDto, UserQueryDto, UserListResponseDto } from './user.dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { User } from '../decorators/user.decorator';
 
 @ApiTags('用户')
 @Controller('users')
+@UseGuards(JwtAuthGuard)
 export class UserController {
-  constructor(
-    private readonly userService: UserService,
-    private readonly walletService: WalletService,
-  ) {}
+  constructor(private readonly userService: UserService) {}
 
-  @Get('me')
-  @ApiBearerAuth()
-  @ApiResponse({ status: 200, type: UserDto, description: '当前用户信息' })
-  @UseGuards(JwtAuthGuard)
-  async getMe(@Req() req): Promise<UserDto | null> {
-    const userId = req.user.sub;
-    const user = await this.userService.findById(userId);
-    if (!user) return null;
-    // 默认查 evm 主链钱包
-    const wallet = await this.walletService.findByUserId(userId, 'evm');
-    const { password, ...dto } = user;
+  @Get()
+  @ApiOperation({ summary: '获取用户列表' })
+  @ApiResponse({ type: UserListResponseDto })
+  async findAll(@Query() query: UserQueryDto): Promise<UserListResponseDto> {
+    const { page = 1, limit = 10 } = query;
+    const { list, total } = await this.userService.findAll(page, limit);
     return {
-      ...dto,
-      walletAddress: wallet?.address || null,
-      walletMainchain: wallet?.mainchain || null,
-    } as UserDto;
-  }
-
-  @Put('set-property')
-  @ApiBearerAuth()
-  @ApiResponse({ status: 200, description: '用户属性设置成功' })
-  @UseGuards(JwtAuthGuard)
-  async setUserProperty(@Req() req, @Body() dto: SetUserPropertyDto) {
-    const userId = req.user.sub;
-    await this.userService.setUserProperty(userId, dto);
-    return { message: '用户属性设置成功' };
-  }
-
-  @Post('onboarded')
-  @ApiBearerAuth()
-  @ApiResponse({ status: 200, description: '首次登录状态已设置' })
-  @UseGuards(JwtAuthGuard)
-  async setOnboarded(@Req() req) {
-    const userId = req.user.sub;
-    await this.userService.setUserProperty(userId, { key: 'onboarded', value: 'true' });
-    return { message: '首次登录状态已设置' };
-  }
-
-  @Put('password')
-  @ApiBearerAuth()
-  @ApiResponse({ status: 200, description: '密码修改成功' })
-  @ApiResponse({ status: 400, description: '密码修改失败' })
-  @UseGuards(JwtAuthGuard)
-  async changePassword(@Req() req, @Body() dto: ChangePasswordDto) {
-    const userId = req.user.sub;
-    await this.userService.changePassword(userId, dto.oldPassword, dto.newPassword);
-    return { 
-      code: 0,
-      message: '密码修改成功',
-      data: null
+      list,
+      total,
+      page,
+      limit,
     };
   }
 
-  @Post('password-by-signature')
-  @ApiResponse({ status: 200, description: '签名验证成功并设置新密码' })
-  async setPasswordBySignature(@Body() dto: WalletSignatureSetPasswordDto) {
-    await this.userService.setPasswordBySignature(dto);
-    return { message: '密码设置成功' };
+  @Get('profile')
+  @ApiOperation({ summary: '获取当前用户信息' })
+  @ApiResponse({ type: UserDto })
+  async getProfile(@User() user: UserDto): Promise<UserDto> {
+    return user;
+  }
+
+  @Put('profile')
+  @ApiOperation({ summary: '更新当前用户信息' })
+  @ApiResponse({ type: UserDto })
+  async updateProfile(
+    @User() user: UserDto,
+    @Body() dto: UpdateUserDto,
+  ): Promise<UserDto> {
+    return this.userService.update(user.id, dto);
+  }
+
+  @Put('profile/property')
+  @ApiOperation({ summary: '设置用户属性' })
+  @ApiResponse({ type: UserDto })
+  async setUserProperty(
+    @User() user: UserDto,
+    @Body() dto: { key?: string; value?: string },
+  ): Promise<void> {
+    await this.userService.setUserProperty(user.id, dto);
   }
 }

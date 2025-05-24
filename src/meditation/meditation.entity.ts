@@ -15,7 +15,7 @@ export class Meditation {
   @Column({ length: 100 })
   name: string
 
-  @Column({ length: 50, default: 'mdi:meditation' })
+  @Column({ length: 350, default: 'mdi:meditation' })
   icon: string
 
   @Column('text')

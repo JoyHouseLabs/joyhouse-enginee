@@ -3,6 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Storage } from './storage.entity';
 import { StorageService } from './storage.service';
 import { StorageController } from './storage.controller';
+import { StorageDir } from './storage-dir.entity';
 
 import { RoleModule } from '../role/role.module';
 
@@ -10,6 +11,6 @@ import { RoleModule } from '../role/role.module';
   imports: [TypeOrmModule.forFeature([Storage, require('./storage-dir.entity').StorageDir]), RoleModule],
   providers: [StorageService],
   controllers: [StorageController],
-  exports: [StorageService],
+  exports: [StorageService, TypeOrmModule],
 })
 export class StorageModule {}

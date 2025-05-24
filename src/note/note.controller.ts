@@ -20,16 +20,17 @@ export class NoteController {
   @ApiResponse({ status: 200, description: '分页获取笔记', schema: { example: { list: [{ title: 'xxx', content: 'yyy' }], total: 11, total_page: 2, pagesize: 10 } } })
   async getNotes(@Req() req, @Query() query: NoteQueryDto): Promise<{ list: NoteListItemDto[]; total: number; total_page: number; pagesize: number }> {
     const userId = req.user.sub;
-    const { page = 1, pageSize = 10, title, content, type } = query;
-    const { data, total } = await this.noteService.findAll(userId, page, pageSize, title, content, type);
+    const { page = 1, pageSize = 10, title, content, type, isPublic } = query;
+    const { data, total } = await this.noteService.findAll(userId, page, pageSize, title, content, type, isPublic);
     return {
-      list: data.map(({ id, event, title, type, createdAt, updatedAt }) => ({ 
+      list: data.map(({ id, event, title, type, createdAt, updatedAt, userId }) => ({ 
         id, 
         event: event || '', 
         title: title || '', 
         type,
         createdAt, 
-        updatedAt 
+        updatedAt,
+        userId
       })),
       total,
       total_page: Math.ceil(total / pageSize),

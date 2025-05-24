@@ -11,6 +11,7 @@ import { join } from 'path';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { JoyhouseConfigService } from './common/joyhouse-config';
 import { JoyhouseLoggerService } from './common/logger.service';
+import { Logger } from '@nestjs/common';
 
 import * as fs from 'fs';
 
@@ -55,12 +56,14 @@ async function bootstrap() {
     };
     app = await NestFactory.create<NestExpressApplication>(AppModule, { 
       httpsOptions,
-      cors: corsConfig
+      cors: corsConfig,
+      logger: ['error', 'warn', 'log', 'debug', 'verbose'], // 启用所有日志级别
     });
     console.log('[启动] HTTPS 已启用');
   } else {
     app = await NestFactory.create<NestExpressApplication>(AppModule, {
-      cors: corsConfig
+      cors: corsConfig,
+      logger: ['error', 'warn', 'log', 'debug', 'verbose'], // 启用所有日志级别
     });
     console.log('[启动] HTTP（未启用 https）');
   }
@@ -75,8 +78,19 @@ async function bootstrap() {
   
   console.log('[静态资源目录]', staticPath, '映射前缀', staticPrefix);
   app.useStaticAssets(staticPath, { prefix: staticPrefix });
-  app.setGlobalPrefix('api');
-  app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
+  app.setGlobalPrefix('api',
+    {
+      exclude: ['/'],
+    }
+  );
+  app.useGlobalPipes(new ValidationPipe({ 
+    whitelist: true, 
+    transform: true,
+    transformOptions: {
+      enableImplicitConversion: true
+    }
+  }));
+
   app.useGlobalInterceptors(new ResponseInterceptor());
   
   // 创建日志服务实例并注入到拦截器
@@ -96,7 +110,9 @@ async function bootstrap() {
 
   const port = process.env.PORT ?? 1666;
   await app.listen(port, '0.0.0.0');
-  console.log(`Swagger 文档已生成: http://localhost:${port}/swagger`);
-  console.log(`服务已启动，监听所有网络接口: 0.0.0.0:${port}`);
+  
+  const loggerBootstrap = new Logger('Bootstrap');
+  loggerBootstrap.log(`Swagger 文档已生成: http://localhost:${port}/swagger`);
+  loggerBootstrap.log(`服务已启动，监听所有网络接口: 0.0.0.0:${port}`);
 }
 bootstrap();

@@ -1,44 +1,74 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsOptional } from 'class-validator';
+import { IsString, IsOptional, IsBoolean } from 'class-validator';
 
 export class UserDto {
-  @ApiProperty({ required: false, description: '钱包地址' })
-  @IsOptional()
-  @IsString()
-  walletAddress?: string;
-
-  @ApiProperty({ required: false, description: '主链类型（sol/evm）' })
-  @IsOptional()
-  @IsString()
-  walletMainchain?: string;
-  @ApiProperty()
-  @IsString()
+  @ApiProperty({ description: '用户ID' })
   id: string;
 
-  @ApiProperty()
-  @IsString()
+  @ApiProperty({ description: '用户名' })
   username: string;
 
-  @ApiProperty({ required: false })
-  @IsOptional()
-  @IsString()
+  @ApiProperty({ description: '昵称', required: false })
   nickname?: string;
 
-  @ApiProperty({ required: false })
-  @IsOptional()
-  @IsString()
+  @ApiProperty({ description: '头像', required: false })
   avatar?: string;
 
-  @ApiProperty({ required: false })
-  @IsOptional()
-  @IsString()
+  @ApiProperty({ description: '是否已完成引导', required: false })
+  onboarded?: boolean;
+
+  @ApiProperty({ description: '备注', required: false })
   remark?: string;
 
-  @ApiProperty()
-  @IsOptional()
+  @ApiProperty({ description: '创建时间' })
   createdAt: Date;
 
-  @ApiProperty()
-  @IsOptional()
+  @ApiProperty({ description: '更新时间' })
   updatedAt: Date;
+}
+
+export class UpdateUserDto {
+  @ApiProperty({ description: '昵称', required: false })
+  @IsString()
+  @IsOptional()
+  nickname?: string;
+
+  @ApiProperty({ description: '头像', required: false })
+  @IsString()
+  @IsOptional()
+  avatar?: string;
+
+  @ApiProperty({ description: '是否已完成引导', required: false })
+  @IsBoolean()
+  @IsOptional()
+  onboarded?: boolean;
+
+  @ApiProperty({ description: '备注', required: false })
+  @IsString()
+  @IsOptional()
+  remark?: string;
+}
+
+export class UserQueryDto {
+  @ApiProperty({ description: '页码', required: false, default: 1 })
+  @IsOptional()
+  page?: number;
+
+  @ApiProperty({ description: '每页数量', required: false, default: 10 })
+  @IsOptional()
+  limit?: number;
+}
+
+export class UserListResponseDto {
+  @ApiProperty({ description: '用户列表', type: [UserDto] })
+  list: UserDto[];
+
+  @ApiProperty({ description: '总数' })
+  total: number;
+
+  @ApiProperty({ description: '当前页码' })
+  page: number;
+
+  @ApiProperty({ description: '每页数量' })
+  limit: number;
 }

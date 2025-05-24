@@ -1,6 +1,6 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsOptional, IsInt, Min, Max, IsString, IsEnum } from 'class-validator';
-import { Type } from 'class-transformer';
+import { IsOptional, IsInt, Min, Max, IsString, IsEnum, IsBoolean } from 'class-validator';
+import { Type, Transform } from 'class-transformer';
 import { NoteType } from './note.entity';
 
 export class NoteQueryDto {
@@ -33,4 +33,14 @@ export class NoteQueryDto {
   @IsOptional()
   @IsEnum(NoteType)
   type?: NoteType;
+
+  @ApiPropertyOptional({ description: '是否只查询公开笔记' })
+  @IsOptional()
+  @Transform(({ value }) => {
+    if (value === 'true') return true;
+    if (value === 'false') return false;
+    return value;
+  })
+  @IsBoolean()
+  isPublic?: boolean;
 }

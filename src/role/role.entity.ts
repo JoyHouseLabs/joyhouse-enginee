@@ -1,5 +1,10 @@
 import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
 
+export enum RoleType {
+  ADMIN = 'admin',
+  USER = 'user',
+}
+
 @Entity('role')
 export class Role {
   @PrimaryGeneratedColumn('uuid')
