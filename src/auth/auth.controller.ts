@@ -81,6 +81,29 @@ export class AuthController {
     return this.authService.verifyToken(token);
   }
 
+  @Post('logout')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: '用户登出' })
+  @ApiResponse({ description: '登出成功' })
+  async logout(@Request() req) {
+    const token = req.headers.authorization?.split(' ')[1];
+    if (token) {
+      await this.authService.invalidateToken(token);
+    }
+    return { message: '登出成功' };
+  }
+
+  @Post('logout-all')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: '使当前用户的所有 token 失效' })
+  @ApiResponse({ description: '所有 token 已失效' })
+  async logoutAll(@Request() req) {
+    await this.authService.invalidateAllUserTokens(req.user.id);
+    return { message: '所有 token 已失效' };
+  }
+
   // 确保用户目录存在
   private async ensureUserDirectories(userId: string) {
     try {

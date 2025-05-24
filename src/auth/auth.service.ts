@@ -9,6 +9,7 @@ import { WalletService } from '../wallet/wallet.service';
 import { RegisterDto, LoginDto } from '../dto/auth.dto';
 import * as bcrypt from 'bcryptjs';
 import { RoleType } from '../role/role.entity';
+import { TokenBlacklist } from './entities/token-blacklist.entity';
 
 @Injectable()
 export class AuthService {
@@ -17,6 +18,8 @@ export class AuthService {
     private readonly userRepo: Repository<User>,
     @InjectRepository(StorageDir)
     private readonly storageDirRepo: Repository<StorageDir>,
+    @InjectRepository(TokenBlacklist)
+    private readonly tokenBlacklistRepo: Repository<TokenBlacklist>,
     private readonly userService: UserService,
     private readonly walletService: WalletService,
     private readonly jwtService: JwtService,
@@ -201,6 +204,44 @@ export class AuthService {
       return user;
     } catch (error) {
       throw new UnauthorizedException('无效的令牌');
+    }
+  }
+
+  async invalidateToken(token: string): Promise<void> {
+    try {
+      // 验证 token 并获取过期时间
+      const decoded = this.jwtService.verify(token);
+      
+      // 将 token 加入黑名单
+      const blacklistEntry = this.tokenBlacklistRepo.create({
+        token,
+        userId: decoded.sub,
+        expiresAt: new Date(decoded.exp * 1000), // 将 JWT 过期时间转换为 Date
+      });
+      
+      await this.tokenBlacklistRepo.save(blacklistEntry);
+    } catch (error) {
+      throw new UnauthorizedException('无效的 token');
+    }
+  }
+
+  async isTokenBlacklisted(token: string): Promise<boolean> {
+    const blacklistedToken = await this.tokenBlacklistRepo.findOne({
+      where: { token }
+    });
+    return !!blacklistedToken;
+  }
+
+  async invalidateAllUserTokens(userId: string): Promise<void> {
+    // 获取用户的所有有效 token
+    const blacklistEntries = await this.tokenBlacklistRepo.find({
+      where: { userId }
+    });
+
+    // 将所有 token 标记为过期
+    for (const entry of blacklistEntries) {
+      entry.expiresAt = new Date();
+      await this.tokenBlacklistRepo.save(entry);
     }
   }
 } 

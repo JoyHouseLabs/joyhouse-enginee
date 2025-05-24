@@ -6,6 +6,7 @@ import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { User } from '../user/user.entity';
 import { StorageDir } from '../storage/storage-dir.entity';
+import { TokenBlacklist } from './entities/token-blacklist.entity';
 import { LocalStrategy } from './strategies/local.strategy';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { WalletModule } from '../wallet/wallet.module';
@@ -14,7 +15,7 @@ import { UserModule } from '../user/user.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User, StorageDir]),
+    TypeOrmModule.forFeature([User, StorageDir, TokenBlacklist]),
     PassportModule,
     JwtModule.register({
       secret: process.env.JWT_SECRET || 'your-secret-key',

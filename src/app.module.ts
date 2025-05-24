@@ -44,6 +44,7 @@ import { OperationLog } from './audit/operation-log.entity';
 import { ConfigModule } from './config/config.module';
 import { ConfigService } from '@nestjs/config';
 import { AuthModule } from './auth/auth.module';
+import { QuizModule } from './quiz/quiz.module';
 
 @Module({
   imports: [
@@ -81,6 +82,7 @@ import { AuthModule } from './auth/auth.module';
     RoleModule,
     OperationLogModule,
     AuthModule,
+    QuizModule,
   ],
   controllers: [AppController],
   providers: [
