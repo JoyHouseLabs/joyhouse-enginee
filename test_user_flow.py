@@ -1,6 +1,6 @@
 import requests
 
-BASE_URL = 'http://localhost:3000/api'
+BASE_URL = 'http://localhost:1666/api'
 
 # 1. 注册
 register_data = {
@@ -19,8 +19,8 @@ login_data = {
 r = requests.post(f'{BASE_URL}/auth/login', json=login_data)
 print('登录:', r.status_code, r.json())
 assert r.status_code == 200  or r.status_code == 201
-access_token = r.json()['token'] if 'token' in r.json() else r.json().get('data', {}).get('token')
-headers = {'Authorization': f'Bearer {access_token}'}
+token = r.json()['token'] if 'token' in r.json() else r.json().get('data', {}).get('token')
+headers = {'Authorization': f'Bearer {token}'}
 
 # 3. 获取当前用户信息
 r = requests.get(f'{BASE_URL}/users/me', headers=headers)

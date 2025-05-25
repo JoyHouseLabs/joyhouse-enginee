@@ -18,7 +18,7 @@ import { UserModule } from '../user/user.module';
     TypeOrmModule.forFeature([User, StorageDir, TokenBlacklist]),
     PassportModule,
     JwtModule.register({
-      secret: process.env.JWT_SECRET || 'your-secret-key',
+      secret: process.env.JWT_SECRET || 'joyhouse-secret',
       signOptions: { expiresIn: '7d' },
     }),
     WalletModule,

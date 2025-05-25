@@ -36,7 +36,7 @@ export class TaskController {
       name: dto.name,
       icon: dto.icon || '',
       description: dto.description,
-      user_id: userId,
+      userId: userId,
       status: dto.status || TaskStatus.PENDING,
       progress: dto.progress,
       type: dto.type || TaskType.CUSTOM,
@@ -87,7 +87,7 @@ export class TaskController {
       rewardId: dto.rewardId,
       taskGroupId: dto.taskGroupId,
       dueDate: dto.dueDate,
-      user_id: userId,
+      userId: userId,
     };
     return this.taskService.update(id, updateDto);
   }

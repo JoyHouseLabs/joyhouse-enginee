@@ -1,5 +1,5 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsOptional, IsString, IsInt, Min } from 'class-validator';
+import { IsOptional, IsString, IsInt, Min, IsBoolean } from 'class-validator';
 
 export class LlmProviderQueryDto {
   @ApiPropertyOptional({ description: '页码', default: 1 })
@@ -18,6 +18,11 @@ export class LlmProviderQueryDto {
   @IsOptional()
   @IsString()
   name?: string;
+
+  @ApiPropertyOptional({ description: '是否只查询公开的 Provider' })
+  @IsOptional()
+  @IsBoolean()
+  isPublic?: boolean;
 }
 
 export class LlmModelQueryDto {
@@ -42,4 +47,9 @@ export class LlmModelQueryDto {
   @IsOptional()
   @IsString()
   provider?: string;
+
+  @ApiPropertyOptional({ description: '是否只查询公开的模型' })
+  @IsOptional()
+  @IsBoolean()
+  isPublic?: boolean;
 }

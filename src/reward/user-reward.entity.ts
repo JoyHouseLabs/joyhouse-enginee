@@ -8,7 +8,7 @@ export class UserReward {
   id: string;
 
   @Column()
-  user_id: string;
+  userId: string;
 
   @Column()
   reward_id: string;
@@ -38,7 +38,7 @@ export class UserReward {
   updatedAt: Date;
 
   @ManyToOne(() => User)
-  @JoinColumn({ name: 'user_id' })
+  @JoinColumn({ name: 'userId' })
   user: User;
 
   @ManyToOne(() => Reward)

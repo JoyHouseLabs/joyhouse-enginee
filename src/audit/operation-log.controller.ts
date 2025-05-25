@@ -6,12 +6,12 @@ import { OperationLog } from './operation-log.entity';
 export class OperationLogController {
   constructor(private readonly logService: OperationLogService) {}
 
-  // 查询操作日志，支持按user_id、action等过滤
+  // 查询操作日志，支持按userId、action等过滤
   @Post('list')
   async list(
     @Body()
     dto: {
-      user_id?: string;
+      userId?: string;
       action?: string;
       skip?: number;
       take?: number;

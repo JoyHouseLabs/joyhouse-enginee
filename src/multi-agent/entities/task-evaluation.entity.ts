@@ -106,7 +106,7 @@ export class TaskEvaluation {
   @Column({ type: 'text', nullable: true })
   revisionRequests?: string;
 
-  @Column({ type: 'datetime', nullable: true })
+  @Column({ type: 'timestamp', nullable: true })
   evaluatedAt?: Date;
 
   @CreateDateColumn()

@@ -11,6 +11,6 @@ export class Reply {
   @ApiProperty({ required: false })
   @Column({ type: 'varchar', length: 26, nullable: true })
   mentionUserId?: string;
-  @ApiProperty() @Column({ type: 'datetime' }) createdAt: Date;
-  @ApiProperty() @Column({ type: 'datetime' }) updatedAt: Date;
+  @ApiProperty() @Column({ type: 'timestamp' }) createdAt: Date;
+  @ApiProperty() @Column({ type: 'timestamp' }) updatedAt: Date;
 }

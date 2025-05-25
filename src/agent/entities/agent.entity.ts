@@ -54,7 +54,7 @@ export class Agent {
   @Column({ type: 'json', nullable: true })
   metadata?: Record<string, any>; // 额外的元数据
 
-  @Column({ type: 'datetime', nullable: true })
+  @Column({ type: 'timestamp', nullable: true })
   lastUsedAt?: Date; // 最后使用时间
 
   @Column({ type: 'integer', default: 0 })

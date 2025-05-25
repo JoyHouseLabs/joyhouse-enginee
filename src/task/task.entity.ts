@@ -17,7 +17,7 @@ export class Task {
   description: string;
 
   @Column()
-  user_id: string;
+  userId: string;
 
   @Column({
     type: 'varchar',
@@ -43,8 +43,8 @@ export class Task {
   @Column()
   taskGroupId: string;
 
-  @Column({ type: 'datetime', nullable: true })
-  dueDate: Date;
+  @Column({ type: 'timestamp', nullable: true })
+  dueDate?: Date;
 
   @Column({ type: 'text', nullable: true })
   error: string;
@@ -56,6 +56,6 @@ export class Task {
   updatedAt: Date;
 
   @ManyToOne(() => User)
-  @JoinColumn({ name: 'user_id' })
+  @JoinColumn({ name: 'userId' })
   user: User;
 }

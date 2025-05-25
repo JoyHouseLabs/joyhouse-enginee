@@ -11,7 +11,7 @@ import { MeditationService } from './meditation.service';
 import { CreateMeditationDto } from './meditation-create.dto';
 import { UpdateMeditationDto } from './meditation-update.dto';
 import { MeditationQueryDto } from './meditation-query.dto';
-import { JwtAuthGuard } from '../user/jwt-auth.guard';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
 @ApiTags('Meditation')

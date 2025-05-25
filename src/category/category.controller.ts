@@ -28,8 +28,8 @@ export class CategoryController {
   @Get()
   @ApiOperation({ summary: '获取所有分类' })
   @ApiResponse({ status: 200, type: [Category] })
-  async findAll(@Query('user_id') user_id?: string): Promise<Category[]> {
-    return this.categoryService.findAll(user_id);
+  async findAll(@Query('userId') userId?: string): Promise<Category[]> {
+    return this.categoryService.findAll(userId);
   }
 
   @Get(':id')

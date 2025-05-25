@@ -46,10 +46,10 @@ export class Meditation {
   loop: boolean;
 
   @ManyToOne(() => User)
-  @JoinColumn({ name: 'user_id' })
+  @JoinColumn({ name: 'userId' })
   user: User;
 
-  @Column({ name: 'user_id' })
+  @Column({ name: 'userId' })
   userId: string;
 
   @CreateDateColumn({ name: 'created_at' })

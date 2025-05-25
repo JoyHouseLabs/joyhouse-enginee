@@ -47,7 +47,7 @@ export class CollaborationRoom {
   @JoinTable({
     name: 'collaboration_room_users',
     joinColumn: { name: 'room_id', referencedColumnName: 'id' },
-    inverseJoinColumn: { name: 'user_id', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'userId', referencedColumnName: 'id' },
   })
   participants: User[];
 

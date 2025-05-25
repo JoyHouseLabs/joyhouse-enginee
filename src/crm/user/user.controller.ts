@@ -20,7 +20,7 @@ import {
   UnjailUserDto,
 } from './user-query.dto';
 import { JailUser } from '../../user/jail-user.entity';
-import { JwtAuthGuard } from '../../user/jwt-auth.guard';
+import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 
 @ApiTags('CRM')
 @Controller('crm/users')
@@ -72,7 +72,7 @@ export class CrmUserController {
 
     const where: any = {};
     if (query.userId) {
-      where.user_id = query.userId;
+      where.userId = query.userId;
     }
     if (query.operator) {
       where.operator = query.operator;
@@ -125,7 +125,7 @@ export class CrmUserController {
     }
 
     const jailUser = this.jailUserRepo.create({
-      user_id: body.userId,
+      userId: body.userId,
       reason: body.reason,
       operation: body.operation,
       operator: operatorId,
@@ -169,7 +169,7 @@ export class CrmUserController {
   async getUserJailStatus(@Param('userId') userId: string) {
     const activeJail = await this.jailUserRepo.findOne({
       where: {
-        user_id: userId,
+        userId: userId,
         operation: 'login',
         expiredAt: MoreThan(new Date()),
       },

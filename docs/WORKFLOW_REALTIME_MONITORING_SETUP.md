@@ -71,7 +71,7 @@ export class AppModule {}
 ```env
 # WebSocket配置
 WEBSOCKET_PORT=3001
-WEBSOCKET_CORS_ORIGIN=http://localhost:3000,http://localhost:3001
+WEBSOCKET_CORS_ORIGIN=http://localhost:1666,http://localhost:3001
 WEBSOCKET_NAMESPACE=/workflow-monitor
 
 # 性能监控配置
@@ -95,7 +95,7 @@ npm install socket.io-client
 import { WorkflowMonitorClient } from './workflow-monitor-client';
 
 // 创建监控客户端
-const monitor = new WorkflowMonitorClient('http://localhost:3000', 'user123');
+const monitor = new WorkflowMonitorClient('http://localhost:1666', 'user123');
 
 // 监控特定工作流执行
 await monitor.subscribeToExecution('execution-id-123');
@@ -127,7 +127,7 @@ export const WorkflowMonitorComponent: React.FC<WorkflowMonitorProps> = ({
 
   useEffect(() => {
     const monitorInstance = new WorkflowPerformanceMonitor(
-      'http://localhost:3000',
+      'http://localhost:1666',
       userId
     );
 
@@ -302,7 +302,7 @@ export class WorkflowDashboard {
   // 添加工作流监控
   async addWorkflowMonitor(executionId: string) {
     const monitor = new WorkflowPerformanceMonitor(
-      'http://localhost:3000',
+      'http://localhost:1666',
       this.userId
     );
     
@@ -387,7 +387,7 @@ export class PerformanceAnalyzer {
 
 ```typescript
 // 启用调试模式
-const monitor = new WorkflowPerformanceMonitor('http://localhost:3000', 'user123');
+const monitor = new WorkflowPerformanceMonitor('http://localhost:1666', 'user123');
 monitor.enableDebugMode();
 
 // 监控连接状态

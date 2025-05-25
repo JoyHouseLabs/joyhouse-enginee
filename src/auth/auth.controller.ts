@@ -141,7 +141,7 @@ export class AuthController {
       );
       if (!homeDir) {
         await this.storageService.createDir({
-          user_id: userId,
+          userId: userId,
           name: 'home',
           parent: '',
         });
@@ -154,7 +154,7 @@ export class AuthController {
       );
       if (!shareDir) {
         await this.storageService.createDir({
-          user_id: userId,
+          userId: userId,
           name: 'share',
           parent: '',
         });

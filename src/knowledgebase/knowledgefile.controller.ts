@@ -19,7 +19,7 @@ import { KnowledgefileService } from './knowledgefile.service';
 import { KnowledgefileDto } from './knowledgefile.dto';
 import { KnowledgefileCreateDto } from './knowledgefile-create.dto';
 import { KnowledgefileUpdateDto } from './knowledgefile-update.dto';
-import { JwtAuthGuard } from '../user/jwt-auth.guard';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @ApiTags('知识文件')
 @ApiBearerAuth()

@@ -15,7 +15,7 @@ export class BrainService {
 
   private async getDefaultModel(userId: string): Promise<LlmModel | null> {
     return this.modelRepo.findOne({
-      where: { user_id: userId, is_default: true },
+      where: { userId: userId, is_default: true },
       relations: ['provider'],
     });
   }

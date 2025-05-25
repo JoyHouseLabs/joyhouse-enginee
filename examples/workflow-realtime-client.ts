@@ -238,7 +238,7 @@ export class WorkflowRealtimeClient {
 // 使用示例
 export async function exampleUsage() {
   // 创建客户端
-  const client = new WorkflowRealtimeClient('http://localhost:3000', 'user123', 'your-jwt-token');
+  const client = new WorkflowRealtimeClient('http://localhost:1666', 'user123', 'your-jwt-token');
 
   // 等待连接
   await new Promise(resolve => {

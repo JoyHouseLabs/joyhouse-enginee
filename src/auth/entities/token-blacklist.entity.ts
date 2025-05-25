@@ -16,7 +16,7 @@ export class TokenBlacklist {
   @Column()
   userId: string;
 
-  @Column({ type: 'datetime' })
+  @Column({ type: 'timestamp' })
   expiresAt: Date;
 
   @CreateDateColumn()

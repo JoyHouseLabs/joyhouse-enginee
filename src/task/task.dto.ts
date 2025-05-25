@@ -12,7 +12,7 @@ export class CreateTaskDto {
   description?: string;
 
   @ApiProperty({ description: '用户ID' })
-  user_id: string;
+  userId: string;
 
   @ApiProperty({
     description: '任务状态',

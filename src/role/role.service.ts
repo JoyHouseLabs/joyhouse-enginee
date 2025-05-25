@@ -24,7 +24,7 @@ export class RoleService {
   // 获取用户所有角色
   async getUserRoles(userId: string): Promise<Role[]> {
     const userRoles = await this.userRoleRepo.find({
-      where: { user_id: userId },
+      where: { userId: userId },
     });
     const roleIds = userRoles.map((ur) => ur.role_id);
     if (!roleIds.length) return [];
@@ -60,39 +60,39 @@ export class RoleService {
   }
   async createRole(
     dto: { name: string; description?: string },
-    user_id?: string,
+    userId?: string,
   ): Promise<Role> {
     const entity = this.roleRepo.create(dto);
     const saved = await this.roleRepo.save(entity);
-    if (user_id)
+    if (userId)
       await this.logService.log(
-        user_id,
+        userId,
         'create_role',
         { role_id: saved.id },
         dto,
       );
     return saved;
   }
-  async deleteRole(id: string, user_id?: string): Promise<void> {
+  async deleteRole(id: string, userId?: string): Promise<void> {
     await this.roleRepo.delete(id);
-    if (user_id)
-      await this.logService.log(user_id, 'delete_role', { role_id: id });
+    if (userId)
+      await this.logService.log(userId, 'delete_role', { role_id: id });
   }
 
   // 用户-角色管理
   async getUserRoleRelations(userId: string): Promise<UserRole[]> {
-    return this.userRoleRepo.find({ where: { user_id: userId } });
+    return this.userRoleRepo.find({ where: { userId: userId } });
   }
   async assignRoleToUser(
-    user_id: string,
+    userId: string,
     role_id: string,
     operator_id?: string,
   ): Promise<UserRole> {
-    const entity = this.userRoleRepo.create({ user_id, role_id });
+    const entity = this.userRoleRepo.create({ userId, role_id });
     const saved = await this.userRoleRepo.save(entity);
     if (operator_id)
       await this.logService.log(operator_id, 'assign_role_to_user', {
-        user_id,
+        userId,
         role_id,
       });
     return saved;
@@ -113,24 +113,24 @@ export class RoleService {
   }
   async addPermission(
     dto: { role_id: string; controller: string; method: string },
-    user_id?: string,
+    userId?: string,
   ): Promise<Permission> {
     const entity = this.permissionRepo.create(dto);
     const saved = await this.permissionRepo.save(entity);
-    if (user_id)
+    if (userId)
       await this.logService.log(
-        user_id,
+        userId,
         'add_permission',
         { permission_id: saved.id },
         dto,
       );
     return saved;
   }
-  async removePermission(id: string, user_id?: string): Promise<void> {
+  async removePermission(id: string, userId?: string): Promise<void> {
     const perm = await this.permissionRepo.findOne({ where: { id } });
     await this.permissionRepo.delete(id);
-    if (user_id)
-      await this.logService.log(user_id, 'remove_permission', { id, perm });
+    if (userId)
+      await this.logService.log(userId, 'remove_permission', { id, perm });
   }
 
   /**

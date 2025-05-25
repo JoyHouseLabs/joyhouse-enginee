@@ -13,20 +13,20 @@ export class OperationLogService {
     private readonly gateway: OperationLogGateway,
   ) {}
 
-  async log(user_id: string, action: string, target?: any, detail?: any) {
-    const entity = this.logRepo.create({ user_id, action, target, detail });
+  async log(userId: string, action: string, target?: any, detail?: any) {
+    const entity = this.logRepo.create({ userId, action, target, detail });
     const saved = await this.logRepo.save(entity);
     this.gateway.notify(saved);
   }
 
   async list(dto: {
-    user_id?: string;
+    userId?: string;
     action?: string;
     skip?: number;
     take?: number;
   }): Promise<OperationLog[]> {
     const where: any = {};
-    if (dto.user_id) where.user_id = dto.user_id;
+    if (dto.userId) where.userId = dto.userId;
     if (dto.action) where.action = dto.action;
     return this.logRepo.find({
       where,

@@ -44,7 +44,7 @@ export class McpTool {
   @Column({ type: 'boolean', default: true })
   isAvailable: boolean;
 
-  @Column({ type: 'datetime', nullable: true })
+  @Column({ type: 'timestamp', nullable: true })
   lastUsedAt?: Date;
 
   @Column({ type: 'integer', default: 0 })

@@ -6,7 +6,7 @@ export class UserRole {
   id: string;
 
   @Column()
-  user_id: string;
+  userId: string;
 
   @Column()
   role_id: string;

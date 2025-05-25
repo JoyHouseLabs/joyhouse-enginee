@@ -1,87 +1,99 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsString, IsOptional, IsBoolean } from 'class-validator';
+import { IsString, IsOptional, IsBoolean, IsArray } from 'class-validator';
 
 export class LlmProviderUpdateDto {
   @ApiProperty({ description: 'Provider ID' })
   @IsString()
   id: string;
 
-  @ApiPropertyOptional({ description: 'Provider 名称' })
+  @ApiProperty({ description: 'Provider 名称', required: false })
   @IsOptional()
   @IsString()
   name?: string;
 
-  @ApiPropertyOptional({ description: 'API Base URL' })
+  @ApiProperty({ description: 'Provider 基础URL', required: false })
   @IsOptional()
   @IsString()
   baseUrl?: string;
 
-  @ApiPropertyOptional({ description: 'API Key' })
+  @ApiProperty({ description: 'Provider API Key', required: false })
   @IsOptional()
   @IsString()
   apiKey?: string;
 
-  @ApiPropertyOptional({ description: '描述' })
+  @ApiProperty({ description: 'Provider 描述', required: false })
   @IsOptional()
   @IsString()
   description?: string;
 
-  @ApiPropertyOptional({ description: '图标' })
+  @ApiProperty({ description: 'Provider 图标', required: false })
   @IsOptional()
   @IsString()
   icon?: string;
 
-  @ApiPropertyOptional({ description: '状态' })
+  @ApiProperty({ description: 'Provider 状态', required: false })
   @IsOptional()
   @IsBoolean()
   status?: boolean;
 
-  @ApiPropertyOptional({ description: 'API 类型', enum: ['ollama', 'openai'] })
+  @ApiProperty({ description: '是否公开', required: false })
+  @IsOptional()
+  @IsBoolean()
+  isPublic?: boolean;
+
+  @ApiProperty({ description: 'API 类型', enum: ['ollama', 'openai'], required: false })
   @IsOptional()
   @IsString()
   apiType?: 'ollama' | 'openai';
 }
 
 export class LlmModelUpdateDto {
-  @ApiProperty({ description: '模型ID' })
+  @ApiProperty({ description: '模型 ID' })
   @IsString()
   id: string;
 
-  @ApiPropertyOptional({ description: '模型名称' })
+  @ApiProperty({ description: '模型名称', required: false })
   @IsOptional()
   @IsString()
   name?: string;
 
-  @ApiPropertyOptional({ description: '图标' })
+  @ApiProperty({ description: '模型标签', required: false })
   @IsOptional()
   @IsString()
   label?: string;
 
-  @ApiPropertyOptional({ description: '模型icon' })
+  @ApiProperty({ description: '模型图标', required: false })
   @IsOptional()
   @IsString()
   icon?: string;
 
-  @ApiPropertyOptional({ description: '描述' })
+  @ApiProperty({ description: '模型描述', required: false })
   @IsOptional()
   @IsString()
   description?: string;
 
-  @ApiPropertyOptional({ description: '标签', type: [String] })
+  @ApiProperty({ description: '模型标签', required: false, type: [String] })
   @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
   tags?: string[];
 
-  @ApiPropertyOptional({ description: 'Provider ID' })
+  @ApiProperty({ description: 'Provider ID', required: false })
   @IsOptional()
   @IsString()
   provider?: string;
 
-  @ApiPropertyOptional({ description: 'License' })
+  @ApiProperty({ description: '是否公开', required: false })
+  @IsOptional()
+  @IsBoolean()
+  isPublic?: boolean;
+
+  @ApiProperty({ description: '模型许可证', required: false })
   @IsOptional()
   @IsString()
   license?: string;
 
-  @ApiPropertyOptional({ description: '参数' })
+  @ApiProperty({ description: '模型参数', required: false })
   @IsOptional()
   params?: Record<string, any>;
 }

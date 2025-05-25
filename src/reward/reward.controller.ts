@@ -24,7 +24,7 @@ import {
   RewardListResponseDto,
 } from './reward.dto';
 import { CreateUserRewardDto, UserRewardDto } from './user-reward.dto';
-import { JwtAuthGuard } from '../user/jwt-auth.guard';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RoleGuard } from '../role/role.guard';
 
 @ApiTags('rewards')

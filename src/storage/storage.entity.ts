@@ -26,7 +26,7 @@ export class Storage {
   url: string;
 
   @Column({ type: 'varchar', length: 64 })
-  user_id: string;
+  userId: string;
 
   @Column({ type: 'varchar', length: 64, nullable: true })
   storage_dir_id?: string;

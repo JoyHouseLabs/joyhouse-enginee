@@ -73,8 +73,8 @@ export class TaskItem {
   @JoinColumn({ name: 'rewardId' })
   reward?: Reward;
 
-  @Column({ type: 'datetime', nullable: true })
-  dueDate: Date;
+  @Column({ type: 'timestamp', nullable: true })
+  dueDate?: Date;
 
   @CreateDateColumn()
   createdAt: Date;

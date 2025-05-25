@@ -4,7 +4,7 @@ import { IsString, IsOptional, IsArray, IsInt } from 'class-validator';
 export class CreateCategoryDto {
   @ApiProperty()
   @IsString()
-  user_id: string;
+  userId: string;
 
   @ApiProperty()
   @IsString()

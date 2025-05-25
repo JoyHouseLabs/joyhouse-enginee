@@ -28,9 +28,9 @@ export class Knowledgebase {
   @Column({ type: 'varchar', length: 128, nullable: true })
   embeddingModel?: string;
   @ApiProperty()
-  @Column({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
+  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   createdAt: Date;
   @ApiProperty()
-  @Column({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
+  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   updatedAt: Date;
 }

@@ -1,15 +1,15 @@
 # 数据库配置
-dbType: sqlite
-dbHost: localhost
+dbType: postgresql
+dbHost: 10.10.0.7
 dbPort: 5432
-dbUser: postgres
-dbPassword: postgres
+dbUser: joyuser
+dbPassword: joyhouse1688
 dbName: joyhouse
 
 # 上传配置
 uploadDir: ./uploads
-domain: http://localhost:3000
-fileDomain: http://localhost:3000/files
+domain: http://localhost:1688
+fileDomain: http://localhost:1688/files
 
 # 日志配置
 logging:
@@ -30,7 +30,7 @@ cors:
 monitoring:
   enabled: true
   websocket:
-    port: 3000
+    port: 1666
     namespace: "/workflow-monitor"
     corsOrigin: "*"
   performance:

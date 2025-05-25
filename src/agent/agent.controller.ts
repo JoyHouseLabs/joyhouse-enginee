@@ -10,6 +10,7 @@ import {
   Sse,
   Request,
   Req,
+  Query,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -42,11 +43,35 @@ import { map } from 'rxjs/operators';
 import { MessageRole } from './entities/conversation-history.entity';
 
 @ApiTags('agents')
-@Controller('agents')
+@Controller('agent')
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth('JWT-auth')
 export class AgentController {
   constructor(private readonly agentService: AgentService) {}
+
+  @Get('my')
+  @ApiOperation({ summary: '获取我的 Agent 列表' })
+  @ApiResponse({ type: [Agent] })
+  findMyAgents(
+    @UserDecorator() user: User,
+    @Query('page') page: number = 1,
+    @Query('pageSize') pageSize: number = 12,
+    @Query('name') name?: string,
+  ) {
+    return this.agentService.findMyAgents(user, { page, pageSize, name });
+  }
+
+  @Get('public')
+  @ApiOperation({ summary: '获取公开的 Agent 列表' })
+  @ApiResponse({ type: [Agent] })
+  findPublicAgents(
+    @UserDecorator() user: User,
+    @Query('page') page: number = 1,
+    @Query('pageSize') pageSize: number = 12,
+    @Query('name') name?: string,
+  ) {
+    return this.agentService.findPublicAgents(user, { page, pageSize, name });
+  }
 
   @Post()
   @ApiOperation({ summary: '创建 Agent' })

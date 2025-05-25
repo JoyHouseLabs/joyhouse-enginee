@@ -26,7 +26,7 @@ import { KnowledgefileService } from './knowledgefile.service';
 import { KnowledgebaseDto } from './knowledgebase.dto';
 import { KnowledgebaseCreateDto } from './knowledgebase-create.dto';
 import { KnowledgebaseUpdateDto } from './knowledgebase-update.dto';
-import { JwtAuthGuard } from '../user/jwt-auth.guard';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @ApiTags('知识库')
 @ApiBearerAuth()

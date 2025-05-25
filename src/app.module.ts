@@ -34,7 +34,6 @@ import { Reward } from './reward/reward.entity';
 import { UserReward } from './reward/user-reward.entity';
 import { RewardModule } from './reward/reward.module';
 import { OperationLogModule } from './audit/operation-log.module';
-
 import { KnowledgebaseModule } from './knowledgebase/knowledgebase.module';
 import { CqrsModule } from '@nestjs/cqrs';
 import { JoyhouseLoggerService } from './common/logger.service';
@@ -48,6 +47,8 @@ import { AgentModule } from './agent/agent.module';
 import { ToolModule } from './tool/tool.module';
 import { WorkflowModule } from './workflow/workflow.module';
 import { MultiAgentModule } from './multi-agent/multi-agent.module';
+import { JoyhouseConfigService } from './common/joyhouse-config';
+import { AppStoreModule } from './appstore/app.module';
 
 @Module({
   imports: [
@@ -56,12 +57,28 @@ import { MultiAgentModule } from './multi-agent/multi-agent.module';
     }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
-      useFactory: (configService: ConfigService) => ({
-        type: 'sqlite',
-        database: configService.get('DATABASE_PATH', 'database.sqlite'),
-        entities: [__dirname + '/**/*.entity{.ts,.js}'],
-        synchronize: true,
-      }),
+      useFactory: (configService: ConfigService) => {
+        const config = JoyhouseConfigService.loadConfig();
+        if (config.dbType === 'postgresql') {
+          return {
+            type: 'postgres',
+            host: config.dbHost,
+            port: config.dbPort,
+            username: config.dbUser,
+            password: config.dbPassword,
+            database: config.dbName,
+            entities: [__dirname + '/**/*.entity{.ts,.js}'],
+            synchronize: true,
+          };
+        } else {
+          return {
+            type: 'sqlite',
+            database: configService.get('DATABASE_PATH', 'database.sqlite'),
+            entities: [__dirname + '/**/*.entity{.ts,.js}'],
+            synchronize: true,
+          };
+        }
+      },
       inject: [ConfigService],
     }),
     CqrsModule,
@@ -85,6 +102,7 @@ import { MultiAgentModule } from './multi-agent/multi-agent.module';
     ToolModule,
     WorkflowModule,
     MultiAgentModule,
+    AppStoreModule,
   ],
   controllers: [AppController],
   providers: [AppService, JoyhouseLoggerService],

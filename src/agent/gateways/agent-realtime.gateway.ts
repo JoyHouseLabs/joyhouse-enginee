@@ -75,7 +75,7 @@ interface ToolExecutionEvent {
   namespace: '/agent-realtime',
   cors: {
     origin: process.env.WEBSOCKET_CORS_ORIGIN?.split(',') || [
-      'http://localhost:3000',
+      'http://localhost:1666',
     ],
     credentials: true,
   },

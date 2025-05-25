@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsOptional, IsBoolean } from 'class-validator';
+import { IsString, IsOptional, IsBoolean, IsArray } from 'class-validator';
 
 export class LlmProviderCreateDto {
   @ApiProperty({ description: 'Provider 名称' })
@@ -10,9 +10,10 @@ export class LlmProviderCreateDto {
   @IsString()
   baseUrl: string;
 
-  @ApiProperty({ description: 'API Key' })
+  @ApiProperty({ description: 'API Key', required: false })
+  @IsOptional()
   @IsString()
-  apiKey: string;
+  apiKey?: string;
 
   @ApiProperty({ description: '描述', required: false })
   @IsOptional()
@@ -24,10 +25,15 @@ export class LlmProviderCreateDto {
   @IsString()
   icon?: string;
 
-  @ApiProperty({ description: '状态', required: false })
+  @ApiProperty({ description: '状态', default: true })
   @IsOptional()
   @IsBoolean()
-  status?: boolean;
+  status?: boolean = true;
+
+  @ApiProperty({ description: '是否公开', default: false })
+  @IsOptional()
+  @IsBoolean()
+  isPublic?: boolean = false;
 
   @ApiProperty({ description: 'API 类型', enum: ['ollama', 'openai'] })
   @IsString()
@@ -51,11 +57,18 @@ export class LlmModelCreateDto {
 
   @ApiProperty({ description: '标签', required: false, type: [String] })
   @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
   tags?: string[];
 
   @ApiProperty({ description: 'Provider ID' })
   @IsString()
   provider: string;
+
+  @ApiProperty({ description: '是否公开', default: false })
+  @IsOptional()
+  @IsBoolean()
+  isPublic?: boolean = false;
 
   @ApiProperty({ description: 'License', required: false })
   @IsOptional()

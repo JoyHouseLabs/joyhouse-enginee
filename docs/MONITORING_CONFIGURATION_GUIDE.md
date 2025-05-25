@@ -23,7 +23,7 @@
 monitoring:
   enabled: true
   websocket:
-    port: 3000
+    port: 1666
     namespace: "/workflow-monitor"
     corsOrigin: "*"
   performance:
@@ -44,9 +44,9 @@ monitoring:
 MONITORING_ENABLED=true
 
 # WebSocket配置
-WEBSOCKET_PORT=3000
+WEBSOCKET_PORT=1666
 WEBSOCKET_NAMESPACE=/workflow-monitor
-WEBSOCKET_CORS_ORIGIN=http://localhost:3000,http://localhost:3001
+WEBSOCKET_CORS_ORIGIN=http://localhost:1666,http://localhost:3001
 
 # 性能监控配置
 PERFORMANCE_TRACKING_ENABLED=true
@@ -72,7 +72,7 @@ ENABLE_PERFORMANCE_EVENTS=true
 
 | 配置项 | YAML路径 | 环境变量 | 默认值 | 说明 |
 |--------|----------|----------|--------|------|
-| 端口 | `monitoring.websocket.port` | `WEBSOCKET_PORT` | `3000` | WebSocket服务端口 |
+| 端口 | `monitoring.websocket.port` | `WEBSOCKET_PORT` | `1666` | WebSocket服务端口 |
 | 命名空间 | `monitoring.websocket.namespace` | `WEBSOCKET_NAMESPACE` | `/workflow-monitor` | Socket.IO命名空间 |
 | CORS源 | `monitoring.websocket.corsOrigin` | `WEBSOCKET_CORS_ORIGIN` | `*` | 允许的跨域源 |
 
@@ -110,7 +110,7 @@ PERFORMANCE_WARNING_THRESHOLD_MS=10000
 PERFORMANCE_CRITICAL_THRESHOLD_MS=60000
 
 # 允许本地开发
-WEBSOCKET_CORS_ORIGIN=http://localhost:3000,http://localhost:3001,http://127.0.0.1:3000
+WEBSOCKET_CORS_ORIGIN=http://localhost:1666,http://localhost:3001,http://127.0.0.1:1666
 ```
 
 ### 测试环境配置
@@ -139,7 +139,7 @@ ENABLE_WORKFLOW_EVENTS=true
 ENABLE_PERFORMANCE_EVENTS=true
 
 # 严格的性能阈值
-PERFORMANCE_WARNING_THRESHOLD_MS=3000
+PERFORMANCE_WARNING_THRESHOLD_MS=1666
 PERFORMANCE_CRITICAL_THRESHOLD_MS=10000
 
 # 生产域名
@@ -223,7 +223,7 @@ MONITORING_API_KEY=your-api-key
 monitoring:
   enabled: true  # 主开关：控制整个监控系统
   websocket:
-    port: 3000   # WebSocket端口：建议使用非标准端口
+    port: 1666   # WebSocket端口：建议使用非标准端口
     namespace: "/workflow-monitor"  # 命名空间：避免与其他Socket.IO服务冲突
 ```
 
@@ -235,7 +235,7 @@ describe('Monitoring Configuration', () => {
   it('should load default configuration', () => {
     const config = JoyhouseConfigService.getMonitoringConfig();
     expect(config.enabled).toBe(true);
-    expect(config.websocket.port).toBe(3000);
+    expect(config.websocket.port).toBe(1666);
   });
 
   it('should override with environment variables', () => {

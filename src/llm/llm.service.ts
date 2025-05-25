@@ -17,54 +17,61 @@ export class LlmService {
   ) {}
 
   // Provider CRUD
-  findAllProviders(user_id?: string) {
-    if (user_id) {
-      return this.providerRepo.find({ where: { user_id } });
-    }
-    return this.providerRepo.find();
+  findAllProviders(userId: string) {
+    return this.providerRepo.find({ where: { userId } });
   }
-  findProviderById(id: string, user_id: string) {
-    return this.providerRepo.findOne({ where: { id, user_id } });
+
+  findProviderById(id: string, userId: string) {
+    return this.providerRepo.findOne({ where: { id, userId } });
   }
+
   createProvider(dto: Partial<LlmProvider>) {
+    if (!dto.userId) {
+      throw new Error('userId is required');
+    }
     return this.providerRepo.save(this.providerRepo.create(dto));
   }
+
   updateProvider(id: string, dto: Partial<LlmProvider>) {
     // 只更新当前用户的数据
-    return this.providerRepo.update({ id, user_id: dto.user_id }, dto);
+    return this.providerRepo.update({ id, userId: dto.userId }, dto);
   }
-  async deleteProvider(id: string, user_id: string) {
+
+  async deleteProvider(id: string, userId: string) {
     // 先删除所有该 provider 下的模型
     await this.modelRepo.delete({ provider: { id } });
     // 再删除 provider 本身
-    return this.providerRepo.delete({ id, user_id });
+    return this.providerRepo.delete({ id, userId });
   }
 
   // Model CRUD
-  findAllModels(user_id?: string) {
-    if (user_id) {
-      return this.modelRepo.find({
-        where: { user_id },
-        relations: ['provider'],
-      });
-    }
-    return this.modelRepo.find({ relations: ['provider'] });
-  }
-  findModelById(id: string, user_id: string) {
-    return this.modelRepo.findOne({
-      where: { id, user_id },
+  findAllModels(userId: string) {
+    return this.modelRepo.find({
+      where: { userId },
       relations: ['provider'],
     });
   }
+
+  findModelById(id: string, userId: string) {
+    return this.modelRepo.findOne({
+      where: { id, userId },
+      relations: ['provider'],
+    });
+  }
+
   async findProvidersPaged(
-    user_id: string | undefined,
+    userId: string,
     page = 1,
     limit = 20,
     name?: string,
+    isPublic?: boolean,
   ) {
-    const where: any = user_id ? { user_id } : {};
+    const where: any = { userId };
     if (name)
       where.name = typeof name === 'string' ? Like(`%${name}%`) : undefined;
+    if (typeof isPublic === 'boolean') {
+      where.isPublic = isPublic;
+    }
     const [data, total] = await this.providerRepo.findAndCount({
       where,
       skip: (page - 1) * limit,
@@ -82,16 +89,20 @@ export class LlmService {
   }
 
   async findModelsPaged(
-    user_id: string | undefined,
+    userId: string,
     page = 1,
     limit = 20,
     name?: string,
     provider?: string,
+    isPublic?: boolean,
   ): Promise<{ list: any[]; total: number; page: number; limit: number }> {
-    const where: any = user_id ? { user_id } : {};
+    const where: any = { userId };
     if (name)
       where.name = typeof name === 'string' ? Like(`%${name}%`) : undefined;
     if (provider) where.provider = provider;
+    if (typeof isPublic === 'boolean') {
+      where.isPublic = isPublic;
+    }
     const [list, total] = await this.modelRepo.findAndCount({
       where,
       skip: (page - 1) * limit,
@@ -103,6 +114,9 @@ export class LlmService {
   }
 
   async createModel(dto: Partial<LlmModel> & { providerId?: string }) {
+    if (!dto.userId) {
+      throw new Error('userId is required');
+    }
     let provider = dto.provider;
     if (!provider && dto.providerId) {
       const found = await this.providerRepo.findOneBy({ id: dto.providerId });
@@ -113,10 +127,14 @@ export class LlmService {
     delete (entity as any).providerId;
     return this.modelRepo.save(entity);
   }
+
   async updateModel(
     id: string,
     dto: Partial<LlmModel> & { providerId?: string },
   ) {
+    if (!dto.userId) {
+      throw new Error('userId is required');
+    }
     // 只更新当前用户的数据
     let provider = dto.provider;
     if (!provider && dto.providerId) {
@@ -125,15 +143,16 @@ export class LlmService {
     }
     const updateData = { ...dto, provider };
     delete (updateData as any).providerId;
-    return this.modelRepo.update({ id, user_id: dto.user_id }, updateData);
-  }
-  deleteModel(id: string, user_id: string) {
-    return this.modelRepo.delete({ id, user_id });
+    return this.modelRepo.update({ id, userId: dto.userId }, updateData);
   }
 
-  async setDefaultModel(id: string, user_id: string): Promise<boolean> {
+  deleteModel(id: string, userId: string) {
+    return this.modelRepo.delete({ id, userId });
+  }
+
+  async setDefaultModel(id: string, userId: string): Promise<boolean> {
     // 1. 验证模型是否存在且属于该用户
-    const model = await this.modelRepo.findOne({ where: { id, user_id } });
+    const model = await this.modelRepo.findOne({ where: { id, userId } });
     if (!model) {
       return false;
     }
@@ -141,12 +160,12 @@ export class LlmService {
     // 2. 开启事务，确保操作的原子性
     return this.modelRepo.manager.transaction(async (manager) => {
       // 3. 将该用户的所有模型设置为非默认
-      await manager.update(LlmModel, { user_id }, { is_default: false });
+      await manager.update(LlmModel, { userId }, { is_default: false });
 
       // 4. 将指定模型设置为默认
       const result = await manager.update(
         LlmModel,
-        { id, user_id },
+        { id, userId },
         { is_default: true },
       );
 

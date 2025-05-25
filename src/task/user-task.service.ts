@@ -54,7 +54,7 @@ export class UserTaskService {
     task.name = taskItem.name;
     task.icon = taskItem.icon;
     task.description = taskItem.description;
-    task.user_id = userId;
+    task.userId = userId;
     task.status = TaskStatus.PENDING;
     task.type = taskItem.type;
     task.params = taskItem.params;
@@ -108,7 +108,7 @@ export class UserTaskService {
     progress: number,
   ): Promise<Task> {
     const task = await this.taskRepository.findOne({
-      where: { id: taskId, user_id: userId },
+      where: { id: taskId, userId: userId },
     });
 
     if (!task) {
@@ -128,7 +128,7 @@ export class UserTaskService {
 
   private async handleTaskCompletion(task: Task): Promise<void> {
     if (task.rewardId) {
-      await this.userRewardService.grantReward(task.user_id, task.rewardId);
+      await this.userRewardService.grantReward(task.userId, task.rewardId);
     }
   }
 
@@ -138,7 +138,7 @@ export class UserTaskService {
   ): Promise<Task[]> {
     const query = this.taskRepository
       .createQueryBuilder('task')
-      .where('task.user_id = :userId', { userId });
+      .where('task.userId = :userId', { userId });
 
     if (taskGroupId) {
       query.andWhere('task.taskGroupId = :taskGroupId', { taskGroupId });

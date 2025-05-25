@@ -6,7 +6,7 @@ export class StorageUploadResponseDto {
   @ApiProperty() filesize: number;
   @ApiProperty() filetype: string;
   @ApiProperty() filename: string;
-  @ApiProperty() user_id: string;
+  @ApiProperty() userId: string;
   @ApiProperty({ required: false, description: '所属目录ID' })
   storage_dir_id?: string;
 }

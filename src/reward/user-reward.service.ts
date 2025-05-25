@@ -23,7 +23,7 @@ export class UserRewardService {
 
     const userReward = new UserReward();
     userReward.id = (await import('ulid')).ulid();
-    userReward.user_id = userId;
+    userReward.userId = userId;
     userReward.reward_id = rewardId;
     userReward.amount = reward.amount;
     userReward.type = reward.type;
@@ -35,7 +35,7 @@ export class UserRewardService {
 
   async getUserRewards(userId: string): Promise<UserReward[]> {
     return this.userRewardRepository.find({
-      where: { user_id: userId },
+      where: { userId: userId },
       relations: ['reward'],
     });
   }

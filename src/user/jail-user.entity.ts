@@ -14,7 +14,7 @@ export class JailUser {
   id: string;
 
   @Column()
-  user_id: string;
+  userId: string;
 
   @Column()
   reason: string;
@@ -32,6 +32,6 @@ export class JailUser {
   createdAt: Date;
 
   @ManyToOne(() => User)
-  @JoinColumn({ name: 'user_id' })
+  @JoinColumn({ name: 'userId' })
   user: User;
 }

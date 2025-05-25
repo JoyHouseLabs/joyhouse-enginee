@@ -16,9 +16,9 @@ export class CategoryService {
     return this.categoryRepo.save(entity);
   }
 
-  async findAll(user_id?: string): Promise<Category[]> {
-    if (user_id) {
-      return this.categoryRepo.find({ where: { user_id } });
+  async findAll(userId?: string): Promise<Category[]> {
+    if (userId) {
+      return this.categoryRepo.find({ where: { userId } });
     }
     return this.categoryRepo.find();
   }

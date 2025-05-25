@@ -38,7 +38,7 @@ Agent WebSocket 实时功能允许客户端通过 WebSocket 连接实时监控 A
 
 ```env
 # WebSocket 配置
-WEBSOCKET_CORS_ORIGIN=http://localhost:3000,http://localhost:3001
+WEBSOCKET_CORS_ORIGIN=http://localhost:1666,http://localhost:3001
 ```
 
 ### 2. 模块注册
@@ -59,7 +59,7 @@ npm install socket.io-client
 import { AgentRealtimeClient } from './agent-realtime-client';
 
 // 创建客户端
-const client = new AgentRealtimeClient('http://localhost:3000', 'user123');
+const client = new AgentRealtimeClient('http://localhost:1666', 'user123');
 
 // 等待连接
 await new Promise(resolve => {
@@ -345,7 +345,7 @@ POST /agents/:id/conversations/:conversationId/websocket-chat
 
 ```typescript
 // 1. 连接 WebSocket
-const client = new AgentRealtimeClient('http://localhost:3000', 'user123');
+const client = new AgentRealtimeClient('http://localhost:1666', 'user123');
 
 // 2. 等待连接
 await new Promise(resolve => client.on('connected', resolve));
@@ -440,7 +440,7 @@ export function useAgentRealtime(serverUrl: string, userId: string) {
 // 组件中使用
 function ChatComponent() {
   const { client, isConnected, events } = useAgentRealtime(
-    'http://localhost:3000', 
+    'http://localhost:1666', 
     'user123'
   );
 

@@ -8,7 +8,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { BrainService } from './brain.service';
-import { JwtAuthGuard } from '../user/jwt-auth.guard';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @Controller('brain')
 @UseGuards(JwtAuthGuard)

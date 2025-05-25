@@ -24,5 +24,5 @@ export class CreateStorageDirDto {
   @ApiProperty({ required: false })
   @IsOptional()
   @IsString()
-  user_id: string;
+  userId: string;
 }

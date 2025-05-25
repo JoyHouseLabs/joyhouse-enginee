@@ -10,7 +10,7 @@ import {
 import { ApiTags, ApiResponse, ApiBody } from '@nestjs/swagger';
 import { RelayService } from './relay.service';
 import { UseGuards, Req } from '@nestjs/common';
-import { JwtAuthGuard } from '../user/jwt-auth.guard';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CreateRelayDto, UpdateRelayDto } from './relay.dto';
 import { RelayListItemDto, RelayListPageDto } from './relay-list.dto';
 

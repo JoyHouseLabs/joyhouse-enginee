@@ -46,10 +46,10 @@ export class WorkflowExecutionStep {
   @Column({ type: 'text', nullable: true })
   error?: string;
 
-  @Column({ type: 'datetime', nullable: true })
+  @Column({ type: 'timestamp', nullable: true })
   startedAt?: Date;
 
-  @Column({ type: 'datetime', nullable: true })
+  @Column({ type: 'timestamp', nullable: true })
   completedAt?: Date;
 
   @Column({ type: 'integer', default: 0 })

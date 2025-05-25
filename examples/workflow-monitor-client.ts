@@ -428,7 +428,7 @@ export class WorkflowPerformanceMonitor {
 
 // 使用示例
 async function example() {
-  const monitor = new WorkflowPerformanceMonitor('http://localhost:3000', 'user123');
+  const monitor = new WorkflowPerformanceMonitor('http://localhost:1666', 'user123');
   
   // 监控特定工作流执行
   await monitor.monitorExecution('execution-id-123');

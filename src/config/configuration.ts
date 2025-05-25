@@ -4,7 +4,7 @@ export default () => {
   const config = JoyhouseConfigService.loadConfig();
 
   return {
-    port: process.env.PORT ? parseInt(process.env.PORT, 10) : 3000,
+    port: process.env.PORT ? parseInt(process.env.PORT, 10) : 1666,
     database: {
       type: config.dbType,
       host: config.dbHost || process.env.DB_HOST || 'localhost',

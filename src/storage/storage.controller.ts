@@ -28,10 +28,10 @@ import { StorageDir } from './storage-dir.entity';
 
 import { UseGuards } from '@nestjs/common';
 import { RoleGuard } from '../role/role.guard';
-import { JwtAuthGuard } from '../user/jwt-auth.guard';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @ApiTags('存储')
-@UseGuards(JwtAuthGuard, RoleGuard)
+@UseGuards(JwtAuthGuard)
 @ApiBearerAuth()
 @Controller('storage')
 export class StorageController {
@@ -87,7 +87,7 @@ export class StorageController {
   }
 
   @Post('upload')
-  @UseGuards(JwtAuthGuard, RoleGuard)
+  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiConsumes('multipart/form-data')
   @ApiBody({
@@ -120,7 +120,8 @@ export class StorageController {
     fs.writeFileSync(filepath, file.buffer);
     const url = `${domain}/${filepath}`.replace(/\\/g, '/');
     let storage_dir_id = req.body?.storage_dir_id || undefined;
-    if (!storage_dir_id || storage_dir_id == 'home') storage_dir_id = '';
+    if (!storage_dir_id || storage_dir_id == 'home') storage_dir_id = 'publicfiles';
+    
 
     const entity = await this.storageService.saveFile({
       filename,
@@ -128,7 +129,7 @@ export class StorageController {
       filetype: file.mimetype,
       filesize: file.size,
       url,
-      user_id: req.user?.sub || '',
+      userId: req.user?.id || '',
       storage_dir_id,
     });
     return {
@@ -137,7 +138,7 @@ export class StorageController {
       filesize: entity.filesize,
       filetype: entity.filetype,
       filename: entity.filename,
-      user_id: entity.user_id,
+      userId: entity.userId,
       storage_dir_id: entity.storage_dir_id,
     };
   }
@@ -151,7 +152,7 @@ export class StorageController {
   ): Promise<StorageDir> {
     // parent 字段默认为空字符串
     if (!dto.parent || dto.parent == 'home') dto.parent = '';
-    dto.user_id = req.user.sub; // 自动注入当前登录用户id
+    dto.userId = req.user.sub; // 自动注入当前登录用户id
     return this.storageService.createDir(dto);
   }
 }

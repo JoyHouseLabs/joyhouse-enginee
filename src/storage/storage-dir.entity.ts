@@ -18,5 +18,5 @@ export class StorageDir {
   roleIds?: string[];
 
   @Column({ type: 'varchar', length: 64 })
-  user_id: string;
+  userId: string;
 }

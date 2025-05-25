@@ -13,10 +13,10 @@ export class Knowledgefile {
   @ApiProperty() @Column({ type: 'bigint' }) filesize: number;
   @ApiProperty() @Column({ type: 'varchar', length: 1024 }) url: string;
   @ApiProperty()
-  @Column({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
+  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   createdAt: Date;
   @ApiProperty()
-  @Column({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
+  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   updatedAt: Date;
   @ApiProperty()
   @Column({ type: 'varchar', length: 32, default: 'pending' })

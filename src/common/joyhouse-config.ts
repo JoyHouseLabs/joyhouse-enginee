@@ -1,7 +1,8 @@
 import * as fs from 'fs';
 import * as yaml from 'js-yaml';
+import * as path from 'path';
 
-const CONFIG_PATH = __dirname + '/../../joyhouse.yaml';
+const CONFIG_PATH = path.join(process.cwd(), 'joyhouse.yaml');
 
 export interface LoggingConfig {
   dir: string;
@@ -76,7 +77,7 @@ export class JoyhouseConfigService {
       const defaultMonitoring: MonitoringConfig = {
         enabled: true,
         websocket: {
-          port: 3000,
+          port: 1666,
           namespace: '/workflow-monitor',
           corsOrigin: '*',
         },
@@ -100,16 +101,19 @@ export class JoyhouseConfigService {
         uploadDir = uploadDir || config.uploadDir;
         domain = domain || config.domain;
         fileDomain = fileDomain || config.fileDomain;
-        dbType = config.dbType || dbType;
-        dbHost = config.dbHost;
-        dbPort = config.dbPort;
-        dbUser = config.dbUser;
-        dbPassword = config.dbPassword;
-        dbName = config.dbName;
+        if (config.dbType) {
+          dbType = config.dbType;
+          dbHost = config.dbHost;
+          dbPort = config.dbPort;
+          dbUser = config.dbUser;
+          dbPassword = config.dbPassword;
+          dbName = config.dbName;
+        }
         logging = config.logging;
         cors = config.cors;
         monitoring = config.monitoring || defaultMonitoring;
-      } catch {
+      } catch (error) {
+        console.error('Failed to load config file:', error);
         monitoring = defaultMonitoring;
       }
 
@@ -178,7 +182,7 @@ export class JoyhouseConfigService {
 
       JoyhouseConfigService.config = {
         uploadDir: uploadDir || './uploads',
-        domain: domain || 'http://localhost:3000',
+        domain: domain || 'http://localhost:1666',
         fileDomain,
         dbType,
         dbHost,

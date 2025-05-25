@@ -6,7 +6,7 @@ export class Category {
   id: string;
 
   @Column({ type: 'varchar', length: 64 })
-  user_id: string;
+  userId: string;
 
   @Column({ type: 'varchar', length: 128 })
   name: string;

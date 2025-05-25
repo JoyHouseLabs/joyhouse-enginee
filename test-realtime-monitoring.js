@@ -5,7 +5,7 @@ async function testRealtimeMonitoring() {
   console.log('🚀 开始测试工作流实时监控系统...\n');
 
   // 连接到WebSocket服务器
-  const socket = io('http://localhost:3000/workflow-monitor', {
+  const socket = io('http://localhost:1666/workflow-monitor', {
     auth: {
       userId: 'test-user-123'
     },
@@ -166,7 +166,7 @@ async function testRealtimeMonitoring() {
 async function testConnectionStats() {
   console.log('\n📊 测试连接统计功能...');
   
-  const socket = io('http://localhost:3000/workflow-monitor', {
+  const socket = io('http://localhost:1666/workflow-monitor', {
     auth: { userId: 'stats-test-user' }
   });
 
@@ -188,7 +188,7 @@ async function testErrorHandling() {
   console.log('\n🚨 测试错误处理...');
   
   // 测试无效用户ID连接
-  const invalidSocket = io('http://localhost:3000/workflow-monitor', {
+  const invalidSocket = io('http://localhost:1666/workflow-monitor', {
     // 不提供userId
     transports: ['websocket']
   });
@@ -229,7 +229,7 @@ async function runAllTests() {
     console.log('\n' + '=' * 60);
     console.log('🎉 所有测试完成！');
     console.log('\n💡 提示:');
-    console.log('   - 确保服务器在 http://localhost:3000 运行');
+    console.log('   - 确保服务器在 http://localhost:1666 运行');
     console.log('   - 确保工作流模块已正确配置');
     console.log('   - 可以通过启动实际工作流来测试完整功能');
 

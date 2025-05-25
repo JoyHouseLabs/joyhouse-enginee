@@ -38,7 +38,7 @@ export class RewardService {
   private toUserRewardDto(userReward: UserReward): UserRewardDto {
     return {
       id: userReward.id,
-      user_id: userReward.user_id,
+      userId: userReward.userId,
       reward_id: userReward.reward_id,
       type: userReward.type,
       amount: userReward.amount,
@@ -161,7 +161,7 @@ export class RewardService {
     // 创建用户奖励记录
     const userReward = new UserReward();
     userReward.id = (await import('ulid')).ulid();
-    userReward.user_id = dto.user_id;
+    userReward.userId = dto.userId;
     userReward.reward_id = dto.reward_id;
     userReward.type = dto.type;
     userReward.amount = dto.amount;
@@ -191,7 +191,7 @@ export class RewardService {
       throw new Error('Invalid page or limit parameters');
     }
 
-    const where: any = { user_id: userId };
+    const where: any = { userId: userId };
     if (query.type) {
       where.type = query.type;
     }

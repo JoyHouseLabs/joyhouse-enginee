@@ -28,7 +28,7 @@ pnpm add socket.io-client
 
 ```env
 # WebSocket配置
-WEBSOCKET_PORT=3000
+WEBSOCKET_PORT=1666
 WEBSOCKET_CORS_ORIGIN=*
 
 # 监控配置
@@ -60,7 +60,7 @@ pnpm run start:prod
 const { io } = require('socket.io-client');
 
 // 连接到监控服务
-const socket = io('http://localhost:3000/workflow-monitor', {
+const socket = io('http://localhost:1666/workflow-monitor', {
   auth: {
     userId: 'your-user-id'
   }
@@ -86,7 +86,7 @@ socket.emit('subscribe-execution', {
 ```javascript
 const { WorkflowPerformanceMonitor } = require('./examples/workflow-monitor-client');
 
-const monitor = new WorkflowPerformanceMonitor('http://localhost:3000');
+const monitor = new WorkflowPerformanceMonitor('http://localhost:1666');
 
 // 连接并开始监控
 await monitor.connect('user-123');
@@ -131,7 +131,7 @@ console.log('性能报告:', report);
 
 ```javascript
 // 连接到监控服务
-const socket = io('http://localhost:3000/workflow-monitor', {
+const socket = io('http://localhost:1666/workflow-monitor', {
   auth: { userId: 'user-id' },
   transports: ['websocket', 'polling']
 });
@@ -221,7 +221,7 @@ socket.emit('get-batch-performance', {
 
 ```javascript
 // JWT令牌认证
-const socket = io('http://localhost:3000/workflow-monitor', {
+const socket = io('http://localhost:1666/workflow-monitor', {
   auth: {
     token: 'your-jwt-token'
   }
@@ -261,7 +261,7 @@ socket.emit('subscribe-execution', {
 
 ```javascript
 // 启用调试日志
-const socket = io('http://localhost:3000/workflow-monitor', {
+const socket = io('http://localhost:1666/workflow-monitor', {
   auth: { userId: 'user-id' },
   forceNew: true,
   debug: true

@@ -304,7 +304,7 @@ export class AgentRealtimeClient {
 // 使用示例
 export async function exampleUsage() {
   // 创建客户端
-  const client = new AgentRealtimeClient('http://localhost:3000', 'user123', 'token123');
+  const client = new AgentRealtimeClient('http://localhost:1666', 'user123', 'token123');
 
   // 等待连接
   await new Promise(resolve => {

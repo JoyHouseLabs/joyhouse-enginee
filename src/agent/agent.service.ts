@@ -875,4 +875,56 @@ ${toolPrompt}
 
     return stream;
   }
+
+  async findMyAgents(
+    user: User,
+    options: { page: number; pageSize: number; name?: string },
+  ) {
+    const { page, pageSize, name } = options;
+    const queryBuilder = this.agentRepo
+      .createQueryBuilder('agent')
+      .where('agent.userId = :userId', { userId: user.id });
+
+    if (name) {
+      queryBuilder.andWhere('agent.name LIKE :name', { name: `%${name}%` });
+    }
+
+    const [items, total] = await queryBuilder
+      .skip((page - 1) * pageSize)
+      .take(pageSize)
+      .getManyAndCount();
+
+    return {
+      items,
+      total,
+      page,
+      pageSize,
+    };
+  }
+
+  async findPublicAgents(
+    user: User,
+    options: { page: number; pageSize: number; name?: string },
+  ) {
+    const { page, pageSize, name } = options;
+    const queryBuilder = this.agentRepo
+      .createQueryBuilder('agent')
+      .where('agent.isPublic = :isPublic', { isPublic: true });
+
+    if (name) {
+      queryBuilder.andWhere('agent.name LIKE :name', { name: `%${name}%` });
+    }
+
+    const [items, total] = await queryBuilder
+      .skip((page - 1) * pageSize)
+      .take(pageSize)
+      .getManyAndCount();
+
+    return {
+      items,
+      total,
+      page,
+      pageSize,
+    };
+  }
 }

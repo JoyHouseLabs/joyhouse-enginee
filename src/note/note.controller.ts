@@ -21,7 +21,7 @@ import { NoteCreateDto } from './note-create.dto';
 import { NoteUpdateDto } from './note-update.dto';
 import { NoteQueryDto } from './note-query.dto';
 import { NoteListItemDto } from './note-list.dto';
-import { JwtAuthGuard } from '../user/jwt-auth.guard';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { NoteDeleteDto } from './note-delete.dto';
 
 @ApiTags('笔记')

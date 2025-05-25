@@ -99,8 +99,11 @@ export class CollaborationMessage {
   @Column({ type: 'boolean', default: false })
   isImportant: boolean;
 
-  @Column({ type: 'datetime', nullable: true })
+  @Column({ type: 'timestamp', nullable: true })
   editedAt?: Date;
+
+  @Column({ type: 'timestamp', nullable: true })
+  readAt?: Date;
 
   @CreateDateColumn()
   createdAt: Date;

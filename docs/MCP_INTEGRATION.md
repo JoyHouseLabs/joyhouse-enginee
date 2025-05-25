@@ -20,7 +20,7 @@
 
 ```bash
 # 使用 API 创建 MCP 服务器
-curl -X POST http://localhost:3000/api/mcp/servers \
+curl -X POST http://localhost:1666/api/mcp/servers \
   -H "Authorization: Bearer YOUR_JWT_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -46,7 +46,7 @@ curl -X POST http://localhost:3000/api/mcp/servers \
 
 ```bash
 # 连接到服务器
-curl -X POST http://localhost:3000/api/mcp/servers/{server-id}/connect \
+curl -X POST http://localhost:1666/api/mcp/servers/{server-id}/connect \
   -H "Authorization: Bearer YOUR_JWT_TOKEN"
 ```
 
@@ -54,7 +54,7 @@ curl -X POST http://localhost:3000/api/mcp/servers/{server-id}/connect \
 
 ```bash
 # 获取所有 MCP 工具
-curl -X GET http://localhost:3000/api/mcp/tools \
+curl -X GET http://localhost:1666/api/mcp/tools \
   -H "Authorization: Bearer YOUR_JWT_TOKEN"
 ```
 
@@ -62,7 +62,7 @@ curl -X GET http://localhost:3000/api/mcp/tools \
 
 ```bash
 # 执行工具
-curl -X POST http://localhost:3000/api/mcp/servers/{server-id}/execute \
+curl -X POST http://localhost:1666/api/mcp/servers/{server-id}/execute \
   -H "Authorization: Bearer YOUR_JWT_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{

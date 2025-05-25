@@ -11,7 +11,7 @@ export class OperationLog {
   id: string;
 
   @Column()
-  user_id: string;
+  userId: string;
 
   @Column()
   action: string;

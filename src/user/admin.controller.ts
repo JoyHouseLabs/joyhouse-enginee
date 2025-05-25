@@ -16,7 +16,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './user.entity';
 import { JailUser } from './jail-user.entity';
-import { JwtAuthGuard } from './jwt-auth.guard';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../role/roles.guard';
 import { Roles } from '../role/roles.decorator';
 import { MoreThan } from 'typeorm';
@@ -96,7 +96,7 @@ export class AdminController {
     }
 
     const jailUser = this.jailUserRepo.create({
-      user_id: userId,
+      userId: userId,
       reason: body.reason,
       operation: body.operation,
       operator,
@@ -111,7 +111,7 @@ export class AdminController {
   async getUserJailStatus(@Param('userId') userId: string) {
     const activeJail = await this.jailUserRepo.findOne({
       where: {
-        user_id: userId,
+        userId: userId,
         operation: 'login',
         expiredAt: MoreThan(new Date()),
       },

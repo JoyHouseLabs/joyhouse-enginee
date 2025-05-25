@@ -5,7 +5,7 @@ async function testWorkflowMonitoring() {
   console.log('🚀 开始测试工作流实时监控系统...\n');
 
   // 创建监控客户端
-  const monitor = new WorkflowPerformanceMonitor('http://localhost:3000', 'test-user-123');
+  const monitor = new WorkflowPerformanceMonitor('http://localhost:1666', 'test-user-123');
 
   // 模拟执行ID
   const executionId = 'test-execution-' + Date.now();
@@ -128,7 +128,7 @@ async function testWorkflowMonitoring() {
 async function testMultipleWorkflowMonitoring() {
   console.log('\n🔄 测试多工作流并发监控...\n');
 
-  const monitor = new WorkflowPerformanceMonitor('http://localhost:3000', 'test-user-456');
+  const monitor = new WorkflowPerformanceMonitor('http://localhost:1666', 'test-user-456');
   const executionIds = [
     'concurrent-exec-1-' + Date.now(),
     'concurrent-exec-2-' + Date.now(),
@@ -201,7 +201,7 @@ async function testMultipleWorkflowMonitoring() {
 async function testPerformanceStress() {
   console.log('\n⚡ 开始性能压力测试...\n');
 
-  const monitor = new WorkflowPerformanceMonitor('http://localhost:3000', 'stress-test-user');
+  const monitor = new WorkflowPerformanceMonitor('http://localhost:1666', 'stress-test-user');
   const executionCount = 10;
   const nodeCountPerExecution = 20;
 
@@ -227,7 +227,7 @@ async function testPerformanceStress() {
     }
 
     console.log('⏳ 等待压力测试完成...');
-    await new Promise(resolve => setTimeout(resolve, 3000));
+    await new Promise(resolve => setTimeout(resolve, 1666));
 
     console.log('✅ 性能压力测试完成');
 

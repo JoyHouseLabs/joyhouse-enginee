@@ -15,7 +15,7 @@ import {
   ApiBody,
   ApiParam,
 } from '@nestjs/swagger';
-import { JwtAuthGuard } from '../user/jwt-auth.guard';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { LlmService } from './llm.service';
 import { LlmProvider } from './llm-provider.entity';
 import { LlmModel } from './llm-model.entity';
@@ -35,13 +35,14 @@ export class LlmController {
   @ApiResponse({ status: 200, type: [LlmProvider] })
   @ApiBody({ type: LlmProviderQueryDto })
   async findAllProviders(@Req() req, @Query() query: LlmProviderQueryDto) {
-    // 管理员可看全部
-    const userId = req.user.isAdmin ? undefined : req.user.sub;
+    console.log('Request user:', req.user);
+    const userId = req.user.id;
     const result = await this.llmService.findProvidersPaged(
       userId,
       query.page ?? 1,
       query.limit ?? 20,
       query.name,
+      query.isPublic,
     );
 
     // 为每个 provider 添加模型数量
@@ -60,14 +61,14 @@ export class LlmController {
   @Get('provider/:id')
   @ApiResponse({ status: 200, type: LlmProvider })
   findProviderById(@Req() req, @Param('id') id: string) {
-    return this.llmService.findProviderById(id, req.user.sub);
+    return this.llmService.findProviderById(id, req.user.id);
   }
 
   @Post('provider/create')
   @ApiResponse({ status: 201, type: LlmProvider })
   @ApiBody({ type: LlmProviderCreateDto })
   createProvider(@Req() req, @Body() dto: LlmProviderCreateDto) {
-    return this.llmService.createProvider({ ...dto, user_id: req.user.sub });
+    return this.llmService.createProvider({ ...dto, userId: req.user.id });
   }
 
   @Post('provider/update')
@@ -77,7 +78,7 @@ export class LlmController {
     const { id, ...rest } = dto;
     return this.llmService.updateProvider(id, {
       ...rest,
-      user_id: req.user.sub,
+      userId: req.user.id,
     });
   }
 
@@ -87,7 +88,7 @@ export class LlmController {
     @Body() body: { id: string },
     @Req() req,
   ): Promise<{ success: boolean }> {
-    const userId = req.user.sub;
+    const userId = req.user.id;
     const result = await this.llmService.deleteProvider(body.id, userId);
     return { success: !!result.affected };
   }
@@ -97,38 +98,36 @@ export class LlmController {
    * 获取模型列表，可选参数provider_id用于查询特定provider下的模型
    * @param query.provider 指定provider的ID
    */
-  @Get('model/list')
+  @Get('models')
   @ApiResponse({ status: 200, type: [LlmModel] })
   @ApiBody({ type: LlmModelQueryDto })
   async findAllModels(@Req() req, @Query() query: LlmModelQueryDto) {
-    // 管理员可看全部
-    const userId = req.user.isAdmin ? undefined : req.user.sub;
-    // 支持通过provider_id筛选模型
+    const userId = req.user.id;
     return this.llmService.findModelsPaged(
       userId,
       query.page ?? 1,
       query.limit ?? 20,
       query.name,
       query.provider,
+      query.isPublic,
     );
   }
 
   @Get('model/:id')
   @ApiResponse({ status: 200, type: LlmModel })
   findModelById(@Req() req, @Param('id') id: string) {
-    return this.llmService.findModelById(id, req.user.sub);
+    return this.llmService.findModelById(id, req.user.id);
   }
 
   @Post('model/create')
   @ApiResponse({ status: 201, type: LlmModel })
   @ApiBody({ type: LlmModelCreateDto })
   createModel(@Req() req, @Body() dto: LlmModelCreateDto) {
-    // 将 providerId 传递给 service，service 负责查找并赋值
     const { provider, ...rest } = dto;
     return this.llmService.createModel({
       ...rest,
       providerId: provider,
-      user_id: req.user.sub,
+      userId: req.user.id,
     });
   }
 
@@ -140,7 +139,7 @@ export class LlmController {
     return this.llmService.updateModel(id, {
       ...rest,
       providerId: provider,
-      user_id: req.user.sub,
+      userId: req.user.id,
     });
   }
 
@@ -156,7 +155,7 @@ export class LlmController {
     @Body() body: { id: string },
     @Req() req,
   ): Promise<{ success: boolean }> {
-    const userId = req.user.sub;
+    const userId = req.user.id;
     const result = await this.llmService.deleteModel(body.id, userId);
     return { success: !!result.affected };
   }
@@ -173,7 +172,7 @@ export class LlmController {
     @Req() req,
     @Body() body: { id: string },
   ): Promise<{ success: boolean }> {
-    const userId = req.user.sub;
+    const userId = req.user.id;
     const result = await this.llmService.setDefaultModel(body.id, userId);
     return { success: result };
   }

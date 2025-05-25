@@ -12,7 +12,7 @@ import { ApiTags, ApiResponse, ApiBody, ApiBearerAuth } from '@nestjs/swagger';
 import { ReplyCreateDto, ReplyUpdateDto } from './reply.dto';
 import { ReplyQueryDto } from './reply-query.dto';
 import { ReplyListItemDto, ReplyListPageDto } from './reply-list.dto';
-import { JwtAuthGuard } from '../user/jwt-auth.guard';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ReplyService } from './reply.service';
 
 @ApiTags('回复')

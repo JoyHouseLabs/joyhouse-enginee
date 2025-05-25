@@ -17,7 +17,7 @@ import { RoleService } from './role.service';
 import { Role } from './role.entity';
 import { UserRole } from './user-role.entity';
 import { Permission } from './permission.entity';
-import { JwtAuthGuard } from '../user/jwt-auth.guard';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RoleGuard } from './role.guard';
 import { Roles } from './roles.decorator';
 
@@ -60,9 +60,9 @@ export class RoleController {
   @ApiResponse({ status: 201, description: '成功创建角色', type: Role })
   @Roles('admin')
   async createRole(
-    @Body() dto: { name: string; description?: string; user_id?: string },
+    @Body() dto: { name: string; description?: string; userId?: string },
   ): Promise<Role> {
-    return this.roleService.createRole(dto, dto.user_id);
+    return this.roleService.createRole(dto, dto.userId);
   }
 
   @Post('delete')
@@ -70,9 +70,9 @@ export class RoleController {
   @ApiResponse({ status: 200, description: '成功删除角色' })
   @Roles('admin')
   async deleteRole(
-    @Body() dto: { id: string; user_id?: string },
+    @Body() dto: { id: string; userId?: string },
   ): Promise<void> {
-    return this.roleService.deleteRole(dto.id, dto.user_id);
+    return this.roleService.deleteRole(dto.id, dto.userId);
   }
 
   // 用户-角色管理
@@ -84,8 +84,8 @@ export class RoleController {
     type: [UserRole],
   })
   @Roles('admin')
-  async getUserRoles(@Body() dto: { user_id: string }): Promise<UserRole[]> {
-    return this.roleService.getUserRoleRelations(dto.user_id);
+  async getUserRoles(@Body() dto: { userId: string }): Promise<UserRole[]> {
+    return this.roleService.getUserRoleRelations(dto.userId);
   }
 
   @Post('user')
@@ -93,10 +93,10 @@ export class RoleController {
   @ApiResponse({ status: 201, description: '成功分配角色', type: UserRole })
   @Roles('admin')
   async assignRoleToUser(
-    @Body() dto: { user_id: string; role_id: string; operator_id?: string },
+    @Body() dto: { userId: string; role_id: string; operator_id?: string },
   ): Promise<UserRole> {
     return this.roleService.assignRoleToUser(
-      dto.user_id,
+      dto.userId,
       dto.role_id,
       dto.operator_id,
     );
@@ -137,10 +137,10 @@ export class RoleController {
       role_id: string;
       controller: string;
       method: string;
-      user_id?: string;
+      userId?: string;
     },
   ): Promise<Permission> {
-    return this.roleService.addPermission(dto, dto.user_id);
+    return this.roleService.addPermission(dto, dto.userId);
   }
 
   @Post('permission/remove')
@@ -148,8 +148,8 @@ export class RoleController {
   @ApiResponse({ status: 200, description: '成功移除权限' })
   @Roles('admin')
   async removePermission(
-    @Body() dto: { id: string; user_id?: string },
+    @Body() dto: { id: string; userId?: string },
   ): Promise<void> {
-    return this.roleService.removePermission(dto.id, dto.user_id);
+    return this.roleService.removePermission(dto.id, dto.userId);
   }
 }

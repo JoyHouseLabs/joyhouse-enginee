@@ -9,7 +9,7 @@ import time
 import sys
 
 # API基础URL
-BASE_URL = "http://localhost:3000"
+BASE_URL = "http://localhost:1666"
 
 # 测试用户认证token（需要替换为实际token）
 AUTH_TOKEN = "your-jwt-token-here"

@@ -218,7 +218,7 @@ export const memeGeneratorWorkflowTemplate = {
     location: 'Beijing',
     retryCount: 0,
     maxRetries: 3,
-    userId: '{{USER_ID}}', // 需要替换为实际用户ID
+    userId: '{{userId}}', // 需要替换为实际用户ID
   },
 
   triggers: [

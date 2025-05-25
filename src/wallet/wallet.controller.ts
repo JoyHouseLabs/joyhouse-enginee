@@ -1,7 +1,7 @@
 import { Controller, Post, Body, Patch, Req, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiResponse, ApiBody, ApiBearerAuth } from '@nestjs/swagger';
 import { WalletService } from './wallet.service';
-import { JwtAuthGuard } from '../user/jwt-auth.guard';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { IsString, IsOptional } from 'class-validator';
 
 import { ApiProperty } from '@nestjs/swagger';

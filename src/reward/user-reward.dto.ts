@@ -6,7 +6,7 @@ export class UserRewardDto {
   id: string;
 
   @ApiProperty({ description: '用户ID' })
-  user_id: string;
+  userId: string;
 
   @ApiProperty({ description: '奖励ID' })
   reward_id: string;
@@ -55,7 +55,7 @@ export class UserRewardDto {
 
 export class CreateUserRewardDto {
   @ApiProperty({ description: '用户ID' })
-  user_id: string;
+  userId: string;
 
   @ApiProperty({ description: '奖励ID' })
   reward_id: string;

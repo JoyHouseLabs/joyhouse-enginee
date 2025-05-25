@@ -125,7 +125,7 @@ export class StorageService {
 
   async findDirByUserIdAndName(userId: string, name: string) {
     return this.storageDirRepo.findOne({
-      where: { user_id: userId, name, parent: '' },
+      where: { userId: userId, name, parent: '' },
     });
   }
 

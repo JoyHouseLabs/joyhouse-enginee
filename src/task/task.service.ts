@@ -31,7 +31,7 @@ export class TaskService {
       name: task.name,
       icon: task.icon,
       description: task.description,
-      user_id: task.user_id,
+      userId: task.userId,
       status: task.status,
       progress: task.progress,
       type: task.type,
@@ -78,7 +78,7 @@ export class TaskService {
       throw new Error('Invalid page or limit parameters');
     }
 
-    const where: any = { user_id: userId };
+    const where: any = { userId: userId };
     if (query.name) {
       where.name = Like(`%${query.name}%`);
     }
@@ -109,7 +109,7 @@ export class TaskService {
 
   async findOne(id: string, userId: string): Promise<TaskDto> {
     const task = await this.taskRepo.findOne({
-      where: { id, user_id: userId },
+      where: { id, userId: userId },
       relations: {
         user: true,
       },
@@ -139,7 +139,7 @@ export class TaskService {
 
   async remove(id: string, userId: string): Promise<void> {
     const task = await this.taskRepo.findOne({
-      where: { id, user_id: userId },
+      where: { id, userId: userId },
     });
     if (task && task.type === TaskType.CRON) {
       await this.taskScheduler.unscheduleTask(id);
@@ -164,7 +164,7 @@ export class TaskService {
     tomorrow.setDate(tomorrow.getDate() + 1);
 
     const where: any = {
-      user_id: userId,
+      userId: userId,
       dueDate: Between(today, tomorrow),
     };
     if (query.name) {
@@ -214,7 +214,7 @@ export class TaskService {
     endOfWeek.setDate(startOfWeek.getDate() + 7);
 
     const where: any = {
-      user_id: userId,
+      userId: userId,
       dueDate: Between(startOfWeek, endOfWeek),
     };
     if (query.name) {
@@ -270,7 +270,7 @@ export class TaskService {
     );
 
     const where: any = {
-      user_id: userId,
+      userId: userId,
       dueDate: Between(startOfMonth, endOfMonth),
     };
     if (query.name) {
@@ -307,7 +307,7 @@ export class TaskService {
     status: TaskStatus,
   ): Promise<TaskDto> {
     const task = await this.taskRepo.findOne({
-      where: { id, user_id: userId },
+      where: { id, userId: userId },
     });
     if (!task) {
       throw new Error('Task not found');

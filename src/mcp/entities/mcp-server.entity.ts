@@ -68,7 +68,7 @@ export class McpServer {
   @Column({ type: 'text', nullable: true })
   lastError?: string;
 
-  @Column({ type: 'datetime', nullable: true })
+  @Column({ type: 'timestamp', nullable: true })
   lastConnectedAt?: Date;
 
   @Column({ type: 'json', nullable: true })

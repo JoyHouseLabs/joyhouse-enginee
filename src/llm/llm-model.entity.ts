@@ -23,17 +23,17 @@ export class LlmModel {
   tags: string[];
 
   @Column()
-  user_id: string;
+  userId: string;
 
   @ApiProperty({ type: () => LlmProvider })
   @ManyToOne(() => LlmProvider, (provider) => provider.models)
   provider: LlmProvider;
 
   @ApiProperty()
-  @Column({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
+  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   createdAt: Date;
   @ApiProperty()
-  @Column({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
+  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   updatedAt: Date;
 
   @Column({ nullable: true })
@@ -44,4 +44,7 @@ export class LlmModel {
 
   @Column({ default: false })
   is_default: boolean;
+
+  @Column({ default: false })
+  isPublic: boolean;
 }

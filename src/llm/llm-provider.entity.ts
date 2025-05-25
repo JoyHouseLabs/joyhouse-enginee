@@ -27,24 +27,27 @@ export class LlmProvider {
   @Column({ default: true })
   status: boolean;
 
+  @Column({ default: false })
+  isPublic: boolean;
+
   @ApiProperty({ description: 'api类型', enum: ['ollama', 'openai'] })
   @Column({ type: 'varchar', length: 32 })
   apiType: LlmApiType;
 
   @ApiProperty()
-  @Column({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
+  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   createdAt: Date;
 
   @ApiProperty()
   @Column({
-    type: 'datetime',
+    type: 'timestamp',
     default: () => 'CURRENT_TIMESTAMP',
     onUpdate: 'CURRENT_TIMESTAMP',
   })
   updatedAt: Date;
 
   @Column()
-  user_id: string;
+  userId: string;
 
   @OneToMany(() => LlmModel, (model) => model.provider)
   models: LlmModel[];
