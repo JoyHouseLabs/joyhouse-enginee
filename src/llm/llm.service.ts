@@ -410,4 +410,9 @@ export class LlmService {
         });
     });
   }
+
+  async findOne(id: string): Promise<LlmModel | undefined> {
+    const model = await this.modelRepo.findOne({ where: { id }, relations: ['provider'] });
+    return model || undefined;
+  }
 }

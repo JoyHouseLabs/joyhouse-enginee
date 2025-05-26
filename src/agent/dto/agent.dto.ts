@@ -94,6 +94,21 @@ export class CreateAgentDto {
   @IsOptional()
   llmParams?: LlmParamsDto;
 
+  @ApiProperty({ required: false })
+  @IsString()
+  @IsOptional()
+  modelId?: string;
+
+  @ApiProperty({ required: false })
+  @IsString()
+  @IsOptional()
+  providerId?: string;
+
+  @ApiProperty({ required: false })
+  @IsBoolean()
+  @IsOptional()
+  isPublic?: boolean;
+
   @IsOptional()
   @IsObject()
   intentRecognition?: IntentRecognitionConfig;
@@ -134,13 +149,25 @@ export class UpdateAgentDto {
   @IsOptional()
   @IsObject()
   llmParams?: {
-    model?: string;
+    model: string; // 必填
     temperature?: number;
     maxTokens?: number;
     topP?: number;
     frequencyPenalty?: number;
     presencePenalty?: number;
   };
+
+  @IsOptional()
+  @IsString()
+  modelId?: string;
+
+  @IsOptional()
+  @IsString()
+  providerId?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  isPublic?: boolean;
 
   @IsOptional()
   @IsObject()

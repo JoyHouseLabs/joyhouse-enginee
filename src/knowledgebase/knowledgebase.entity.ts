@@ -1,4 +1,4 @@
-import { Entity, PrimaryColumn, Column } from 'typeorm';
+import { Entity, PrimaryColumn, Column, OneToMany } from 'typeorm';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 @Entity()
@@ -27,10 +27,16 @@ export class Knowledgebase {
   @ApiPropertyOptional()
   @Column({ type: 'varchar', length: 128, nullable: true })
   embeddingModel?: string;
+  @ApiPropertyOptional()
+  @Column({ type: 'json', nullable: true })
+  processingConfig?: any;
   @ApiProperty()
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   createdAt: Date;
   @ApiProperty()
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   updatedAt: Date;
+
+  @OneToMany('KnowledgeChunk', 'knowledgebase')
+  chunks: any[];
 }

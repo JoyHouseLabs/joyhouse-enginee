@@ -3,16 +3,19 @@ import {
   NotFoundException,
   Inject,
   forwardRef,
+  Logger,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Agent } from './entities/agent.entity';
+import { RoleCard } from './entities/role-card.entity';
 import { Conversation } from './entities/conversation.entity';
 import {
   ConversationHistory,
   MessageRole,
 } from './entities/conversation-history.entity';
 import { CreateAgentDto, UpdateAgentDto } from './dto/agent.dto';
+import { CreateRoleCardDto, UpdateRoleCardDto } from './dto/role-card.dto';
 import {
   CreateConversationDto,
   UpdateConversationDto,
@@ -64,9 +67,13 @@ interface ActionExecutionResult {
 
 @Injectable()
 export class AgentService {
+  private readonly logger = new Logger(AgentService.name);
+
   constructor(
     @InjectRepository(Agent)
     private readonly agentRepo: Repository<Agent>,
+    @InjectRepository(RoleCard)
+    private readonly roleCardRepo: Repository<RoleCard>,
     @InjectRepository(Conversation)
     private readonly conversationRepo: Repository<Conversation>,
     @InjectRepository(ConversationHistory)
@@ -713,6 +720,60 @@ ${workflowsDescription}
   }
 
   /**
+   * 基于知识库增强的对话回复
+   */
+  private async generateKnowledgeEnhancedResponse(
+    userMessage: string,
+    history: ConversationHistory[],
+    agent: Agent,
+    user: User,
+  ): Promise<string> {
+    // 获取当前角色卡片
+    const currentRoleCard = await this.getCurrentRoleCard(agent.id, user);
+    
+    // 如果有角色卡片且配置了知识库，进行知识库搜索
+    let knowledgeContext = '';
+    if (currentRoleCard?.enabledKnowledgeBases && currentRoleCard.enabledKnowledgeBases.length > 0) {
+      try {
+        // 简化的知识库搜索（实际应该调用 SemanticSearchService）
+        const recentContext = history.slice(-3).map(h => h.content).join(' ');
+        knowledgeContext = await this.searchKnowledgeForContext(
+          userMessage,
+          currentRoleCard.enabledKnowledgeBases,
+          recentContext
+        );
+      } catch (error) {
+        this.logger.warn('Knowledge search failed:', error);
+      }
+    }
+
+    // 构建增强的系统提示词
+    const systemPrompt = this.buildEnhancedSystemPrompt(agent, currentRoleCard, knowledgeContext);
+
+    // 准备对话消息
+    const messages = [
+      {
+        role: 'system' as const,
+        content: systemPrompt,
+      },
+      ...history.slice(-10).map((h) => ({
+        role: h.role.toLowerCase() as 'user' | 'assistant' | 'system',
+        content: h.content,
+      })),
+    ];
+
+    // 调用LLM
+    const response = await this.llmService.chat({
+      model: currentRoleCard?.llmParams?.model || agent.llmParams?.model || 'gpt-3.5-turbo',
+      messages,
+      temperature: currentRoleCard?.llmParams?.temperature || agent.llmParams?.temperature || 0.7,
+      maxTokens: currentRoleCard?.llmParams?.maxTokens || agent.llmParams?.maxTokens || 1000,
+    });
+
+    return response.content;
+  }
+
+  /**
    * 生成传统对话回复（回退模式）
    */
   private async generateTraditionalResponse(
@@ -926,5 +987,358 @@ ${toolPrompt}
       page,
       pageSize,
     };
+  }
+
+  // 切换角色
+  async switchRole(agentId: string, roleId: string, user: User): Promise<Agent> {
+    const agent = await this.findOne(agentId, user);
+    const role = agent.longTermMemory?.roles.find(r => r.id === roleId);
+    if (!role) throw new Error('Role not found');
+    if (!agent.shortTermMemory) agent.shortTermMemory = { context: '', lastInteraction: new Date() };
+    agent.shortTermMemory.activeRole = role.name;
+    agent.shortTermMemory.activePrompt = role.prompt;
+    return this.agentRepo.save(agent);
+  }
+
+  // 更新环境上下文
+  async updateEnvironmentContext(agentId: string, context: any, user: User): Promise<Agent> {
+    const agent = await this.findOne(agentId, user);
+    if (!agent.environmentContext) agent.environmentContext = { collaborators: [], sharedContext: {} };
+    agent.environmentContext = { ...agent.environmentContext, ...context };
+    return this.agentRepo.save(agent);
+  }
+
+  // 同步协作 agent 的上下文
+  async syncCollaboratorContext(agentId: string, collaboratorId: string, user: User): Promise<Agent> {
+    const agent = await this.findOne(agentId, user);
+    const collaborator = await this.findOne(collaboratorId, user);
+    if (!agent.environmentContext) agent.environmentContext = { collaborators: [], sharedContext: {} };
+    if (!agent.environmentContext.collaborators) agent.environmentContext.collaborators = [];
+    agent.environmentContext.collaborators = agent.environmentContext.collaborators.map(c => 
+      c.agentId === collaboratorId ? { ...c, lastSync: new Date() } : c
+    );
+    return this.agentRepo.save(agent);
+  }
+
+  // ==================== RoleCard 相关方法 ====================
+
+  // 创建角色卡片
+  async createRoleCard(createRoleCardDto: CreateRoleCardDto, user: User): Promise<RoleCard> {
+    const roleCard = this.roleCardRepo.create({
+      ...createRoleCardDto,
+      user,
+    });
+    return this.roleCardRepo.save(roleCard);
+  }
+
+  // 获取我的角色卡片列表
+  async findMyRoleCards(
+    user: User,
+    options: { page: number; pageSize: number; name?: string },
+  ) {
+    const { page, pageSize, name } = options;
+    const queryBuilder = this.roleCardRepo
+      .createQueryBuilder('roleCard')
+      .where('roleCard.userId = :userId', { userId: user.id });
+
+    if (name) {
+      queryBuilder.andWhere('roleCard.name LIKE :name', { name: `%${name}%` });
+    }
+
+    const [items, total] = await queryBuilder
+      .skip((page - 1) * pageSize)
+      .take(pageSize)
+      .getManyAndCount();
+
+    return {
+      items,
+      total,
+      page,
+      pageSize,
+    };
+  }
+
+  // 获取公开的角色卡片列表
+  async findPublicRoleCards(
+    user: User,
+    options: { page: number; pageSize: number; name?: string },
+  ) {
+    const { page, pageSize, name } = options;
+    const queryBuilder = this.roleCardRepo
+      .createQueryBuilder('roleCard')
+      .where('roleCard.isPublic = :isPublic', { isPublic: true });
+
+    if (name) {
+      queryBuilder.andWhere('roleCard.name LIKE :name', { name: `%${name}%` });
+    }
+
+    const [items, total] = await queryBuilder
+      .skip((page - 1) * pageSize)
+      .take(pageSize)
+      .getManyAndCount();
+
+    return {
+      items,
+      total,
+      page,
+      pageSize,
+    };
+  }
+
+  // 获取指定角色卡片
+  async findOneRoleCard(id: string, user: User): Promise<RoleCard> {
+    const roleCard = await this.roleCardRepo.findOne({
+      where: [
+        { id, user: { id: user.id } }, // 用户自己的角色卡片
+        { id, isPublic: true }, // 公开的角色卡片
+      ],
+      relations: ['user'],
+    });
+
+    if (!roleCard) {
+      throw new NotFoundException(`RoleCard with ID ${id} not found`);
+    }
+
+    return roleCard;
+  }
+
+  // 更新角色卡片
+  async updateRoleCard(
+    id: string,
+    updateRoleCardDto: UpdateRoleCardDto,
+    user: User,
+  ): Promise<RoleCard> {
+    const roleCard = await this.roleCardRepo.findOne({
+      where: { id, user: { id: user.id } },
+    });
+
+    if (!roleCard) {
+      throw new NotFoundException(`RoleCard with ID ${id} not found`);
+    }
+
+    Object.assign(roleCard, updateRoleCardDto);
+    return this.roleCardRepo.save(roleCard);
+  }
+
+  // 删除角色卡片
+  async removeRoleCard(id: string, user: User): Promise<void> {
+    const roleCard = await this.roleCardRepo.findOne({
+      where: { id, user: { id: user.id } },
+    });
+
+    if (!roleCard) {
+      throw new NotFoundException(`RoleCard with ID ${id} not found`);
+    }
+
+    await this.roleCardRepo.remove(roleCard);
+  }
+
+  // 为 Agent 添加角色卡片
+  async addRoleCardToAgent(agentId: string, roleCardId: string, user: User): Promise<Agent> {
+    const agent = await this.findOne(agentId, user);
+    const roleCard = await this.findOneRoleCard(roleCardId, user);
+
+    if (!agent.roleCards) {
+      agent.roleCards = [];
+    }
+
+    // 检查是否已经添加过
+    const exists = agent.roleCards.some(rc => rc.id === roleCardId);
+    if (!exists) {
+      agent.roleCards.push(roleCard);
+      await this.agentRepo.save(agent);
+    }
+
+    return agent;
+  }
+
+  // 从 Agent 移除角色卡片
+  async removeRoleCardFromAgent(agentId: string, roleCardId: string, user: User): Promise<Agent> {
+    const agent = await this.agentRepo.findOne({
+      where: { id: agentId, user: { id: user.id } },
+      relations: ['roleCards'],
+    });
+
+    if (!agent) {
+      throw new NotFoundException(`Agent with ID ${agentId} not found`);
+    }
+
+    agent.roleCards = agent.roleCards.filter(rc => rc.id !== roleCardId);
+    
+    // 如果移除的是当前激活的角色卡片，清除激活状态
+    if (agent.currentRoleCardId === roleCardId) {
+      agent.currentRoleCardId = undefined;
+    }
+
+    return this.agentRepo.save(agent);
+  }
+
+  // 切换 Agent 的角色卡片
+  async switchAgentRoleCard(agentId: string, roleCardId: string, user: User): Promise<Agent> {
+    const agent = await this.agentRepo.findOne({
+      where: { id: agentId, user: { id: user.id } },
+      relations: ['roleCards'],
+    });
+
+    if (!agent) {
+      throw new NotFoundException(`Agent with ID ${agentId} not found`);
+    }
+
+    const roleCard = agent.roleCards.find(rc => rc.id === roleCardId);
+    if (!roleCard) {
+      throw new NotFoundException(`RoleCard with ID ${roleCardId} not found in agent's role cards`);
+    }
+
+    // 更新当前激活的角色卡片
+    agent.currentRoleCardId = roleCardId;
+
+    // 根据角色卡片配置更新 agent 的相关设置
+    if (roleCard.llmParams) {
+      agent.llmParams = { ...agent.llmParams, ...roleCard.llmParams };
+    }
+
+    if (roleCard.intentRecognitionConfig) {
+      agent.intentRecognition = roleCard.intentRecognitionConfig as any;
+    }
+
+    if (roleCard.enabledTools) {
+      agent.enabledTools = roleCard.enabledTools;
+    }
+
+    if (roleCard.enabledMcpTools) {
+      agent.enabledMcpTools = roleCard.enabledMcpTools;
+    }
+
+    if (roleCard.enabledWorkflows) {
+      agent.enabledWorkflows = roleCard.enabledWorkflows;
+    }
+
+    // 更新短期记忆
+    if (!agent.shortTermMemory) {
+      agent.shortTermMemory = { context: '', lastInteraction: new Date() };
+    }
+    agent.shortTermMemory.activeRole = roleCard.name;
+    agent.shortTermMemory.activePrompt = roleCard.systemPrompt;
+
+    return this.agentRepo.save(agent);
+  }
+
+  // 获取 Agent 的当前角色卡片
+  async getCurrentRoleCard(agentId: string, user: User): Promise<RoleCard | null> {
+    const agent = await this.agentRepo.findOne({
+      where: { id: agentId, user: { id: user.id } },
+      relations: ['roleCards'],
+    });
+
+    if (!agent || !agent.currentRoleCardId) {
+      return null;
+    }
+
+    return agent.roleCards.find(rc => rc.id === agent.currentRoleCardId) || null;
+  }
+
+  // 根据角色卡片配置生成聊天回复
+  async chatWithRoleCard(
+    agentId: string,
+    conversationId: string,
+    chatRequestDto: ChatRequestDto,
+    user: User,
+  ): Promise<any> {
+    const agent = await this.findOne(agentId, user);
+    const currentRoleCard = await this.getCurrentRoleCard(agentId, user);
+
+    if (!currentRoleCard) {
+      // 如果没有激活的角色卡片，使用默认的聊天逻辑
+      return this.chat(agentId, conversationId, chatRequestDto, user);
+    }
+
+    const conversation = await this.findOneConversation(conversationId, user);
+
+    if (conversation.agent.id !== agentId) {
+      throw new NotFoundException('Conversation does not belong to this agent');
+    }
+
+    // 保存用户消息
+    await this.addMessage(
+      conversationId,
+      {
+        role: MessageRole.USER,
+        content: chatRequestDto.message,
+      },
+      user,
+    );
+
+    // 获取对话历史
+    const history = await this.getConversationHistory(conversationId, user);
+
+    // 使用角色卡片的配置进行对话
+    const messages = [
+      {
+        role: 'system' as const,
+        content: currentRoleCard.systemPrompt,
+      },
+      ...history.map((h) => ({
+        role: h.role.toLowerCase() as 'user' | 'assistant' | 'system',
+        content: h.content,
+      })),
+    ];
+
+    // 使用角色卡片的 LLM 参数
+    const llmParams = currentRoleCard.llmParams || agent.llmParams;
+    const response = await this.llmService.chat({
+      model: llmParams?.model || 'gpt-3.5-turbo',
+      messages,
+      temperature: llmParams?.temperature || 0.7,
+      maxTokens: llmParams?.maxTokens || 1000,
+    });
+
+    // 保存助手回复
+    const assistantMessage = await this.addMessage(
+      conversationId,
+      {
+        role: MessageRole.ASSISTANT,
+        content: response.content,
+      },
+      user,
+    );
+
+    return {
+      message: response.content,
+      conversationId,
+      agentId,
+      roleCard: {
+        id: currentRoleCard.id,
+        name: currentRoleCard.name,
+      },
+    };
+  }
+
+  // 知识库搜索相关的辅助方法
+  private async searchKnowledgeForContext(
+    query: string,
+    knowledgebaseIds: string[],
+    context: string
+  ): Promise<string> {
+    // TODO: 实现知识库搜索
+    // 这里应该调用 SemanticSearchService
+    return `基于知识库搜索的上下文信息：${query}`;
+  }
+
+  private buildEnhancedSystemPrompt(
+    agent: Agent,
+    roleCard: RoleCard | null,
+    knowledgeContext: string
+  ): string {
+    let systemPrompt = agent.description || `你是 ${agent.name}`;
+
+    if (roleCard) {
+      systemPrompt = roleCard.systemPrompt || systemPrompt;
+    }
+
+    if (knowledgeContext) {
+      systemPrompt += `\n\n相关知识库信息：\n${knowledgeContext}`;
+    }
+
+    return systemPrompt;
   }
 }

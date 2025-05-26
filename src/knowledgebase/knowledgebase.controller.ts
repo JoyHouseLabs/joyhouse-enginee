@@ -8,6 +8,7 @@ import {
   UseGuards,
   Query,
   UploadedFile,
+  UploadedFiles,
   UseInterceptors,
 } from '@nestjs/common';
 import { JoyhouseConfigService } from '../common/joyhouse-config';
@@ -19,13 +20,25 @@ import {
   ApiBearerAuth,
   ApiQuery,
   ApiConsumes,
+  ApiOperation,
 } from '@nestjs/swagger';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { KnowledgebaseService } from './knowledgebase.service';
 import { KnowledgefileService } from './knowledgefile.service';
+import { SemanticSearchService } from './services/semantic-search.service';
+import { DocumentProcessingService } from './services/document-processing.service';
+
 import { KnowledgebaseDto } from './knowledgebase.dto';
 import { KnowledgebaseCreateDto } from './knowledgebase-create.dto';
 import { KnowledgebaseUpdateDto } from './knowledgebase-update.dto';
+import {
+  KnowledgeSearchDto,
+  AgentKnowledgeSearchDto,
+  ChunkQueryDto,
+  BatchUploadDto,
+  KnowledgeSyncDto,
+  KnowledgeQADto,
+} from './dto/knowledge-search.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @ApiTags('知识库')
@@ -36,6 +49,8 @@ export class KnowledgebaseController {
   constructor(
     private readonly kbService: KnowledgebaseService,
     private readonly kfService: KnowledgefileService,
+    private readonly searchService: SemanticSearchService,
+    private readonly processingService: DocumentProcessingService,
   ) {}
 
   /**
@@ -251,5 +266,85 @@ export class KnowledgebaseController {
   async delete(@Param('id') id: string, @Req() req) {
     const userId = req.user.sub;
     return this.kbService.remove(id, userId);
+  }
+
+  @Post('search')
+  @ApiResponse({ status: 200, description: '语义搜索知识库' })
+  async searchKnowledge(
+    @Body() searchDto: KnowledgeSearchDto,
+    @Req() req,
+  ) {
+    const userId = req.user.sub;
+    return this.searchService.searchKnowledge(
+      searchDto.query,
+      searchDto.knowledgebaseIds,
+      searchDto.options
+    );
+  }
+
+  @Post('search-for-agent')
+  @ApiResponse({ status: 200, description: 'Agent 专用知识库搜索' })
+  async searchForAgent(
+    @Body() searchDto: AgentKnowledgeSearchDto,
+    @Req() req,
+  ) {
+    const userId = req.user.sub;
+    // TODO: 从角色卡片服务获取启用的知识库列表
+    // 暂时返回空数组，需要集成角色卡片服务
+    const enabledKnowledgeBases: string[] = [];
+    return this.searchService.searchForAgent(
+      searchDto.query,
+      enabledKnowledgeBases,
+      searchDto.context
+    );
+  }
+
+  @Get(':id/chunks')
+  @ApiResponse({ status: 200, description: '获取知识库的所有知识块' })
+  async getKnowledgeChunks(
+    @Param('id') id: string,
+    @Query() query: ChunkQueryDto,
+    @Req() req,
+  ) {
+    const userId = req.user.sub;
+    // 验证用户是否有权限访问该知识库
+    await this.kbService.findById(id, userId);
+    
+    // 构建搜索选项
+    const searchOptions = {
+      limit: query.pageSize || 20,
+      filters: {
+        codeLanguage: query.codeLanguage,
+        importance: query.minImportance,
+      },
+    };
+
+    // 如果有内容搜索，使用搜索服务
+    if (query.content) {
+      return this.searchService.searchKnowledge(query.content, [id], searchOptions);
+    }
+
+    // 否则直接查询数据库
+    return this.searchService.searchKnowledge('', [id], searchOptions);
+  }
+
+  @Post(':id/reprocess')
+  @ApiResponse({ status: 200, description: '重新处理知识库文档' })
+  async reprocessKnowledgebase(
+    @Param('id') id: string,
+    @Req() req,
+  ) {
+    // TODO: 实现重新处理
+    return { message: '重新处理功能待实现' };
+  }
+
+  @Get(':id/statistics')
+  @ApiResponse({ status: 200, description: '获取知识库统计信息' })
+  async getKnowledgebaseStats(
+    @Param('id') id: string,
+    @Req() req,
+  ) {
+    // TODO: 实现统计信息
+    return { message: '统计信息功能待实现' };
   }
 }

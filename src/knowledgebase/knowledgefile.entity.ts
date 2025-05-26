@@ -1,4 +1,4 @@
-import { Entity, PrimaryColumn, Column } from 'typeorm';
+import { Entity, PrimaryColumn, Column, OneToMany } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
 
 @Entity()
@@ -21,4 +21,7 @@ export class Knowledgefile {
   @ApiProperty()
   @Column({ type: 'varchar', length: 32, default: 'pending' })
   status: string;
+
+  @OneToMany('KnowledgeChunk', 'file')
+  chunks: any[];
 }

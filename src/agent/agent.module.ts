@@ -14,10 +14,11 @@ import { ToolModule } from '../tool/tool.module';
 import { McpModule } from '../mcp/mcp.module';
 import { WorkflowModule } from '../workflow/workflow.module';
 import { UserModule } from '../user/user.module';
+import { RoleCard } from './entities/role-card.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Agent, Conversation, ConversationHistory]),
+    TypeOrmModule.forFeature([Agent, RoleCard, Conversation, ConversationHistory]),
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
@@ -32,6 +33,7 @@ import { UserModule } from '../user/user.module';
     ToolModule,
     McpModule,
     forwardRef(() => WorkflowModule),
+    forwardRef(() => LlmModule),
   ],
   controllers: [AgentController],
   providers: [AgentService, AgentRealtimeGateway, WsJwtAuthGuard],

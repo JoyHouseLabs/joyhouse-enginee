@@ -26,6 +26,7 @@ import {
   UpdateAgentDto,
   TestIntentRecognitionDto,
 } from './dto/agent.dto';
+import { CreateRoleCardDto, UpdateRoleCardDto } from './dto/role-card.dto';
 import {
   CreateConversationDto,
   UpdateConversationDto,
@@ -33,6 +34,7 @@ import {
 } from './dto/conversation.dto';
 import { ChatRequestDto } from './dto/chat.dto';
 import { Agent } from './entities/agent.entity';
+import { RoleCard } from './entities/role-card.entity';
 import { Conversation } from './entities/conversation.entity';
 import { ConversationHistory } from './entities/conversation-history.entity';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -41,24 +43,40 @@ import { User } from '../user/user.entity';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { MessageRole } from './entities/conversation-history.entity';
+import { LlmService } from '../llm/llm.service';
 
 @ApiTags('agents')
 @Controller('agent')
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth('JWT-auth')
 export class AgentController {
-  constructor(private readonly agentService: AgentService) {}
+  constructor(
+    private readonly agentService: AgentService,
+    private readonly llmService: LlmService,
+  ) {}
 
   @Get('my')
   @ApiOperation({ summary: '获取我的 Agent 列表' })
   @ApiResponse({ type: [Agent] })
-  findMyAgents(
+  async findMyAgents(
     @UserDecorator() user: User,
     @Query('page') page: number = 1,
     @Query('pageSize') pageSize: number = 12,
     @Query('name') name?: string,
   ) {
-    return this.agentService.findMyAgents(user, { page, pageSize, name });
+    const result = await this.agentService.findMyAgents(user, { page, pageSize, name });
+    const items = await Promise.all(result.items.map(async agent => {
+      if (!agent.modelId) return { ...agent, modelName: 'Unknown', providerId: undefined, providerName: 'Unknown', isPublic: agent.isPublic };
+      const model = await this.llmService.findOne(agent.modelId);
+      return {
+        ...agent,
+        modelName: model?.name || 'Unknown',
+        providerId: model?.provider?.id,
+        providerName: model?.provider?.name || 'Unknown',
+        isPublic: agent.isPublic
+      };
+    }));
+    return { ...result, items };
   }
 
   @Get('public')
@@ -90,8 +108,17 @@ export class AgentController {
   @Get(':id')
   @ApiOperation({ summary: '获取指定 Agent' })
   @ApiResponse({ type: Agent })
-  findOne(@Param('id') id: string, @UserDecorator() user: User) {
-    return this.agentService.findOne(id, user);
+  async findOne(@Param('id') id: string, @UserDecorator() user: User) {
+    const agent = await this.agentService.findOne(id, user);
+    if (!agent.modelId) return { ...agent, modelName: 'Unknown', providerId: undefined, providerName: 'Unknown', isPublic: agent.isPublic };
+    const model = await this.llmService.findOne(agent.modelId);
+    return {
+      ...agent,
+      modelName: model?.name || 'Unknown',
+      providerId: model?.provider?.id,
+      providerName: model?.provider?.name || 'Unknown',
+      isPublic: agent.isPublic
+    };
   }
 
   @Patch(':id')
@@ -298,5 +325,113 @@ export class AgentController {
         'agent-error',
       ],
     };
+  }
+
+  @Post('role-cards')
+  @ApiOperation({ summary: '创建角色卡片' })
+  @ApiResponse({ type: RoleCard })
+  createRoleCard(@Body() createRoleCardDto: CreateRoleCardDto, @UserDecorator() user: User) {
+    return this.agentService.createRoleCard(createRoleCardDto, user);
+  }
+
+  @Get('role-cards/my')
+  @ApiOperation({ summary: '获取我的角色卡片列表' })
+  @ApiResponse({ type: [RoleCard] })
+  findMyRoleCards(
+    @UserDecorator() user: User,
+    @Query('page') page: number = 1,
+    @Query('pageSize') pageSize: number = 12,
+    @Query('name') name?: string,
+  ) {
+    return this.agentService.findMyRoleCards(user, { page, pageSize, name });
+  }
+
+  @Get('role-cards/public')
+  @ApiOperation({ summary: '获取公开的角色卡片列表' })
+  @ApiResponse({ type: [RoleCard] })
+  findPublicRoleCards(
+    @UserDecorator() user: User,
+    @Query('page') page: number = 1,
+    @Query('pageSize') pageSize: number = 12,
+    @Query('name') name?: string,
+  ) {
+    return this.agentService.findPublicRoleCards(user, { page, pageSize, name });
+  }
+
+  @Get('role-cards/:id')
+  @ApiOperation({ summary: '获取指定角色卡片' })
+  @ApiResponse({ type: RoleCard })
+  findOneRoleCard(@Param('id') id: string, @UserDecorator() user: User) {
+    return this.agentService.findOneRoleCard(id, user);
+  }
+
+  @Patch('role-cards/:id')
+  @ApiOperation({ summary: '更新角色卡片' })
+  @ApiResponse({ type: RoleCard })
+  updateRoleCard(
+    @Param('id') id: string,
+    @Body() updateRoleCardDto: UpdateRoleCardDto,
+    @UserDecorator() user: User,
+  ) {
+    return this.agentService.updateRoleCard(id, updateRoleCardDto, user);
+  }
+
+  @Delete('role-cards/:id')
+  @ApiOperation({ summary: '删除角色卡片' })
+  @ApiResponse({ description: '删除成功' })
+  removeRoleCard(@Param('id') id: string, @UserDecorator() user: User) {
+    return this.agentService.removeRoleCard(id, user);
+  }
+
+  @Post(':agentId/role-cards/:roleCardId')
+  @ApiOperation({ summary: '为 Agent 添加角色卡片' })
+  @ApiResponse({ type: Agent })
+  addRoleCardToAgent(
+    @Param('agentId') agentId: string,
+    @Param('roleCardId') roleCardId: string,
+    @UserDecorator() user: User,
+  ) {
+    return this.agentService.addRoleCardToAgent(agentId, roleCardId, user);
+  }
+
+  @Delete(':agentId/role-cards/:roleCardId')
+  @ApiOperation({ summary: '从 Agent 移除角色卡片' })
+  @ApiResponse({ type: Agent })
+  removeRoleCardFromAgent(
+    @Param('agentId') agentId: string,
+    @Param('roleCardId') roleCardId: string,
+    @UserDecorator() user: User,
+  ) {
+    return this.agentService.removeRoleCardFromAgent(agentId, roleCardId, user);
+  }
+
+  @Post(':agentId/switch-role-card/:roleCardId')
+  @ApiOperation({ summary: '切换 Agent 的角色卡片' })
+  @ApiResponse({ type: Agent })
+  switchAgentRoleCard(
+    @Param('agentId') agentId: string,
+    @Param('roleCardId') roleCardId: string,
+    @UserDecorator() user: User,
+  ) {
+    return this.agentService.switchAgentRoleCard(agentId, roleCardId, user);
+  }
+
+  @Get(':agentId/current-role-card')
+  @ApiOperation({ summary: '获取 Agent 的当前角色卡片' })
+  @ApiResponse({ type: RoleCard })
+  getCurrentRoleCard(@Param('agentId') agentId: string, @UserDecorator() user: User) {
+    return this.agentService.getCurrentRoleCard(agentId, user);
+  }
+
+  @Post(':agentId/conversations/:conversationId/chat-with-role')
+  @ApiOperation({ summary: '使用角色卡片与 Agent 对话' })
+  @ApiResponse({ type: ConversationHistory })
+  chatWithRoleCard(
+    @Param('agentId') agentId: string,
+    @Param('conversationId') conversationId: string,
+    @Body() chatRequestDto: ChatRequestDto,
+    @UserDecorator() user: User,
+  ) {
+    return this.agentService.chatWithRoleCard(agentId, conversationId, chatRequestDto, user);
   }
 }

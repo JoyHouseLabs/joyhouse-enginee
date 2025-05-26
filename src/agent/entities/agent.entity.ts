@@ -6,9 +6,12 @@ import {
   UpdateDateColumn,
   ManyToOne,
   OneToMany,
+  ManyToMany,
+  JoinTable,
 } from 'typeorm';
 import { User } from '../../user/user.entity';
 import { Conversation } from './conversation.entity';
+import { RoleCard } from './role-card.entity';
 import { IntentRecognitionConfig } from '../dto/agent.dto';
 
 @Entity('agent')
@@ -27,7 +30,7 @@ export class Agent {
 
   @Column({ type: 'json', nullable: true })
   llmParams?: {
-    model?: string;
+    model: string;
     temperature?: number;
     maxTokens?: number;
     topP?: number;
@@ -60,11 +63,65 @@ export class Agent {
   @Column({ type: 'integer', default: 0 })
   usageCount?: number; // 使用次数
 
+  @Column({ nullable: true })
+  modelId?: string;
+
+  @Column({ nullable: true })
+  providerId?: string;
+
+  @Column({ default: false })
+  isPublic: boolean;
+
+  @Column({ nullable: true })
+  currentRoleCardId?: string; // 当前激活的角色卡片ID
+
+  @Column({ type: 'json', nullable: true })
+  shortTermMemory?: {
+    context: string; // 当前上下文
+    lastInteraction: Date; // 最后交互时间
+    activeRole?: string; // 当前激活的角色
+    activePrompt?: string; // 当前激活的提示词
+  };
+
+  @Column({ type: 'json', nullable: true })
+  longTermMemory?: {
+    roles: Array<{
+      id: string;
+      name: string; // 角色名称（如"软件开发工程师"、"产品经理"）
+      prompt: string; // 角色对应的提示词
+      description?: string; // 角色描述
+    }>;
+    knowledgeBase?: Array<{
+      id: string;
+      content: string; // 知识内容
+      category?: string; // 知识分类
+      lastUpdated: Date; // 最后更新时间
+    }>;
+  };
+
+  @Column({ type: 'json', nullable: true })
+  environmentContext?: {
+    collaborators?: Array<{
+      agentId: string; // 协作 agent 的 ID
+      role: string; // 协作 agent 的角色
+      lastSync: Date; // 最后同步时间
+    }>;
+    sharedContext?: Record<string, any>; // 共享的上下文信息
+  };
+
   @ManyToOne(() => User)
   user: User;
 
   @OneToMany(() => Conversation, (conversation) => conversation.agent)
   conversations: Conversation[];
+
+  @ManyToMany(() => RoleCard, roleCard => roleCard.agents)
+  @JoinTable({
+    name: 'agent_role_cards',
+    joinColumn: { name: 'agentId', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'roleCardId', referencedColumnName: 'id' }
+  })
+  roleCards: RoleCard[];
 
   @CreateDateColumn()
   createdAt: Date;
