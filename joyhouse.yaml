@@ -7,13 +7,13 @@ dbPassword: joyhouse1688
 dbName: joyhouse
 
 # 上传配置
-uploadDir: ./uploads
+uploadDir: /deploy/joyhouselabs/uploads
 domain: http://localhost:1688
 fileDomain: http://localhost:1688/files
 
 # 日志配置
 logging:
-  dir: ./logs
+  dir: /deploy/joyhouselabs/logs
   level: info
   console: true
   maxSize: 10485760  # 10MB

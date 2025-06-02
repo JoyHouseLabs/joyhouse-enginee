@@ -15,6 +15,7 @@ import { McpModule } from '../mcp/mcp.module';
 import { WorkflowModule } from '../workflow/workflow.module';
 import { UserModule } from '../user/user.module';
 import { RoleCard } from './entities/role-card.entity';
+import { TaskModule } from '../task/task.module';
 
 @Module({
   imports: [
@@ -32,11 +33,21 @@ import { RoleCard } from './entities/role-card.entity';
     LlmModule,
     ToolModule,
     McpModule,
+    TaskModule,
     forwardRef(() => WorkflowModule),
-    forwardRef(() => LlmModule),
   ],
   controllers: [AgentController],
-  providers: [AgentService, AgentRealtimeGateway, WsJwtAuthGuard],
+  providers: [
+    {
+      provide: AgentService,
+      useClass: AgentService,
+    },
+    {
+      provide: AgentRealtimeGateway,
+      useClass: AgentRealtimeGateway,
+    },
+    WsJwtAuthGuard,
+  ],
   exports: [AgentService, AgentRealtimeGateway, TypeOrmModule],
 })
 export class AgentModule {}

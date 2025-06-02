@@ -1224,17 +1224,16 @@ ${toolPrompt}
   }
 
   // 获取 Agent 的当前角色卡片
-  async getCurrentRoleCard(agentId: string, user: User): Promise<RoleCard | null> {
-    const agent = await this.agentRepo.findOne({
-      where: { id: agentId, user: { id: user.id } },
-      relations: ['roleCards'],
-    });
-
-    if (!agent || !agent.currentRoleCardId) {
-      return null;
+  async getCurrentRoleCard(agentId: string, user: User): Promise<RoleCard> {
+    const agent = await this.findOne(agentId, user);
+    if (!agent.currentRoleCardId) {
+      throw new NotFoundException('No current role card found for this agent');
     }
-
-    return agent.roleCards.find(rc => rc.id === agent.currentRoleCardId) || null;
+    const roleCard = await this.roleCardRepo.findOne({ where: { id: agent.currentRoleCardId } });
+    if (!roleCard) {
+      throw new NotFoundException('Role card not found');
+    }
+    return roleCard;
   }
 
   // 根据角色卡片配置生成聊天回复
@@ -1340,5 +1339,42 @@ ${toolPrompt}
     }
 
     return systemPrompt;
+  }
+
+  async getDefaultAgent(user: User): Promise<Agent> {
+    // 首先尝试获取用户最近使用的agent
+    const recentAgent = await this.agentRepo.findOne({
+      where: { user: { id: user.id } },
+      order: { updatedAt: 'DESC' }
+    });
+
+    if (recentAgent) {
+      return recentAgent;
+    }
+
+    // 如果没有最近使用的agent，尝试获取一个公开的agent
+    const publicAgent = await this.agentRepo.findOne({
+      where: { isPublic: true },
+      order: { createdAt: 'DESC' }
+    });
+
+    if (publicAgent) {
+      return publicAgent;
+    }
+
+    // 如果都没有，创建一个新的默认agent
+    const defaultAgent = this.agentRepo.create({
+      name: '默认助手',
+      description: '这是一个默认的AI助手',
+      user: user,
+      isPublic: false,
+      llmParams: {
+        model: 'gpt-3.5-turbo',
+        temperature: 0.7,
+        maxTokens: 2000
+      }
+    });
+
+    return this.agentRepo.save(defaultAgent);
   }
 }

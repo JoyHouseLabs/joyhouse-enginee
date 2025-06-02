@@ -105,6 +105,22 @@ export class AgentController {
     return this.agentService.findAll(user);
   }
 
+  @Get('default')
+  @ApiOperation({ summary: '获取默认 Agent' })
+  @ApiResponse({ type: Agent })
+  async getDefaultAgent(@UserDecorator() user: User) {
+    const agent = await this.agentService.getDefaultAgent(user);
+    if (!agent.modelId) return { ...agent, modelName: 'Unknown', providerId: undefined, providerName: 'Unknown', isPublic: agent.isPublic };
+    const model = await this.llmService.findOne(agent.modelId);
+    return {
+      ...agent,
+      modelName: model?.name || 'Unknown',
+      providerId: model?.provider?.id,
+      providerName: model?.provider?.name || 'Unknown',
+      isPublic: agent.isPublic
+    };
+  }
+
   @Get(':id')
   @ApiOperation({ summary: '获取指定 Agent' })
   @ApiResponse({ type: Agent })

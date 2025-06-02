@@ -1,5 +1,6 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { HttpClientService } from '../../common/http/http-client.service';
 import axios, { AxiosResponse } from 'axios';
 
 export interface ProcessingOptions {

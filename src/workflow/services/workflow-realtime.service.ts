@@ -90,7 +90,8 @@ interface ClientConnection {
       JoyhouseConfigService.getMonitoringConfig().websocket.corsOrigin,
     credentials: true,
   },
-  transports: ['websocket', 'polling'],
+  transports: ['websocket'],
+  path: '/workflow-socket.io',
 })
 @UseGuards(WsJwtAuthGuard)
 export class WorkflowRealtimeService

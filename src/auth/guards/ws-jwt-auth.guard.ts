@@ -15,20 +15,59 @@ export class WsJwtAuthGuard implements CanActivate {
 
   constructor(
     private readonly jwtService: JwtService,
-    private readonly configService: ConfigService,
     private readonly userService: UserService,
+    private readonly configService: ConfigService,
   ) {}
+
+  private extractTokenFromSocket(client: Socket): string | null {
+    // 1. 从 auth 对象中获取
+    if (client.handshake.auth?.token) {
+      return client.handshake.auth.token;
+    }
+
+    // 2. 从 query 参数中获取
+    if (client.handshake.query?.token) {
+      return client.handshake.query.token as string;
+    }
+
+    // 3. 从 headers 中获取
+    const authHeader = client.handshake.headers.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      return authHeader.substring(7);
+    }
+
+    return null;
+  }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     try {
       const client: Socket = context.switchToWs().getClient();
+      
+      // 记录握手信息
+      this.logger.log('WebSocket handshake info:', {
+        headers: client.handshake.headers,
+        query: client.handshake.query,
+        auth: client.handshake.auth,
+      });
+
       const token = this.extractTokenFromSocket(client);
 
       if (!token) {
-        this.logger.warn(`WebSocket connection rejected: No token provided`);
+        this.logger.log(`WebSocket connection rejected: No token provided`, {
+          handshake: {
+            headers: client.handshake.headers,
+            query: client.handshake.query,
+            auth: client.handshake.auth,
+          }
+        });
         client.disconnect();
         return false;
       }
+
+      this.logger.log('Extracted token:', {
+        tokenLength: token.length,
+        tokenPrefix: token.substring(0, 10) + '...',
+      });
 
       // 验证JWT token
       const payload = this.jwtService.verify(token, {
@@ -37,11 +76,21 @@ export class WsJwtAuthGuard implements CanActivate {
           'your-super-secret-key-change-in-production',
       });
 
+      this.logger.log('JWT payload:', payload);
+
       // 获取用户信息
       const user = await this.userService.findById(payload.sub);
       if (!user) {
-        this.logger.warn(
+        this.logger.log(
           `WebSocket connection rejected: User not found for ID ${payload.sub}`,
+          {
+            payload,
+            handshake: {
+              headers: client.handshake.headers,
+              query: client.handshake.query,
+              auth: client.handshake.auth,
+            }
+          }
         );
         client.disconnect();
         return false;
@@ -55,42 +104,12 @@ export class WsJwtAuthGuard implements CanActivate {
       );
       return true;
     } catch (error) {
-      this.logger.warn(`WebSocket authentication failed: ${error.message}`);
-      const client: Socket = context.switchToWs().getClient();
-      client.emit('auth-error', {
-        message: 'Authentication failed',
-        error: error.message,
+      this.logger.error(`WebSocket authentication error: ${error.message}`, {
+        error,
+        handshake: context.switchToWs().getClient().handshake,
       });
-      client.disconnect();
+      context.switchToWs().getClient().disconnect();
       return false;
     }
-  }
-
-  private extractTokenFromSocket(client: Socket): string | null {
-    // 尝试从多个位置获取token
-    const authHeader = client.handshake.headers.authorization;
-    const authQuery = client.handshake.query?.token;
-    const authAuth = client.handshake.auth?.token;
-
-    // 优先从Authorization header获取
-    if (
-      authHeader &&
-      typeof authHeader === 'string' &&
-      authHeader.startsWith('Bearer ')
-    ) {
-      return authHeader.slice(7);
-    }
-
-    // 从query参数获取
-    if (authQuery && typeof authQuery === 'string') {
-      return authQuery;
-    }
-
-    // 从auth对象获取
-    if (authAuth && typeof authAuth === 'string') {
-      return authAuth;
-    }
-
-    return null;
   }
 }

@@ -8,7 +8,7 @@ import {
   ConnectedSocket,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { Injectable, Logger, UseGuards } from '@nestjs/common';
+import { Injectable, Logger, UseGuards, Inject, forwardRef } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { WsJwtAuthGuard } from '../../auth/guards/ws-jwt-auth.guard';
 import { User } from '../../user/user.entity';
@@ -16,6 +16,9 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Agent } from '../entities/agent.entity';
 import { Conversation } from '../entities/conversation.entity';
+import { AgentService } from '../agent.service';
+import { WorkflowService } from '../../workflow/workflow.service';
+import { TaskSchedulerService } from '../../task/task-scheduler.service';
 
 // Agent 实时事件接口
 interface AgentChatEvent {
@@ -72,14 +75,18 @@ interface ToolExecutionEvent {
 
 @Injectable()
 @WebSocketGateway({
-  namespace: '/agent-realtime',
   cors: {
-    origin: process.env.WEBSOCKET_CORS_ORIGIN?.split(',') || [
-      'http://localhost:1666',
-    ],
+    origin: ['http://localhost:5173', 'http://localhost:1666'],
     credentials: true,
+    methods: ['GET', 'POST'],
+    allowedHeaders: ['authorization', 'content-type']
   },
-  transports: ['websocket', 'polling'],
+  namespace: '/agent-realtime',
+  transports: ['websocket'],
+  path: '/agent-socket.io',
+  allowEIO3: true,
+  pingTimeout: 60000,
+  pingInterval: 25000
 })
 @UseGuards(WsJwtAuthGuard)
 export class AgentRealtimeGateway
@@ -99,49 +106,67 @@ export class AgentRealtimeGateway
     private readonly agentRepo: Repository<Agent>,
     @InjectRepository(Conversation)
     private readonly conversationRepo: Repository<Conversation>,
-  ) {}
+    @Inject(forwardRef(() => AgentService))
+    private readonly agentService: AgentService,
+    @Inject(forwardRef(() => WorkflowService))
+    private readonly workflowService: WorkflowService,
+    private readonly taskSchedulerService: TaskSchedulerService,
+  ) {
+    this.logger.log('AgentRealtimeGateway initialized with WsJwtAuthGuard');
+  }
 
-  // WebSocket 连接处理
   async handleConnection(client: Socket) {
-    // 用户信息已经通过WsJwtAuthGuard验证并附加到socket上
-    const user: User = (client as any).user;
+    try {
+      this.logger.log('WebSocket connection attempt:', {
+        socketId: client.id,
+        handshake: client.handshake
+      });
 
-    if (!user) {
-      this.logger.warn(
-        `Client ${client.id} connected without authenticated user, disconnecting`,
-      );
+      // 检查用户是否已认证
+      if (!(client as any).user) {
+        this.logger.warn(`Client ${client.id} connected without authenticated user, disconnecting`, {
+          handshake: client.handshake
+        });
+        client.disconnect();
+        return;
+      }
+
+      const user = (client as any).user;
+      this.logger.log(`Client ${client.id} connected successfully`, {
+        userId: user.id,
+        username: user.username
+      });
+
+      // 加入用户专属房间
+      await client.join(`user:${user.id}`);
+      this.logger.log(`Client ${client.id} joined room user:${user.id}`);
+
+      // 获取用户的默认Agent
+      const defaultAgent = await this.agentService.getDefaultAgent(user.id);
+      if (defaultAgent) {
+        await client.join(`agent:${defaultAgent.id}`);
+        this.logger.log(`Client ${client.id} joined room agent:${defaultAgent.id}`);
+      }
+
+      // 发送连接确认
+      client.emit('connected', {
+        socketId: client.id,
+        userId: user.id,
+        username: user.username,
+        timestamp: new Date(),
+        message: 'Connected to agent realtime service',
+        capabilities: [
+          'chat_streaming',
+          'intent_recognition',
+          'tool_execution',
+          'workflow_monitoring',
+        ],
+      });
+
+    } catch (error) {
+      this.logger.error(`Error handling connection for client ${client.id}:`, error);
       client.disconnect();
-      return;
     }
-
-    const clientInfo: ClientConnection = {
-      socketId: client.id,
-      userId: user.id,
-      subscribedConversations: new Set(),
-      subscribedAgents: new Set(),
-      connectedAt: new Date(),
-      lastActivity: new Date(),
-    };
-
-    this.clients.set(client.id, clientInfo);
-    this.logger.log(
-      `Agent realtime client ${client.id} connected for authenticated user ${user.id} (${user.username})`,
-    );
-
-    // 发送连接确认
-    client.emit('connected', {
-      socketId: client.id,
-      userId: user.id,
-      username: user.username,
-      timestamp: new Date(),
-      message: 'Connected to agent realtime service',
-      capabilities: [
-        'chat_streaming',
-        'intent_recognition',
-        'tool_execution',
-        'workflow_monitoring',
-      ],
-    });
   }
 
   async handleDisconnect(client: Socket) {
