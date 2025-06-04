@@ -49,9 +49,22 @@ async function bootstrap() {
   // 设置全局前缀
   app.setGlobalPrefix('api');
 
+  // 配置 Swagger
+  const swaggerConfig = new DocumentBuilder()
+    .setTitle('Joyhouse API')
+    .setDescription('Joyhouse API 文档')
+    .setVersion('1.0')
+    .addTag('joyhouse')
+    .addBearerAuth()
+    .build();
+  
+  const document = SwaggerModule.createDocument(app, swaggerConfig);
+  SwaggerModule.setup('api/docs', app, document);
+
   // 启动服务器
   const port = process.env.PORT || 1666;
   await app.listen(port);
   console.log(`Application is running on: http://localhost:${port}`);
+  console.log(`Swagger API docs available at: http://localhost:${port}/api/docs`);
 }
 bootstrap();
