@@ -951,6 +951,8 @@ ${toolPrompt}
     }
 
     const [items, total] = await queryBuilder
+      .orderBy('agent.isDefault', 'DESC')
+      .addOrderBy('agent.updatedAt', 'DESC')
       .skip((page - 1) * pageSize)
       .take(pageSize)
       .getManyAndCount();
@@ -977,6 +979,8 @@ ${toolPrompt}
     }
 
     const [items, total] = await queryBuilder
+      .orderBy('agent.isDefault', 'DESC')
+      .addOrderBy('agent.updatedAt', 'DESC')
       .skip((page - 1) * pageSize)
       .take(pageSize)
       .getManyAndCount();
@@ -1341,8 +1345,34 @@ ${toolPrompt}
     return systemPrompt;
   }
 
+  async setDefaultAgent(agentId: string, user: User): Promise<boolean> {
+    // 首先将该用户的所有Agent设置为非默认
+    await this.agentRepo.update(
+      { user: { id: user.id } },
+      { isDefault: false }
+    );
+
+    // 然后将指定的Agent设置为默认
+    const result = await this.agentRepo.update(
+      { id: agentId, user: { id: user.id } },
+      { isDefault: true }
+    );
+
+    return (result.affected ?? 0) > 0;
+  }
+
   async getDefaultAgent(user: User): Promise<Agent> {
-    // 首先尝试获取用户最近使用的agent
+    // 首先尝试获取用户设置的默认Agent
+    const defaultAgent = await this.agentRepo.findOne({
+      where: { user: { id: user.id }, isDefault: true },
+      order: { updatedAt: 'DESC' }
+    });
+
+    if (defaultAgent) {
+      return defaultAgent;
+    }
+
+    // 如果没有设置默认Agent，尝试获取用户最近使用的agent
     const recentAgent = await this.agentRepo.findOne({
       where: { user: { id: user.id } },
       order: { updatedAt: 'DESC' }
@@ -1363,11 +1393,12 @@ ${toolPrompt}
     }
 
     // 如果都没有，创建一个新的默认agent
-    const defaultAgent = this.agentRepo.create({
+    const newDefaultAgent = this.agentRepo.create({
       name: '默认助手',
       description: '这是一个默认的AI助手',
       user: user,
       isPublic: false,
+      isDefault: true,
       llmParams: {
         model: 'gpt-3.5-turbo',
         temperature: 0.7,
@@ -1375,6 +1406,6 @@ ${toolPrompt}
       }
     });
 
-    return this.agentRepo.save(defaultAgent);
+    return this.agentRepo.save(newDefaultAgent);
   }
 }
