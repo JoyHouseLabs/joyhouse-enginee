@@ -121,6 +121,17 @@ export class AgentController {
     };
   }
 
+  @Post(':id/set-default')
+  @ApiOperation({ summary: '设置默认 Agent' })
+  @ApiResponse({ status: 200, description: '设置默认Agent成功' })
+  async setDefaultAgent(
+    @Param('id') id: string,
+    @UserDecorator() user: User,
+  ): Promise<{ success: boolean }> {
+    const result = await this.agentService.setDefaultAgent(id, user);
+    return { success: result };
+  }
+
   @Get(':id')
   @ApiOperation({ summary: '获取指定 Agent' })
   @ApiResponse({ type: Agent })

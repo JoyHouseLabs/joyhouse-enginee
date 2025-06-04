@@ -48,6 +48,11 @@ export class LlmModelQueryDto {
   @IsString()
   provider?: string;
 
+  @ApiPropertyOptional({ description: 'Provider ID 精确匹配 (前端兼容字段)' })
+  @IsOptional()
+  @IsString()
+  providerId?: string;
+
   @ApiPropertyOptional({ description: '是否只查询公开的模型' })
   @IsOptional()
   @IsBoolean()

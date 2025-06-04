@@ -99,7 +99,7 @@ export class LlmService {
     const where: any = { userId };
     if (name)
       where.name = typeof name === 'string' ? Like(`%${name}%`) : undefined;
-    if (provider) where.provider = provider;
+    if (provider) where.provider = { id: provider };
     if (typeof isPublic === 'boolean') {
       where.isPublic = isPublic;
     }

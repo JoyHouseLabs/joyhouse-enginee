@@ -72,6 +72,9 @@ export class Agent {
   @Column({ default: false })
   isPublic: boolean;
 
+  @Column({ default: false })
+  isDefault: boolean;
+
   @Column({ nullable: true })
   currentRoleCardId?: string; // 当前激活的角色卡片ID
 

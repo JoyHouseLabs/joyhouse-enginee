@@ -12,7 +12,7 @@ import { JoyhouseLoggerService } from './common/logger.service';
 import * as fs from 'fs';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, {
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     cors: false, // 禁用全局 CORS，让每个模块自己处理
   });
 
@@ -23,6 +23,15 @@ async function bootstrap() {
     credentials: true,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
   };
+
+  // 配置静态文件服务
+  const uploadDir = config.uploadDir;
+  // 确保上传目录存在
+  fs.mkdirSync(uploadDir, { recursive: true });
+  // 配置静态文件服务，将 /files/uploads 映射到上传目录
+  app.useStaticAssets(uploadDir, {
+    prefix: '/files/uploads',
+  });
 
   // 添加手动 CORS 中间件，排除 WebSocket 路径
   app.use((req, res, next) => {

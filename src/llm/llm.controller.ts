@@ -95,7 +95,7 @@ export class LlmController {
 
   // Model CRUD
   /**
-   * 获取模型列表，可选参数provider_id用于查询特定provider下的模型
+   * 获取模型列表，可选参数providerId用于查询特定provider下的模型
    * @param query.provider 指定provider的ID
    */
   @Get('models')
@@ -108,7 +108,7 @@ export class LlmController {
       query.page ?? 1,
       query.limit ?? 20,
       query.name,
-      query.provider,
+      query.providerId || query.provider,
       query.isPublic,
     );
   }

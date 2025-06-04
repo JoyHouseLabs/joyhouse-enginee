@@ -22,6 +22,7 @@ import { StorageUploadResponseDto } from './storage.dto';
 import * as fs from 'fs';
 import { JoyhouseConfigService } from '../common/joyhouse-config';
 import { extname } from 'path';
+import * as crypto from 'crypto';
 
 import { CreateStorageDirDto } from './storage-dir.dto';
 import { StorageDir } from './storage-dir.entity';
@@ -110,18 +111,27 @@ export class StorageController {
     @UploadedFile() file: Express.Multer.File,
     @Req() req,
   ): Promise<StorageUploadResponseDto> {
-    // 统一用 JoyhouseConfigService 获取配置
-    const uploadDir = JoyhouseConfigService.loadConfig().uploadDir;
-    const domain = JoyhouseConfigService.loadConfig().fileDomain;
+    const config = JoyhouseConfigService.loadConfig();
+    const uploadDir = config.uploadDir;
+    const fileDomain = config.fileDomain;
+
     // 保证上传目录存在
     fs.mkdirSync(uploadDir, { recursive: true });
-    const filename = Date.now() + '-' + file.originalname;
+
+    // 处理文件名：生成随机字符串 + 原始扩展名
+    const ext = extname(file.originalname);
+    const randomStr = crypto.randomBytes(8).toString('hex');
+    const filename = `${Date.now()}-${randomStr}${ext}`;
     const filepath = `${uploadDir}/${filename}`;
+
+    // 保存文件
     fs.writeFileSync(filepath, file.buffer);
-    const url = `${domain}/${filepath}`.replace(/\\/g, '/');
+
+    // 生成访问URL：使用fileDomain + /uploads/ + filename
+    const url = `${fileDomain}/uploads/${filename}`;
+
     let storage_dir_id = req.body?.storage_dir_id || undefined;
     if (!storage_dir_id || storage_dir_id == 'home') storage_dir_id = 'publicfiles';
-    
 
     const entity = await this.storageService.saveFile({
       filename,
@@ -132,6 +142,7 @@ export class StorageController {
       userId: req.user?.id || '',
       storage_dir_id,
     });
+
     return {
       url: entity.url,
       filepath: entity.filepath,

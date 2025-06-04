@@ -8,8 +8,8 @@ dbName: joyhouse
 
 # 上传配置
 uploadDir: /deploy/joyhouselabs/uploads
-domain: http://localhost:1688
-fileDomain: http://localhost:1688/files
+domain: http://localhost:1666
+fileDomain: http://localhost:1666/files
 
 # 日志配置
 logging:
