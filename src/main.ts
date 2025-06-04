@@ -49,6 +49,17 @@ async function bootstrap() {
   // 设置全局前缀
   app.setGlobalPrefix('api');
 
+  // 配置全局管道、拦截器和过滤器
+  app.useGlobalPipes(new ValidationPipe({
+    transform: true,
+    whitelist: true,
+    forbidNonWhitelisted: true,
+  }));
+  
+  app.useGlobalInterceptors(new ResponseInterceptor());
+  app.useGlobalInterceptors(new LoggingInterceptor(new JoyhouseLoggerService()));
+  app.useGlobalFilters(new HttpExceptionFilter());
+
   // 配置 Swagger
   const swaggerConfig = new DocumentBuilder()
     .setTitle('Joyhouse API')
