@@ -47,6 +47,21 @@ export class UpdateUserDto {
   @IsString()
   @IsOptional()
   remark?: string;
+
+  @ApiProperty({ description: 'home_dir_id', required: false })
+  @IsString()
+  @IsOptional()
+  home_dir_id?: string;
+
+  @ApiProperty({ description: 'share_dir_id', required: false })
+  @IsString()
+  @IsOptional()
+  share_dir_id?: string;
+
+  @ApiProperty({ description: 'auto_extract_content', required: false })
+  @IsBoolean()
+  @IsOptional()
+  auto_extract_content?: boolean;
 }
 
 export class UserQueryDto {

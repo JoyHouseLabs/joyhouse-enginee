@@ -13,7 +13,7 @@ import { AuthModule } from '../auth/auth.module';
   imports: [
     TypeOrmModule.forFeature([User, JailUser]),
     WalletModule,
-    StorageModule,
+    forwardRef(() => StorageModule),
     forwardRef(() => AuthModule),
   ],
   providers: [UserService],

@@ -9,6 +9,8 @@ import {
   Query,
   UseGuards,
   Logger,
+  Req,
+  NotFoundException,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -80,5 +82,22 @@ export class UserController {
       JSON.stringify(user, null, 2),
     );
     await this.userService.setUserProperty(user.id, dto);
+  }
+
+  // 查询当前用户的自动内容清洗配置
+  @Get('auto-extract-content')
+  async getAutoExtractContent(@Req() req) {
+    const user = await this.userService.findById(req.user.id);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    return { auto_extract_content: user.auto_extract_content };
+  }
+
+  // 设置当前用户的自动内容清洗配置
+  @Post('auto-extract-content')
+  async setAutoExtractContent(@Req() req, @Body() body: { auto_extract_content: boolean }) {
+    await this.userService.update(req.user.id, { auto_extract_content: body.auto_extract_content })
+    return { success: true }
   }
 }

@@ -37,6 +37,15 @@ export class User {
   @Column({ nullable: true })
   remark?: string;
 
+  @Column({ nullable: true })
+  home_dir_id: string;
+
+  @Column({ nullable: true })
+  share_dir_id: string;
+
+  @Column({ default: true })
+  auto_extract_content: boolean;
+
   @CreateDateColumn()
   createdAt: Date;
 

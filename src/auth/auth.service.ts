@@ -17,6 +17,7 @@ import { RegisterDto, LoginDto } from '../dto/auth.dto';
 import * as bcrypt from 'bcryptjs';
 import { RoleType } from '../role/role.entity';
 import { TokenBlacklist } from './entities/token-blacklist.entity';
+import { StorageService } from '../storage/storage.service';
 
 @Injectable()
 export class AuthService {
@@ -30,6 +31,7 @@ export class AuthService {
     private readonly userService: UserService,
     private readonly walletService: WalletService,
     private readonly jwtService: JwtService,
+    private readonly storageService: StorageService,
   ) {}
 
   async validateUser(username: string, password: string): Promise<any> {
@@ -61,7 +63,21 @@ export class AuthService {
     // 加密密码
     const hashed = await bcrypt.hash(password, 10);
 
-    // 直接创建用户
+    // 创建用户目录
+    const [homeDir, shareDir] = await Promise.all([
+      this.storageService.createDir({
+        userId: '', // 临时ID，稍后更新
+        name: 'home',
+        parent: '',
+      }),
+      this.storageService.createDir({
+        userId: '', // 临时ID，稍后更新
+        name: 'share',
+        parent: '',
+      }),
+    ]);
+
+    // 创建用户
     const user = this.userRepo.create({
       username,
       password: hashed,
@@ -69,9 +85,18 @@ export class AuthService {
       role: isFirstUser ? RoleType.ADMIN : RoleType.USER,
       isAdmin: isFirstUser,
       onboarded: false,
+      home_dir_id: homeDir.id,
+      share_dir_id: shareDir.id,
     });
 
     const savedUser = await this.userRepo.save(user);
+
+    // 更新目录的用户ID
+    await Promise.all([
+      this.storageService.updateDir(homeDir.id, { userId: savedUser.id }),
+      this.storageService.updateDir(shareDir.id, { userId: savedUser.id }),
+    ]);
+
     const { password: _, ...result } = savedUser;
     return result;
   }
@@ -93,6 +118,8 @@ export class AuthService {
         remark: user.remark,
         onboarded: user.onboarded,
         isAdmin: user.isAdmin,
+        home_dir_id: user.home_dir_id,
+        share_dir_id: user.share_dir_id,
       },
     };
   }
