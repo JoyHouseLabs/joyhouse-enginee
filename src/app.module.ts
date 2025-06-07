@@ -48,7 +48,8 @@ import { ToolModule } from './tool/tool.module';
 import { WorkflowModule } from './workflow/workflow.module';
 import { MultiAgentModule } from './multi-agent/multi-agent.module';
 import { JoyhouseConfigService } from './common/joyhouse-config';
-import { AppStoreModule } from './appstore/app.module';
+import { AppStoreModule } from './appstore/appstore.module';
+import { AppSubscribeModule } from './appstore/app-subscribe.module';
 
 @Module({
   imports: [
@@ -103,6 +104,7 @@ import { AppStoreModule } from './appstore/app.module';
     WorkflowModule,
     MultiAgentModule,
     AppStoreModule,
+    AppSubscribeModule,
   ],
   controllers: [AppController],
   providers: [AppService, JoyhouseLoggerService],

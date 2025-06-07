@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsString, IsUUID, IsEnum, IsDate, IsOptional } from 'class-validator';
 import { SubscribeStatus } from '../app-subscribe.entity';
+import { Transform } from 'class-transformer';
 
 export class AppSubscribeDto {
   @ApiProperty({ description: '订阅ID' })
@@ -37,6 +38,7 @@ export class CreateAppSubscribeDto {
 
   @ApiProperty({ description: '过期时间' })
   @IsDate()
+  @Transform(({ value }) => new Date(value))
   expireAt: Date;
 }
 

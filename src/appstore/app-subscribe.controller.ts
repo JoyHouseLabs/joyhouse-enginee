@@ -25,7 +25,7 @@ export class AppSubscribeController {
   @Get()
   @ApiOperation({ summary: '获取订阅列表' })
   @ApiResponse({ status: 200, description: '获取成功', type: [AppSubscribe] })
-  async findAll(@Query() query: AppSubscribeQueryDto): Promise<[AppSubscribe[], number]> {
+  async findAll(@Query() query: AppSubscribeQueryDto) {
     return this.appSubscribeService.findAll(query);
   }
 

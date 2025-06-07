@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsString, IsNumber, IsOptional, IsUUID } from 'class-validator';
+import { Transform } from 'class-transformer';
 
 export class AppDto {
   @ApiProperty({ description: '应用ID' })
@@ -76,28 +77,33 @@ export class CreateAppDto {
 
   @ApiProperty({ description: '人民币价格' })
   @IsNumber()
+  @Transform(({ value }) => Number(value))
   priceCny: number;
 
   @ApiProperty({ description: '美元价格' })
   @IsNumber()
+  @Transform(({ value }) => Number(value))
   priceUsd: number;
 }
 
 export class UpdateAppDto extends CreateAppDto {
-  @ApiProperty({ description: '应用ID' })
+  @ApiProperty({ description: '应用ID', required: false })
   @IsUUID()
-  id: string;
+  @IsOptional()
+  id?: string;
 }
 
 export class AppQueryDto {
-  @ApiProperty({ description: '页码', required: false })
+  @ApiProperty({ description: '页码', required: false, default: 1 })
   @IsNumber()
   @IsOptional()
+  @Transform(({ value }) => Number(value))
   page?: number;
 
-  @ApiProperty({ description: '每页数量', required: false })
+  @ApiProperty({ description: '每页数量', required: false, default: 10 })
   @IsNumber()
   @IsOptional()
+  @Transform(({ value }) => Number(value))
   pageSize?: number;
 
   @ApiProperty({ description: '应用名称', required: false })

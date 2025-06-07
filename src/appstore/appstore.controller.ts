@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Query, UseGuards, Delete } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { AppStoreService } from './appstore.service';
@@ -24,8 +24,8 @@ export class AppStoreController {
 
   @Get()
   @ApiOperation({ summary: '获取应用列表' })
-  @ApiResponse({ status: 200, description: '获取成功', type: [App] })
-  async findAll(@Query() query: AppQueryDto): Promise<[App[], number]> {
+  @ApiResponse({ status: 200, description: '获取成功', type: App })
+  async findAll(@Query() query: AppQueryDto) {
     return this.appStoreService.findAll(query);
   }
 
@@ -44,5 +44,15 @@ export class AppStoreController {
     @Body() updateDto: UpdateAppDto,
   ): Promise<App> {
     return this.appStoreService.update(id, updateDto);
+  }
+
+  @Delete(':id')
+  @ApiOperation({ summary: '删除应用' })
+  @ApiResponse({ status: 200, description: '删除成功' })
+  async remove(
+    @Param('id') id: string,
+    @User('id') userId: string,
+  ): Promise<void> {
+    return this.appStoreService.remove(id, userId);
   }
 } 

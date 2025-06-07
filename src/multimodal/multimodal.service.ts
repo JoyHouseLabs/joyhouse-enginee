@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common'
 import { Blip2Extractor } from './extractors/blip2.extractor'
 import { Storage } from '../storage/storage.entity'
-import { ExtractionResult } from '../types'
+import { ExtractionResult } from './types'
 
 @Injectable()
 export class MultimodalService {

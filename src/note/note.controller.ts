@@ -4,7 +4,6 @@ import {
   Post,
   Body,
   Param,
-  Req,
   UseGuards,
   Query,
 } from '@nestjs/common';
@@ -23,6 +22,7 @@ import { NoteQueryDto } from './note-query.dto';
 import { NoteListItemDto } from './note-list.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { NoteDeleteDto } from './note-delete.dto';
+import { User } from '../user/user.decorator';
 
 @ApiTags('笔记')
 @ApiBearerAuth()
@@ -45,7 +45,8 @@ export class NoteController {
     },
   })
   async getNotes(
-    @Req() req,
+    @User('id') userId: string,
+
     @Query() query: NoteQueryDto,
   ): Promise<{
     list: NoteListItemDto[];
@@ -53,7 +54,6 @@ export class NoteController {
     total_page: number;
     pagesize: number;
   }> {
-    const userId = req.user.sub;
     const { page = 1, pageSize = 10, title, content, type, isPublic } = query;
     const { data, total } = await this.noteService.findAll(
       userId,
@@ -84,8 +84,10 @@ export class NoteController {
 
   @Get(':id')
   @ApiResponse({ status: 200, type: NoteDto, description: '获取单条笔记' })
-  async getNote(@Param('id') id: string, @Req() req): Promise<NoteDto | null> {
-    const userId = req.user.sub;
+  async getNote(
+    @Param('id') id: string,
+    @User('id') userId: string,
+  ): Promise<NoteDto | null> {
     const note = await this.noteService.findById(id, userId);
     if (!note) return null;
     const { userId: _uid, ...dto } = note;
@@ -95,8 +97,10 @@ export class NoteController {
   @Post('create-notes')
   @ApiBody({ type: NoteCreateDto, description: '新建笔记内容' })
   @ApiResponse({ status: 201, type: NoteDto, description: '创建新笔记' })
-  async createNote(@Body() body: NoteCreateDto, @Req() req): Promise<NoteDto> {
-    const userId = req.user.sub;
+  async createNote(
+    @Body() body: NoteCreateDto,
+    @User('id') userId: string,
+  ): Promise<NoteDto> {
     const note = await this.noteService.create(body, userId);
     const { userId: _uid, ...dto } = note;
     return dto as NoteDto;
@@ -109,11 +113,10 @@ export class NoteController {
   })
   @ApiResponse({ status: 200, type: NoteDto, description: '更新笔记' })
   async updateNote(
-    @Req() req,
     @Body() dto: NoteUpdateDto,
+    @User('id') userId: string,
   ): Promise<NoteDto | null> {
     const { id, ...rest } = dto;
-    const userId = req.user.sub;
     const note = await this.noteService.update(id, userId, rest);
     if (!note) return null;
     const { userId: _uid, ...dtoResult } = note;
@@ -125,9 +128,8 @@ export class NoteController {
   @ApiResponse({ status: 200, description: '删除笔记，返回是否成功' })
   async deleteNote(
     @Body() dto: NoteDeleteDto,
-    @Req() req,
+    @User('id') userId: string,
   ): Promise<{ success: boolean }> {
-    const userId = req.user.sub;
     const success = await this.noteService.remove(dto.id, userId);
     return { success };
   }
@@ -136,9 +138,8 @@ export class NoteController {
   @ApiResponse({ status: 200, description: '增加自己的查看次数' })
   async incrementSelfView(
     @Body('id') id: string,
-    @Req() req,
+    @User('id') userId: string,
   ): Promise<{ success: boolean }> {
-    const userId = req.user.sub;
     const success = await this.noteService.incrementSelfView(id, userId);
     return { success };
   }
@@ -147,9 +148,8 @@ export class NoteController {
   @ApiResponse({ status: 200, description: '增加他人的查看次数' })
   async incrementOtherView(
     @Body('id') id: string,
-    @Req() req,
+    @User('id') userId: string,
   ): Promise<{ success: boolean }> {
-    const userId = req.user.sub;
     const success = await this.noteService.incrementOtherView(id, userId);
     return { success };
   }
