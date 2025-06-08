@@ -22,9 +22,9 @@ export class RoleGuard implements CanActivate {
     const request = context.switchToHttp().getRequest();
     const user = request.user;
     console.log('[RoleGuard] request.user:', user);
-    if (!user || !user.sub) {
+    if (!user || !user.id) {
       console.log('[RoleGuard] 未登录, user:', user);
-      throw new ForbiddenException('未登录');
+      throw new ForbiddenException('未登录2');
     }
     // 获取当前 controller 和 handler 名
     const handler = context.getHandler();

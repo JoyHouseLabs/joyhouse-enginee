@@ -29,7 +29,7 @@ export class Meditation {
   @Column('text')
   description: string;
 
-  @Column()
+  @Column({ nullable: true })
   voice: string;
 
   @Column('int')
@@ -51,6 +51,9 @@ export class Meditation {
 
   @Column({ name: 'userId' })
   userId: string;
+
+  @Column({ type: 'boolean', default: false, comment: '是否公开到冥想广场' })
+  isPublic: boolean;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

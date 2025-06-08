@@ -7,6 +7,7 @@ import {
   Request,
   Put,
   Param,
+  Req,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -22,7 +23,7 @@ import {
   LoginDto,
   LoginResponseDto,
   WalletSignatureLoginDto,
-} from '../dto/auth.dto';
+} from './auth.dto';
 import { UserDto } from '../user/user.dto';
 import { StorageService } from '../storage/storage.service';
 
@@ -37,17 +38,19 @@ export class AuthController {
   @Post('register')
   @ApiOperation({ summary: '用户注册' })
   @ApiResponse({ description: '注册成功' })
-  async register(@Body() registerDto: RegisterDto) {
-    const { username, password, nickname } = registerDto;
-    return this.authService.register(username, password, nickname);
+  async register(@Req() req, @Body() registerDto: RegisterDto) {
+    const { username, password, nickname, sourceType } = registerDto;
+    const ip = req.headers['x-forwarded-for'] || req.ip || req.connection?.remoteAddress;
+    return this.authService.register(username, password, nickname, ip, sourceType);
   }
 
   @Post('login')
   @ApiOperation({ summary: '用户登录' })
   @ApiResponse({ description: '登录成功' })
-  async login(@Body() loginDto: LoginDto) {
+  async login(@Req() req, @Body() loginDto: LoginDto) {
     const { username, password } = loginDto;
-    return this.authService.login(username, password);
+    const ip = req.headers['x-forwarded-for'] || req.ip || req.connection?.remoteAddress;
+    return this.authService.login(username, password, ip);
   }
 
   @Post('wallet-signature-login')

@@ -29,6 +29,13 @@ export class AppStoreController {
     return this.appStoreService.findAll(query);
   }
 
+  @Get('recommanded')
+  @ApiOperation({ summary: '获取推荐应用列表' })
+  @ApiResponse({ status: 200, description: '获取成功', type: [App] })
+  async getRecommandedApps(): Promise<App[]> {
+    return this.appStoreService.getRecommandedApps();
+  }
+
   @Get(':id')
   @ApiOperation({ summary: '获取应用详情' })
   @ApiResponse({ status: 200, description: '获取成功', type: App })

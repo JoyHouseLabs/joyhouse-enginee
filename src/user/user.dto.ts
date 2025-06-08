@@ -71,12 +71,12 @@ export class UserQueryDto {
 
   @ApiProperty({ description: '每页数量', required: false, default: 10 })
   @IsOptional()
-  limit?: number;
+  pageSize?: number;
 }
 
 export class UserListResponseDto {
   @ApiProperty({ description: '用户列表', type: [UserDto] })
-  list: UserDto[];
+  items: UserDto[];
 
   @ApiProperty({ description: '总数' })
   total: number;
@@ -85,5 +85,5 @@ export class UserListResponseDto {
   page: number;
 
   @ApiProperty({ description: '每页数量' })
-  limit: number;
+  pageSize: number;
 }

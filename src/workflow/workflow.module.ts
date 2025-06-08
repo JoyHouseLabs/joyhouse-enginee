@@ -36,7 +36,7 @@ import { UserModule } from '../user/user.module';
       inject: [ConfigService],
     }),
     ConfigModule,
-    UserModule,
+    forwardRef(() => UserModule),
     ToolModule,
     forwardRef(() => AgentModule),
     McpModule,

@@ -5,7 +5,6 @@ import {
   Body,
   Query,
   UseGuards,
-  Req,
 } from '@nestjs/common';
 import { MeditationService } from './meditation.service';
 import { CreateMeditationDto } from './meditation-create.dto';
@@ -13,6 +12,7 @@ import { UpdateMeditationDto } from './meditation-update.dto';
 import { MeditationQueryDto } from './meditation-query.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { User } from '../user/user.decorator';
 
 @ApiTags('Meditation')
 @ApiBearerAuth()
@@ -27,9 +27,8 @@ export class MeditationController {
   }
 
   @Get('my')
-  findMyMeditations(@Req() req) {
-    const userId = req.user.sub;
-    return this.meditationService.findByUserId(userId);
+  findMyMeditations(@User('id') userId: string, @Query() query: MeditationQueryDto) {
+    return this.meditationService.findByUserId(userId, query);
   }
 
   @Get('detail')
@@ -38,18 +37,16 @@ export class MeditationController {
   }
 
   @Post('create')
-  create(@Body() createMeditationDto: CreateMeditationDto, @Req() req) {
-    const userId = req.user.sub;
+  create(@User('id') userId: string, @Body() createMeditationDto: CreateMeditationDto) {
     return this.meditationService.create(createMeditationDto, userId);
   }
 
   @Post('update')
   update(
+    @User('id') userId: string,
     @Body('id') id: string,
     @Body() updateMeditationDto: UpdateMeditationDto,
-    @Req() req,
   ) {
-    const userId = req.user.sub;
     return this.meditationService.update(id, {
       ...updateMeditationDto,
       userId,
@@ -57,7 +54,7 @@ export class MeditationController {
   }
 
   @Post('delete')
-  remove(@Body('id') id: string) {
-    return this.meditationService.remove(id);
+  remove(@User('id') userId: string, @Body('id') id: string) {
+    return this.meditationService.remove(id, userId);
   }
 }

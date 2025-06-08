@@ -18,7 +18,6 @@ import { Reply } from './reply/reply.entity';
 import { RelayModule } from './relay/relay.module';
 import { ReplyModule } from './reply/reply.module';
 import { Knowledgebase } from './knowledgebase/knowledgebase.entity';
-import { Knowledgefile } from './knowledgebase/knowledgefile.entity';
 import { StorageDir } from './storage/storage-dir.entity';
 import { Permission } from './role/permission.entity';
 import { UserRole } from './role/user-role.entity';
@@ -33,7 +32,7 @@ import { TaskModule } from './task/task.module';
 import { Reward } from './reward/reward.entity';
 import { UserReward } from './reward/user-reward.entity';
 import { RewardModule } from './reward/reward.module';
-import { OperationLogModule } from './audit/operation-log.module';
+import { AuditModule } from './audit/audit.module';
 import { KnowledgebaseModule } from './knowledgebase/knowledgebase.module';
 import { CqrsModule } from '@nestjs/cqrs';
 import { JoyhouseLoggerService } from './common/logger.service';
@@ -50,6 +49,7 @@ import { MultiAgentModule } from './multi-agent/multi-agent.module';
 import { JoyhouseConfigService } from './common/joyhouse-config';
 import { AppStoreModule } from './appstore/appstore.module';
 import { AppSubscribeModule } from './appstore/app-subscribe.module';
+import { ProjectModule } from './project/project.module';
 
 @Module({
   imports: [
@@ -96,7 +96,7 @@ import { AppSubscribeModule } from './appstore/app-subscribe.module';
     TaskModule,
     RewardModule,
     RoleModule,
-    OperationLogModule,
+    AuditModule,
     AuthModule,
     QuizModule,
     AgentModule,
@@ -105,6 +105,7 @@ import { AppSubscribeModule } from './appstore/app-subscribe.module';
     MultiAgentModule,
     AppStoreModule,
     AppSubscribeModule,
+    ProjectModule,
   ],
   controllers: [AppController],
   providers: [AppService, JoyhouseLoggerService],

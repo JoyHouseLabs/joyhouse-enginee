@@ -1,34 +1,38 @@
-import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
+import { Injectable, HttpException, HttpStatus, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './user.entity';
 import { UpdateUserDto } from './user.dto';
+import { UserSettings } from './user-settings.entity';
+import { UserSettingsCreateDto, UserSettingsUpdateDto } from './user-settings.dto';
 
 @Injectable()
 export class UserService {
   constructor(
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
+    @InjectRepository(UserSettings)
+    private readonly userSettingsRepository: Repository<UserSettings>,
   ) {}
 
   async findById(id: string): Promise<User | null> {
     return this.userRepo.findOneBy({ id });
   }
 
-  async findByUsername(username: string): Promise<User | null> {
+  async findByUsername(username: string): Promise<User |   null> {
     return this.userRepo.findOneBy({ username });
   }
 
   async findAll(
     page = 1,
     limit = 10,
-  ): Promise<{ list: User[]; total: number }> {
-    const [list, total] = await this.userRepo.findAndCount({
+  ): Promise<{ items: User[]; total: number }> {
+    const [items, total] = await this.userRepo.findAndCount({
       skip: (page - 1) * limit,
       take: limit,
       order: { createdAt: 'DESC' },
     });
-    return { list, total };
+    return { items, total };
   }
 
   async update(id: string, dto: UpdateUserDto): Promise<User> {
@@ -172,5 +176,58 @@ export class UserService {
     user.password = await bcrypt.hash(dto.newPassword, 10);
     user.updatedAt = new Date();
     await this.userRepo.save(user);
+  }
+
+  async createUserSettings(userId: string, dto: UserSettingsCreateDto): Promise<UserSettings> {
+    const user = await this.userRepo.findOne({ where: { id: userId } });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    const settings = this.userSettingsRepository.create({
+      userId,
+      ...dto,
+    });
+
+    return this.userSettingsRepository.save(settings);
+  }
+
+  async updateUserSettings(userId: string, dto: UserSettingsUpdateDto): Promise<UserSettings> {
+    const settings = await this.userSettingsRepository.findOne({
+      where: { id: dto.id, userId },
+    });
+
+    if (!settings) {
+      throw new NotFoundException('User settings not found');
+    }
+
+    const { id, ...updateData } = dto;
+    Object.assign(settings, updateData);
+
+    return this.userSettingsRepository.save(settings);
+  }
+
+  async getUserSettings(userId: string): Promise<UserSettings> {
+    const settings = await this.userSettingsRepository.findOne({
+      where: { userId },
+    });
+
+    if (!settings) {
+      // 如果用户设置不存在，创建默认设置
+      return this.createUserSettings(userId, {});
+    }
+
+    return settings;
+  }
+
+  async deleteUserSettings(userId: string, settingsId: string): Promise<void> {
+    const result = await this.userSettingsRepository.delete({
+      id: settingsId,
+      userId,
+    });
+
+    if (result.affected === 0) {
+      throw new NotFoundException('User settings not found');
+    }
   }
 }

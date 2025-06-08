@@ -29,6 +29,12 @@ export class App {
   @Column()
   userId: string;
 
+  @Column({ type: 'boolean', default: false })
+  recommand: boolean;
+
+  @Column({ type: 'boolean', default: false })
+  isMiniapp: boolean;
+
   @CreateDateColumn()
   createdAt: Date;
 

@@ -40,7 +40,7 @@ export class LlmController {
     const result = await this.llmService.findProvidersPaged(
       userId,
       query.page ?? 1,
-      query.limit ?? 20,
+      query.pageSize ?? 20,
       query.name,
       query.isPublic,
     );
@@ -106,7 +106,7 @@ export class LlmController {
     return this.llmService.findModelsPaged(
       userId,
       query.page ?? 1,
-      query.limit ?? 20,
+      query.pageSize ?? 20,
       query.name,
       query.providerId || query.provider,
       query.isPublic,

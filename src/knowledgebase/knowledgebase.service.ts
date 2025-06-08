@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Knowledgebase } from './knowledgebase.entity';
+import { Storage } from '../storage/storage.entity';
 import { ulid } from 'ulid';
 
 @Injectable()
@@ -42,7 +43,6 @@ export class KnowledgebaseService {
       ...body,
       id: ulid(),
       userId,
-      embeddingModel: body.embeddingModel,
       createdAt: new Date(),
       updatedAt: new Date(),
     });
@@ -57,10 +57,35 @@ export class KnowledgebaseService {
     const kb = await this.kbRepo.findOneBy({ id, userId });
     if (!kb) throw new NotFoundException('知识库不存在');
     Object.assign(kb, body, {
-      embeddingModel: body.embeddingModel,
       updatedAt: new Date(),
     });
     return this.kbRepo.save(kb);
+  }
+
+  async addStorageToKnowledgebase(
+    knowledgebaseId: string,
+    storageId: string,
+  ): Promise<void> {
+    const kb = await this.kbRepo.findOne({
+      where: { id: knowledgebaseId },
+      relations: ['includedFiles'],
+    });
+    if (!kb) {
+      throw new NotFoundException('知识库不存在');
+    }
+    
+    // 创建一个Storage对象引用
+    const storage = new Storage();
+    storage.id = storageId;
+    
+    // 确保includedFiles数组存在
+    if (!kb.includedFiles) {
+      kb.includedFiles = [];
+    }
+    
+    // 添加storage到知识库
+    kb.includedFiles.push(storage);
+    await this.kbRepo.save(kb);
   }
 
   async remove(id: string, userId: string): Promise<boolean> {

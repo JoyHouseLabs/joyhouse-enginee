@@ -2,8 +2,9 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { KnowledgeChunk } from '../entities/knowledge-chunk.entity';
-import { Knowledgefile } from '../knowledgefile.entity';
+import { Storage } from '../../storage/storage.entity';
 import { Knowledgebase } from '../knowledgebase.entity';
+import { FileContent } from '../../storage/file-content.entity';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -20,6 +21,7 @@ export interface ChunkData {
   title?: string;
   metadata?: any;
   keywords?: string[];
+  chunkType?: 'text' | 'code' | 'table' | 'image' | 'metadata' | 'heading' | 'list' | 'quote' | 'equation';
 }
 
 export interface ProcessingResult {
@@ -36,83 +38,114 @@ export class DocumentProcessingService {
   constructor(
     @InjectRepository(KnowledgeChunk)
     private readonly chunkRepo: Repository<KnowledgeChunk>,
-    @InjectRepository(Knowledgefile)
-    private readonly fileRepo: Repository<Knowledgefile>,
+    @InjectRepository(Storage)
+    private readonly storageRepo: Repository<Storage>,
     @InjectRepository(Knowledgebase)
     private readonly kbRepo: Repository<Knowledgebase>,
+    @InjectRepository(FileContent)
+    private readonly fileContentRepo: Repository<FileContent>,
   ) {}
 
   /**
-   * 处理单个文档
+   * 处理单个Storage项目
    */
-  async processDocument(fileId: string): Promise<void> {
+  async processStorage(storageId: string, knowledgebaseId?: string): Promise<void> {
     const startTime = Date.now();
     
     try {
-      const file = await this.fileRepo.findOne({
-        where: { id: fileId },
+      const storage = await this.storageRepo.findOne({
+        where: { id: storageId },
+        relations: ['knowledgeBases'],
       });
 
-      if (!file) {
-        throw new Error(`File with ID ${fileId} not found`);
+      if (!storage) {
+        throw new Error(`Storage with ID ${storageId} not found`);
       }
 
-      this.logger.log(`Starting to process document: ${file.filename}`);
+      // 只处理文件类型的Storage
+      if (storage.type !== 'file') {
+        this.logger.warn(`Storage ${storageId} is not a file, skipping processing`);
+        return;
+      }
 
-      // 更新文件状态为处理中
-      await this.updateFileStatus(fileId, 'processing');
+      this.logger.log(`Starting to process storage: ${storage.filename}`);
+
+      // 更新处理状态
+      await this.updateStorageProcessingState(storageId, 'processing');
 
       // 1. 提取文档内容
-      const content = await this.extractContent(file);
-      this.logger.log(`Extracted content from ${file.filename}, length: ${content.length}`);
+      const content = await this.extractContent(storage);
+      this.logger.log(`Extracted content from ${storage.filename}, length: ${content.length}`);
 
       // 2. 获取处理配置
-      const config = await this.getProcessingConfig(file.knowledgebaseId);
+      const targetKnowledgeBases = knowledgebaseId ? 
+        [await this.kbRepo.findOne({ where: { id: knowledgebaseId } })] :
+        storage.knowledgeBases || [];
 
-      // 3. 文档分块
-      const chunks = await this.chunkDocument(content, file, config);
-      this.logger.log(`Created ${chunks.length} chunks from ${file.filename}`);
+      if (targetKnowledgeBases.length === 0) {
+        this.logger.warn(`No knowledge bases found for storage ${storageId}`);
+        return;
+      }
 
-      // 4. 保存知识块
-      await this.saveChunks(chunks, file);
+      // 3. 为每个知识库处理文档
+      for (const kb of targetKnowledgeBases.filter(kb => kb)) {
+        await this.processStorageForKnowledgeBase(storage, kb, content, startTime);
+      }
 
-      // 5. 更新文件状态和处理结果
-      const processingResult: ProcessingResult = {
-        totalChunks: chunks.length,
-        processingTime: Date.now() - startTime,
-        extractedMetadata: this.extractMetadata(content, file),
-      };
+      // 4. 更新总体状态
+      await this.updateStorageProcessingState(storageId, 'completed');
 
-      await this.updateFileStatus(fileId, 'completed', processingResult);
-
-      this.logger.log(`Successfully processed file ${file.filename} with ${chunks.length} chunks in ${processingResult.processingTime}ms`);
+      this.logger.log(`Successfully processed storage ${storage.filename}`);
     } catch (error) {
-      this.logger.error(`Error processing file ${fileId}:`, error);
-      await this.updateFileStatus(fileId, 'error', undefined, error.message);
+      this.logger.error(`Error processing storage ${storageId}:`, error);
+      await this.updateStorageProcessingState(storageId, 'failed', error.message);
       throw error;
     }
   }
 
   /**
-   * 批量处理文件
+   * 为特定知识库处理Storage
    */
-  async batchProcessFiles(fileIds: string[]): Promise<void> {
-    this.logger.log(`Starting batch processing of ${fileIds.length} files`);
-    
-    for (const fileId of fileIds) {
-      try {
-        await this.processDocument(fileId);
-      } catch (error) {
-        this.logger.error(`Failed to process file ${fileId}:`, error);
-        // 继续处理其他文件
-      }
-    }
-    
-    this.logger.log(`Completed batch processing of ${fileIds.length} files`);
+  private async processStorageForKnowledgeBase(
+    storage: Storage, 
+    knowledgeBase: Knowledgebase, 
+    content: string,
+    startTime: number
+  ): Promise<void> {
+    // 获取知识库特定的处理配置
+    const config = await this.getProcessingConfig(knowledgeBase.id);
+
+    // 文档分块
+    const chunks = await this.chunkDocument(content, storage, config);
+    this.logger.log(`Created ${chunks.length} chunks from ${storage.filename} for KB ${knowledgeBase.name}`);
+
+    // 保存知识块
+    await this.saveChunks(chunks, storage, knowledgeBase.id);
+
+    // 更新知识库统计
+    await this.updateKnowledgeBaseStats(knowledgeBase.id, chunks.length);
   }
 
   /**
-   * 重新处理知识库中的所有文档
+   * 批量处理Storage项目
+   */
+  async batchProcessStorages(storageIds: string[], knowledgebaseId?: string): Promise<void> {
+    this.logger.log(`Starting batch processing of ${storageIds.length} storage items`);
+    
+    for (const storageId of storageIds) {
+      try {
+        await this.processStorage(storageId, knowledgebaseId);
+      } catch (error) {
+        this.logger.error(`Failed to process storage ${storageId}:`, error);
+        // 继续处理其他项目
+      }
+    }
+    
+    this.logger.log(`Completed batch processing of ${storageIds.length} storage items`);
+  }
+
+  /**
+   * 重新处理知识库中的所有Storage
    */
   async reprocessKnowledgebase(knowledgebaseId: string): Promise<void> {
     this.logger.log(`Starting reprocessing of knowledgebase: ${knowledgebaseId}`);
@@ -121,16 +154,21 @@ export class DocumentProcessingService {
     await this.chunkRepo.delete({ knowledgebaseId });
     this.logger.log(`Deleted existing chunks for knowledgebase: ${knowledgebaseId}`);
 
-    // 获取所有文件
-    const files = await this.fileRepo.find({
-      where: { knowledgebaseId },
+    // 获取知识库关联的所有Storage
+    const kb = await this.kbRepo.findOne({
+      where: { id: knowledgebaseId },
+      relations: ['includedFiles'],
     });
 
-    this.logger.log(`Found ${files.length} files to reprocess`);
+    if (!kb) {
+      throw new Error(`Knowledge base ${knowledgebaseId} not found`);
+    }
 
-    // 重新处理所有文件
-    for (const file of files) {
-      await this.processDocument(file.id);
+    this.logger.log(`Found ${kb.includedFiles.length} storage items to reprocess`);
+
+    // 重新处理所有Storage项目
+    for (const storage of kb.includedFiles) {
+      await this.processStorage(storage.id, knowledgebaseId);
     }
     
     this.logger.log(`Completed reprocessing of knowledgebase: ${knowledgebaseId}`);
@@ -139,28 +177,32 @@ export class DocumentProcessingService {
   /**
    * 提取文档内容
    */
-  private async extractContent(file: Knowledgefile): Promise<string> {
-    const filePath = file.filepath;
+  private async extractContent(storage: Storage): Promise<string> {
+    // 首先尝试从FileContent获取
+    const fileContent = await this.fileContentRepo.findOne({
+      where: { fileId: storage.id }
+    });
+    
+    if (fileContent?.content) {
+      return fileContent.content;
+    }
 
-    if (!fs.existsSync(filePath)) {
+    // 如果没有预提取的内容，从文件路径读取
+    const filePath = storage.filepath;
+    if (!filePath || !fs.existsSync(filePath)) {
       throw new Error(`File not found: ${filePath}`);
     }
 
-    const fileExtension = path.extname(file.filename).toLowerCase();
-    this.logger.debug(`Extracting content from ${fileExtension} file: ${file.filename}`);
+    const fileExtension = path.extname(storage.filename).toLowerCase();
+    this.logger.debug(`Extracting content from ${fileExtension} file: ${storage.filename}`);
 
+    let content: string;
     switch (fileExtension) {
       case '.txt':
       case '.md':
       case '.markdown':
-        return fs.readFileSync(filePath, 'utf-8');
-      case '.pdf':
-        return this.extractPdfContent(filePath);
-      case '.docx':
-        return this.extractDocxContent(filePath);
-      case '.html':
-      case '.htm':
-        return this.extractHtmlContent(filePath);
+        content = fs.readFileSync(filePath, 'utf-8');
+        break;
       case '.rs':
       case '.js':
       case '.ts':
@@ -170,83 +212,52 @@ export class DocumentProcessingService {
       case '.c':
       case '.go':
       case '.php':
-        return this.extractCodeContent(filePath);
+      case '.css':
+      case '.scss':
+      case '.vue':
+      case '.jsx':
+      case '.tsx':
+        content = fs.readFileSync(filePath, 'utf-8');
+        break;
       case '.json':
-        return this.extractJsonContent(filePath);
+        content = this.extractJsonContent(filePath);
+        break;
       case '.xml':
-        return this.extractXmlContent(filePath);
+        content = this.extractXmlContent(filePath);
+        break;
       default:
         // 尝试作为文本文件读取
         this.logger.warn(`Unknown file extension ${fileExtension}, treating as text file`);
-        return fs.readFileSync(filePath, 'utf-8');
+        content = fs.readFileSync(filePath, 'utf-8');
     }
+
+    // 保存提取的内容到FileContent表
+    await this.saveExtractedContent(storage.id, content);
+
+    return content;
   }
 
   /**
-   * 提取 PDF 内容
+   * 保存提取的内容
    */
-  private async extractPdfContent(filePath: string): Promise<string> {
-    // TODO: 实现 PDF 内容提取
-    // 可以使用 pdf-parse 或其他 PDF 解析库
-    this.logger.warn('PDF extraction not implemented yet, returning empty string');
-    return '';
-  }
+  private async saveExtractedContent(storageId: string, content: string): Promise<void> {
+    const existingContent = await this.fileContentRepo.findOne({
+      where: { fileId: storageId },
+    });
 
-  /**
-   * 提取 DOCX 内容
-   */
-  private async extractDocxContent(filePath: string): Promise<string> {
-    // TODO: 实现 DOCX 内容提取
-    // 可以使用 mammoth 或其他 DOCX 解析库
-    this.logger.warn('DOCX extraction not implemented yet, returning empty string');
-    return '';
-  }
-
-  /**
-   * 提取 HTML 内容
-   */
-  private async extractHtmlContent(filePath: string): Promise<string> {
-    const content = fs.readFileSync(filePath, 'utf-8');
-    // 简单的 HTML 标签移除
-    return content
-      .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '') // 移除脚本
-      .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '') // 移除样式
-      .replace(/<[^>]*>/g, '') // 移除所有标签
-      .replace(/\s+/g, ' ') // 合并空白字符
-      .trim();
-  }
-
-  /**
-   * 提取代码内容
-   */
-  private async extractCodeContent(filePath: string): Promise<string> {
-    return fs.readFileSync(filePath, 'utf-8');
-  }
-
-  /**
-   * 提取 JSON 内容
-   */
-  private async extractJsonContent(filePath: string): Promise<string> {
-    const content = fs.readFileSync(filePath, 'utf-8');
-    try {
-      const jsonData = JSON.parse(content);
-      return JSON.stringify(jsonData, null, 2);
-    } catch (error) {
-      this.logger.warn(`Invalid JSON file: ${filePath}`);
-      return content;
+    if (existingContent) {
+      await this.fileContentRepo.update(existingContent.id, {
+        content: content,
+        isProcessed: true,
+      });
+    } else {
+      await this.fileContentRepo.save({
+        fileId: storageId,
+        content: content,
+        contentType: 'text' as any,
+        isProcessed: true,
+      });
     }
-  }
-
-  /**
-   * 提取 XML 内容
-   */
-  private async extractXmlContent(filePath: string): Promise<string> {
-    const content = fs.readFileSync(filePath, 'utf-8');
-    // 简单的 XML 标签移除，保留文本内容
-    return content
-      .replace(/<[^>]*>/g, ' ')
-      .replace(/\s+/g, ' ')
-      .trim();
   }
 
   /**
@@ -254,15 +265,15 @@ export class DocumentProcessingService {
    */
   private async chunkDocument(
     content: string,
-    file: Knowledgefile,
+    storage: Storage,
     config: ProcessingConfig
   ): Promise<ChunkData[]> {
-    const fileExtension = path.extname(file.filename).toLowerCase();
-
-    if (this.isCodeFile(fileExtension) && config.enableCodeParsing) {
-      return this.chunkCodeDocument(content, file, config);
+    const fileExtension = path.extname(storage.filename).toLowerCase();
+    
+    if (this.isCodeFile(fileExtension)) {
+      return this.chunkCodeDocument(content, storage, config);
     } else {
-      return this.chunkTextDocument(content, file, config);
+      return this.chunkTextDocument(content, storage, config);
     }
   }
 
@@ -271,7 +282,7 @@ export class DocumentProcessingService {
    */
   private async chunkTextDocument(
     content: string,
-    file: Knowledgefile,
+    storage: Storage,
     config: ProcessingConfig
   ): Promise<ChunkData[]> {
     const chunks: ChunkData[] = [];
@@ -279,48 +290,46 @@ export class DocumentProcessingService {
 
     // 按段落分割
     const paragraphs = content.split(/\n\s*\n/).filter(p => p.trim().length > 0);
-
+    
     let currentChunk = '';
-    let currentSize = 0;
+    let overlapText = '';
 
     for (const paragraph of paragraphs) {
-      const paragraphSize = paragraph.length;
+      // 如果当前段落太长，需要进一步分割
+      if (paragraph.length > chunkSize) {
+        // 先保存当前chunk
+        if (currentChunk.trim()) {
+          chunks.push(this.createChunkData(currentChunk, storage));
+          overlapText = this.getOverlapText(currentChunk, chunkOverlap);
+          currentChunk = overlapText;
+        }
 
-      if (currentSize + paragraphSize > chunkSize && currentChunk.length > 0) {
-        // 保存当前块
-        chunks.push({
-          content: currentChunk.trim(),
-          title: this.extractTitle(currentChunk),
-          metadata: {
-            fileType: path.extname(file.filename),
-            chunkIndex: chunks.length,
-            startPosition: currentSize - currentChunk.length,
-            endPosition: currentSize,
-          },
-          keywords: this.extractKeywords(currentChunk),
-        });
-
-        // 开始新块，保留重叠部分
-        const overlapText = this.getOverlapText(currentChunk, chunkOverlap);
-        currentChunk = overlapText + '\n' + paragraph;
-        currentSize = currentChunk.length;
+        // 分割长段落
+        const sentences = paragraph.split(/[.!?。！？]\s+/);
+        for (const sentence of sentences) {
+          if (currentChunk.length + sentence.length > chunkSize && currentChunk.trim()) {
+            chunks.push(this.createChunkData(currentChunk, storage));
+            overlapText = this.getOverlapText(currentChunk, chunkOverlap);
+            currentChunk = overlapText + sentence;
+          } else {
+            currentChunk += (currentChunk ? ' ' : '') + sentence;
+          }
+        }
       } else {
-        currentChunk += (currentChunk ? '\n\n' : '') + paragraph;
-        currentSize += paragraphSize;
+        // 检查添加这个段落是否会超过大小限制
+        if (currentChunk.length + paragraph.length > chunkSize && currentChunk.trim()) {
+          chunks.push(this.createChunkData(currentChunk, storage));
+          overlapText = this.getOverlapText(currentChunk, chunkOverlap);
+          currentChunk = overlapText + paragraph;
+        } else {
+          currentChunk += (currentChunk ? '\n\n' : '') + paragraph;
+        }
       }
     }
 
-    // 保存最后一个块
-    if (currentChunk.trim().length > 0) {
-      chunks.push({
-        content: currentChunk.trim(),
-        title: this.extractTitle(currentChunk),
-        metadata: {
-          fileType: path.extname(file.filename),
-          chunkIndex: chunks.length,
-        },
-        keywords: this.extractKeywords(currentChunk),
-      });
+    // 保存最后一个chunk
+    if (currentChunk.trim()) {
+      chunks.push(this.createChunkData(currentChunk, storage));
     }
 
     return chunks;
@@ -331,230 +340,187 @@ export class DocumentProcessingService {
    */
   private async chunkCodeDocument(
     content: string,
-    file: Knowledgefile,
+    storage: Storage,
     config: ProcessingConfig
   ): Promise<ChunkData[]> {
-    const fileExtension = path.extname(file.filename).toLowerCase();
-
-    if (fileExtension === '.rs') {
-      return this.chunkRustCode(content, file);
-    } else if (['.js', '.ts'].includes(fileExtension)) {
-      return this.chunkJavaScriptCode(content, file);
-    } else if (fileExtension === '.py') {
-      return this.chunkPythonCode(content, file);
-    } else {
-      // 通用代码分块
-      return this.chunkGenericCode(content, file, config);
+    const extension = path.extname(storage.filename).toLowerCase();
+    
+    switch (extension) {
+      case '.rs':
+        return this.chunkRustCode(content, storage);
+      case '.js':
+      case '.ts':
+      case '.jsx':
+      case '.tsx':
+        return this.chunkJavaScriptCode(content, storage);
+      case '.py':
+        return this.chunkPythonCode(content, storage);
+      default:
+        return this.chunkGenericCode(content, storage, config);
     }
   }
 
   /**
-   * Rust 代码分块
+   * Rust代码分块
    */
-  private async chunkRustCode(content: string, file: Knowledgefile): Promise<ChunkData[]> {
+  private async chunkRustCode(content: string, storage: Storage): Promise<ChunkData[]> {
     const chunks: ChunkData[] = [];
     const lines = content.split('\n');
-
+    
     let currentFunction = '';
-    let currentFunctionName = '';
-    let braceCount = 0;
+    let currentStruct = '';
+    let currentImpl = '';
+    let braceLevel = 0;
     let inFunction = false;
-    let startLine = 0;
+    let inStruct = false;
+    let inImpl = false;
 
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
+      const trimmed = line.trim();
 
-      // 检测函数定义
-      const functionMatch = line.match(/^\s*(pub\s+)?fn\s+(\w+)/);
-      if (functionMatch && !inFunction) {
-        currentFunctionName = functionMatch[2];
-        inFunction = true;
-        braceCount = 0;
-        startLine = i;
-      }
-
-      if (inFunction) {
-        currentFunction += line + '\n';
-
-        // 计算大括号
-        braceCount += (line.match(/\{/g) || []).length;
-        braceCount -= (line.match(/\}/g) || []).length;
-
-        // 函数结束
-        if (braceCount === 0 && line.includes('}')) {
-          chunks.push({
-            content: currentFunction.trim(),
-            title: `函数: ${currentFunctionName}`,
-            metadata: {
-              codeLanguage: 'rust',
-              functionName: currentFunctionName,
-              startLine: startLine + 1,
-              endLine: i + 1,
-              importance: this.calculateCodeImportance(currentFunction),
-              filePath: file.filename,
-            },
-            keywords: this.extractCodeKeywords(currentFunction),
-          });
-
-          currentFunction = '';
-          currentFunctionName = '';
-          inFunction = false;
+      // 函数定义
+      if (trimmed.match(/^(pub\s+)?fn\s+\w+/)) {
+        if (currentFunction.trim()) {
+          chunks.push(this.createCodeChunk(currentFunction, storage, 'rust'));
         }
-      }
-    }
-
-    // 处理结构体和枚举
-    const structChunks = this.extractRustStructs(content, file);
-    chunks.push(...structChunks);
-
-    return chunks;
-  }
-
-  /**
-   * 提取 Rust 结构体
-   */
-  private extractRustStructs(content: string, file: Knowledgefile): ChunkData[] {
-    const chunks: ChunkData[] = [];
-    const structRegex = /(?:pub\s+)?struct\s+(\w+)[\s\S]*?\{[\s\S]*?\}/g;
-    let match;
-
-    while ((match = structRegex.exec(content)) !== null) {
-      const structName = match[1];
-      const structCode = match[0];
-
-      chunks.push({
-        content: structCode,
-        title: `结构体: ${structName}`,
-        metadata: {
-          codeLanguage: 'rust',
-          structName,
-          category: 'struct',
-          importance: 3,
-          filePath: file.filename,
-        },
-        keywords: this.extractCodeKeywords(structCode),
-      });
-    }
-
-    return chunks;
-  }
-
-  /**
-   * JavaScript/TypeScript 代码分块
-   */
-  private async chunkJavaScriptCode(content: string, file: Knowledgefile): Promise<ChunkData[]> {
-    const chunks: ChunkData[] = [];
-    const lines = content.split('\n');
-
-    // 简单的函数提取
-    const functionRegex = /(?:function\s+(\w+)|(?:const|let|var)\s+(\w+)\s*=\s*(?:async\s+)?(?:function|\(.*?\)\s*=>))/g;
-    let match;
-
-    while ((match = functionRegex.exec(content)) !== null) {
-      const functionName = match[1] || match[2];
-      const functionCode = this.extractJSFunction(content, match.index);
-
-      if (functionCode) {
-        chunks.push({
-          content: functionCode,
-          title: `函数: ${functionName}`,
-          metadata: {
-            codeLanguage: file.filename.endsWith('.ts') ? 'typescript' : 'javascript',
-            functionName,
-            importance: 2,
-            filePath: file.filename,
-          },
-          keywords: this.extractCodeKeywords(functionCode),
-        });
-      }
-    }
-
-    return chunks;
-  }
-
-  /**
-   * Python 代码分块
-   */
-  private async chunkPythonCode(content: string, file: Knowledgefile): Promise<ChunkData[]> {
-    const chunks: ChunkData[] = [];
-    const lines = content.split('\n');
-
-    let currentFunction = '';
-    let currentFunctionName = '';
-    let inFunction = false;
-    let indentLevel = 0;
-    let startLine = 0;
-
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i];
-
-      // 检测函数定义
-      const functionMatch = line.match(/^(\s*)def\s+(\w+)/);
-      if (functionMatch) {
-        // 保存之前的函数
-        if (inFunction && currentFunction) {
-          chunks.push({
-            content: currentFunction.trim(),
-            title: `函数: ${currentFunctionName}`,
-            metadata: {
-              codeLanguage: 'python',
-              functionName: currentFunctionName,
-              startLine: startLine + 1,
-              endLine: i,
-              importance: 2,
-              filePath: file.filename,
-            },
-            keywords: this.extractCodeKeywords(currentFunction),
-          });
-        }
-
-        currentFunctionName = functionMatch[2];
-        indentLevel = functionMatch[1].length;
-        inFunction = true;
         currentFunction = line + '\n';
-        startLine = i;
-      } else if (inFunction) {
-        const lineIndent = line.match(/^(\s*)/)?.[1]?.length || 0;
-        
-        if (line.trim() === '' || lineIndent > indentLevel) {
-          currentFunction += line + '\n';
-        } else {
-          // 函数结束
-          chunks.push({
-            content: currentFunction.trim(),
-            title: `函数: ${currentFunctionName}`,
-            metadata: {
-              codeLanguage: 'python',
-              functionName: currentFunctionName,
-              startLine: startLine + 1,
-              endLine: i,
-              importance: 2,
-              filePath: file.filename,
-            },
-            keywords: this.extractCodeKeywords(currentFunction),
-          });
+        inFunction = true;
+        braceLevel = 0;
+      }
+      // 结构体定义
+      else if (trimmed.match(/^(pub\s+)?struct\s+\w+/)) {
+        if (currentStruct.trim()) {
+          chunks.push(this.createCodeChunk(currentStruct, storage, 'rust'));
+        }
+        currentStruct = line + '\n';
+        inStruct = true;
+        braceLevel = 0;
+      }
+      // impl块
+      else if (trimmed.match(/^impl\s+/)) {
+        if (currentImpl.trim()) {
+          chunks.push(this.createCodeChunk(currentImpl, storage, 'rust'));
+        }
+        currentImpl = line + '\n';
+        inImpl = true;
+        braceLevel = 0;
+      }
+      else {
+        if (inFunction) currentFunction += line + '\n';
+        if (inStruct) currentStruct += line + '\n';
+        if (inImpl) currentImpl += line + '\n';
+      }
 
-          inFunction = false;
+      // 跟踪大括号层级
+      braceLevel += (line.match(/\{/g) || []).length;
+      braceLevel -= (line.match(/\}/g) || []).length;
+
+      // 函数/结构体/impl结束
+      if (braceLevel === 0 && (inFunction || inStruct || inImpl)) {
+        if (inFunction && currentFunction.trim()) {
+          chunks.push(this.createCodeChunk(currentFunction, storage, 'rust'));
           currentFunction = '';
         }
+        if (inStruct && currentStruct.trim()) {
+          chunks.push(this.createCodeChunk(currentStruct, storage, 'rust'));
+          currentStruct = '';
+        }
+        if (inImpl && currentImpl.trim()) {
+          chunks.push(this.createCodeChunk(currentImpl, storage, 'rust'));
+          currentImpl = '';
+        }
+        inFunction = inStruct = inImpl = false;
       }
     }
 
-    // 处理最后一个函数
-    if (inFunction && currentFunction) {
-      chunks.push({
-        content: currentFunction.trim(),
-        title: `函数: ${currentFunctionName}`,
-        metadata: {
-          codeLanguage: 'python',
-          functionName: currentFunctionName,
-          startLine: startLine + 1,
-          endLine: lines.length,
-          importance: 2,
-          filePath: file.filename,
-        },
-        keywords: this.extractCodeKeywords(currentFunction),
-      });
+    return chunks;
+  }
+
+  /**
+   * JavaScript/TypeScript代码分块
+   */
+  private async chunkJavaScriptCode(content: string, storage: Storage): Promise<ChunkData[]> {
+    const chunks: ChunkData[] = [];
+    const functionRegex = /(?:export\s+)?(?:async\s+)?function\s+\w+[^{]*{/g;
+    const classRegex = /(?:export\s+)?class\s+\w+[^{]*{/g;
+
+    let match: RegExpExecArray | null;
+
+    // 提取函数
+    while ((match = functionRegex.exec(content)) !== null) {
+      const functionStart = match.index;
+      const functionCode = this.extractJSFunction(content, functionStart);
+      if (functionCode) {
+        chunks.push(this.createCodeChunk(functionCode, storage, 'javascript'));
+      }
+    }
+
+    // 提取类
+    functionRegex.lastIndex = 0;
+    while ((match = classRegex.exec(content)) !== null) {
+      const classStart = match.index;
+      const classCode = this.extractJSClass(content, classStart);
+      if (classCode) {
+        chunks.push(this.createCodeChunk(classCode, storage, 'javascript'));
+      }
+    }
+
+    return chunks;
+  }
+
+  /**
+   * Python代码分块
+   */
+  private async chunkPythonCode(content: string, storage: Storage): Promise<ChunkData[]> {
+    const chunks: ChunkData[] = [];
+    const lines = content.split('\n');
+    
+    let currentFunction = '';
+    let currentClass = '';
+    let indentLevel = 0;
+    let inFunction = false;
+    let inClass = false;
+
+    for (const line of lines) {
+      const trimmed = line.trim();
+      const currentIndent = line.length - line.trimStart().length;
+
+      // 函数定义
+      if (trimmed.startsWith('def ')) {
+        if (currentFunction.trim()) {
+          chunks.push(this.createCodeChunk(currentFunction, storage, 'python'));
+        }
+        currentFunction = line + '\n';
+        inFunction = true;
+        indentLevel = currentIndent;
+      }
+      // 类定义
+      else if (trimmed.startsWith('class ')) {
+        if (currentClass.trim()) {
+          chunks.push(this.createCodeChunk(currentClass, storage, 'python'));
+        }
+        currentClass = line + '\n';
+        inClass = true;
+        indentLevel = currentIndent;
+      }
+      // 继续当前函数或类
+      else if ((inFunction || inClass) && (currentIndent > indentLevel || trimmed === '')) {
+        if (inFunction) currentFunction += line + '\n';
+        if (inClass) currentClass += line + '\n';
+      }
+      // 函数或类结束
+      else if ((inFunction || inClass) && currentIndent <= indentLevel && trimmed !== '') {
+        if (inFunction && currentFunction.trim()) {
+          chunks.push(this.createCodeChunk(currentFunction, storage, 'python'));
+          currentFunction = '';
+        }
+        if (inClass && currentClass.trim()) {
+          chunks.push(this.createCodeChunk(currentClass, storage, 'python'));
+          currentClass = '';
+        }
+        inFunction = inClass = false;
+      }
     }
 
     return chunks;
@@ -565,105 +531,108 @@ export class DocumentProcessingService {
    */
   private async chunkGenericCode(
     content: string,
-    file: Knowledgefile,
+    storage: Storage,
     config: ProcessingConfig
   ): Promise<ChunkData[]> {
-    const chunks: ChunkData[] = [];
+    // 简单按行数分块
     const lines = content.split('\n');
-    const { chunkSize } = config;
+    const chunks: ChunkData[] = [];
+    const linesPerChunk = Math.max(Math.floor(config.chunkSize / 50), 20); // 假设平均每行50字符
 
-    let currentChunk = '';
-    let currentSize = 0;
-    let chunkIndex = 0;
-
-    for (const line of lines) {
-      if (currentSize + line.length > chunkSize && currentChunk.length > 0) {
-        chunks.push({
-          content: currentChunk.trim(),
-          title: `代码块 ${chunkIndex + 1}`,
-          metadata: {
-            codeLanguage: this.detectCodeLanguage(file.filename),
-            chunkIndex,
-            filePath: file.filename,
-          },
-          keywords: this.extractCodeKeywords(currentChunk),
-        });
-
-        currentChunk = line + '\n';
-        currentSize = line.length;
-        chunkIndex++;
-      } else {
-        currentChunk += line + '\n';
-        currentSize += line.length;
+    for (let i = 0; i < lines.length; i += linesPerChunk) {
+      const chunkLines = lines.slice(i, i + linesPerChunk);
+      const chunkContent = chunkLines.join('\n');
+      
+      if (chunkContent.trim()) {
+        chunks.push(this.createCodeChunk(chunkContent, storage, this.detectCodeLanguage(storage.filename)));
       }
-    }
-
-    if (currentChunk.trim().length > 0) {
-      chunks.push({
-        content: currentChunk.trim(),
-        title: `代码块 ${chunkIndex + 1}`,
-        metadata: {
-          codeLanguage: this.detectCodeLanguage(file.filename),
-          chunkIndex,
-          filePath: file.filename,
-        },
-        keywords: this.extractCodeKeywords(currentChunk),
-      });
     }
 
     return chunks;
   }
 
   /**
-   * 保存知识块
+   * 创建文本块数据
    */
-  private async saveChunks(chunks: ChunkData[], file: Knowledgefile): Promise<void> {
-    for (const chunkData of chunks) {
-      const chunk = this.chunkRepo.create({
-        knowledgebaseId: file.knowledgebaseId,
-        fileId: file.id,
-        content: chunkData.content,
-        title: chunkData.title,
-        metadata: chunkData.metadata,
-        keywords: chunkData.keywords,
-        relevanceScore: this.calculateRelevanceScore(chunkData),
-      });
-
-      await this.chunkRepo.save(chunk);
-    }
+  private createChunkData(content: string, storage: Storage): ChunkData {
+    return {
+      content: content.trim(),
+      title: this.extractTitle(content),
+      keywords: this.extractKeywords(content),
+      chunkType: 'text',
+      metadata: {
+        fileSize: storage.filesize,
+        importance: this.calculateImportance(content),
+      }
+    };
   }
 
   /**
-   * 更新文件状态
+   * 创建代码块数据
    */
-  private async updateFileStatus(
-    fileId: string,
-    status: string,
-    processingResult?: ProcessingResult,
+  private createCodeChunk(content: string, storage: Storage, language: string): ChunkData {
+    return {
+      content: content.trim(),
+      title: this.extractCodeTitle(content, language),
+      keywords: this.extractCodeKeywords(content),
+      chunkType: 'code',
+      metadata: {
+        codeLanguage: language,
+        fileSize: storage.filesize,
+        importance: this.calculateCodeImportance(content),
+      }
+    };
+  }
+
+  /**
+   * 保存知识块
+   */
+  private async saveChunks(chunks: ChunkData[], storage: Storage, knowledgebaseId: string): Promise<void> {
+    const knowledgeChunks = chunks.map(chunk => ({
+      knowledgebaseId,
+      storageId: storage.id,
+      chunkType: chunk.chunkType || 'text',
+      content: chunk.content,
+      title: chunk.title,
+      metadata: chunk.metadata,
+      keywords: chunk.keywords,
+      relevanceScore: this.calculateRelevanceScore(chunk),
+    }));
+
+    await this.chunkRepo.save(knowledgeChunks);
+  }
+
+  /**
+   * 更新Storage处理状态
+   */
+  private async updateStorageProcessingState(
+    storageId: string,
+    status: 'processing' | 'completed' | 'failed',
     errorMessage?: string
   ): Promise<void> {
-    const updateData: any = { status };
+    const updateData: any = {
+      updatedAt: new Date(),
+    };
 
-    if (processingResult) {
-      updateData.processingResult = processingResult;
+    if (status === 'failed' && errorMessage) {
+      updateData.metadata = { processingError: errorMessage };
     }
 
-    if (errorMessage) {
-      updateData.errorMessage = errorMessage;
-    }
+    await this.storageRepo.update(storageId, updateData);
+  }
 
-    await this.fileRepo.update(fileId, updateData);
+  /**
+   * 更新知识库统计信息
+   */
+  private async updateKnowledgeBaseStats(knowledgebaseId: string, newChunksCount: number): Promise<void> {
+    await this.kbRepo.increment({ id: knowledgebaseId }, 'totalChunks', newChunksCount);
+    await this.kbRepo.update(knowledgebaseId, { lastUpdateAt: new Date() });
   }
 
   /**
    * 获取处理配置
    */
-  private async getProcessingConfig(knowledgebaseId: string): Promise<ProcessingConfig> {
-    const kb = await this.kbRepo.findOne({
-      where: { id: knowledgebaseId },
-    });
-
-    // 如果知识库有自定义配置，使用自定义配置，否则使用默认配置
+  private async getProcessingConfig(knowledgebaseId: string | null): Promise<ProcessingConfig> {
     const defaultConfig: ProcessingConfig = {
       chunkSize: 1000,
       chunkOverlap: 200,
@@ -672,16 +641,26 @@ export class DocumentProcessingService {
       enableStructureExtraction: true,
     };
 
-    if (kb?.processingConfig) {
-      return { ...defaultConfig, ...kb.processingConfig };
+    if (!knowledgebaseId) {
+      return defaultConfig;
+    }
+
+    const kb = await this.kbRepo.findOne({ where: { id: knowledgebaseId } });
+    
+    // 使用vectorConfig中的配置
+    if (kb?.vectorConfig) {
+      return { 
+        ...defaultConfig,
+        chunkSize: kb.vectorConfig.chunkSize || defaultConfig.chunkSize,
+        chunkOverlap: kb.vectorConfig.chunkOverlap || defaultConfig.chunkOverlap,
+        embeddingModel: kb.vectorConfig.embeddingModel || defaultConfig.embeddingModel,
+      };
     }
 
     return defaultConfig;
   }
 
-  /**
-   * 判断是否为代码文件
-   */
+  // 工具方法
   private isCodeFile(extension: string): boolean {
     const codeExtensions = [
       '.rs', '.js', '.ts', '.py', '.java', '.cpp', '.c', '.go', '.php',
@@ -691,19 +670,14 @@ export class DocumentProcessingService {
     return codeExtensions.includes(extension);
   }
 
-  /**
-   * 提取标题
-   */
   private extractTitle(content: string): string | undefined {
     const lines = content.split('\n');
     const firstLine = lines[0]?.trim();
 
-    // Markdown 标题
     if (firstLine?.startsWith('#')) {
       return firstLine.replace(/^#+\s*/, '');
     }
 
-    // 如果第一行较短且不包含特殊字符，可能是标题
     if (firstLine && firstLine.length < 100 && !firstLine.includes('{')) {
       return firstLine;
     }
@@ -711,60 +685,63 @@ export class DocumentProcessingService {
     return undefined;
   }
 
-  /**
-   * 提取关键词
-   */
+  private extractCodeTitle(content: string, language: string): string | undefined {
+    const lines = content.split('\n');
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (trimmed.match(/^(pub\s+)?fn\s+(\w+)/)) {
+        return trimmed.match(/^(pub\s+)?fn\s+(\w+)/)?.[2];
+      }
+      if (trimmed.match(/^(export\s+)?function\s+(\w+)/)) {
+        return trimmed.match(/^(export\s+)?function\s+(\w+)/)?.[2];
+      }
+      if (trimmed.match(/^def\s+(\w+)/)) {
+        return trimmed.match(/^def\s+(\w+)/)?.[1];
+      }
+      if (trimmed.match(/^(pub\s+)?struct\s+(\w+)/)) {
+        return trimmed.match(/^(pub\s+)?struct\s+(\w+)/)?.[2];
+      }
+      if (trimmed.match(/^class\s+(\w+)/)) {
+        return trimmed.match(/^class\s+(\w+)/)?.[1];
+      }
+    }
+    return undefined;
+  }
+
   private extractKeywords(content: string): string[] {
-    // 简单的关键词提取
     const words = content
       .toLowerCase()
       .replace(/[^\w\s]/g, ' ')
       .split(/\s+/)
       .filter(word => word.length > 3 && word.length < 20);
 
-    // 统计词频
     const wordCount: Record<string, number> = {};
     words.forEach(word => {
       wordCount[word] = (wordCount[word] || 0) + 1;
     });
 
-    // 返回出现频率最高的词
     return Object.entries(wordCount)
       .sort(([, a], [, b]) => b - a)
       .slice(0, 10)
       .map(([word]) => word);
   }
 
-  /**
-   * 提取代码关键词
-   */
   private extractCodeKeywords(code: string): string[] {
     const keywords: string[] = [];
 
-    // 提取函数名
     const functionMatches = code.match(/(?:function|fn|def|func)\s+(\w+)/g);
     if (functionMatches) {
       keywords.push(...functionMatches.map(match => match.split(/\s+/).pop()!).filter(Boolean));
     }
 
-    // 提取类名
     const classMatches = code.match(/(?:class|struct|interface)\s+(\w+)/g);
     if (classMatches) {
       keywords.push(...classMatches.map(match => match.split(/\s+/).pop()!).filter(Boolean));
     }
 
-    // 提取变量名（简单版本）
-    const varMatches = code.match(/(?:let|const|var)\s+(\w+)/g);
-    if (varMatches) {
-      keywords.push(...varMatches.map(match => match.split(/\s+/).pop()!).filter(Boolean));
-    }
-
     return [...new Set(keywords)];
   }
 
-  /**
-   * 检测代码语言
-   */
   private detectCodeLanguage(filename: string): string {
     const extension = path.extname(filename).toLowerCase();
     const languageMap: Record<string, string> = {
@@ -788,130 +765,95 @@ export class DocumentProcessingService {
     return languageMap[extension] || 'unknown';
   }
 
-  /**
-   * 计算代码重要性
-   */
+  private calculateImportance(content: string): number {
+    let importance = 1;
+    
+    if (content.length > 500) importance += 1;
+    if (content.includes('重要') || content.includes('关键') || content.includes('核心')) importance += 1;
+    if (content.split('\n').length > 10) importance += 1;
+    
+    return Math.min(importance, 5);
+  }
+
   private calculateCodeImportance(code: string): number {
     let importance = 1;
 
-    // 公共函数更重要
-    if (code.includes('pub fn') || code.includes('public')) {
-      importance += 2;
-    }
-
-    // 包含注释的函数更重要
-    if (code.includes('///') || code.includes('/**') || code.includes('"""')) {
-      importance += 1;
-    }
-
-    // 长函数可能更重要
-    if (code.split('\n').length > 20) {
-      importance += 1;
-    }
-
-    // 包含错误处理的代码更重要
-    if (code.includes('Error') || code.includes('Exception') || code.includes('Result')) {
-      importance += 1;
-    }
+    if (code.includes('pub fn') || code.includes('public')) importance += 2;
+    if (code.includes('///') || code.includes('/**') || code.includes('"""')) importance += 1;
+    if (code.split('\n').length > 20) importance += 1;
+    if (code.includes('Error') || code.includes('Exception') || code.includes('Result')) importance += 1;
 
     return Math.min(importance, 5);
   }
 
-  /**
-   * 计算相关性评分
-   */
   private calculateRelevanceScore(chunkData: ChunkData): number {
     let score = 1.0;
 
-    // 有标题的块更重要
-    if (chunkData.title) {
-      score += 0.5;
-    }
-
-    // 代码块的重要性
-    if (chunkData.metadata?.importance) {
-      score += chunkData.metadata.importance * 0.2;
-    }
-
-    // 内容长度影响
-    const contentLength = chunkData.content.length;
-    if (contentLength > 500) {
-      score += 0.3;
-    }
-
-    // 关键词数量影响
-    if (chunkData.keywords && chunkData.keywords.length > 5) {
-      score += 0.2;
-    }
+    if (chunkData.title) score += 0.5;
+    if (chunkData.metadata?.importance) score += chunkData.metadata.importance * 0.2;
+    if (chunkData.content.length > 500) score += 0.3;
+    if (chunkData.keywords && chunkData.keywords.length > 5) score += 0.2;
 
     return Math.min(score, 5.0);
   }
 
-  /**
-   * 获取重叠文本
-   */
   private getOverlapText(text: string, overlapSize: number): string {
-    if (text.length <= overlapSize) {
-      return text;
-    }
-
+    if (text.length <= overlapSize) return text;
     return text.slice(-overlapSize);
   }
 
-  /**
-   * 提取元数据
-   */
-  private extractMetadata(content: string, file: Knowledgefile): any {
-    return {
-      wordCount: content.split(/\s+/).length,
-      lineCount: content.split('\n').length,
-      fileSize: file.filesize,
-      language: this.detectCodeLanguage(file.filename),
-      hasCode: this.isCodeFile(path.extname(file.filename)),
-      encoding: 'utf-8',
-    };
+  private extractJsonContent(filePath: string): string {
+    const jsonContent = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+    return JSON.stringify(jsonContent, null, 2);
   }
 
-  /**
-   * 提取 JavaScript 函数
-   */
+  private extractXmlContent(filePath: string): string {
+    return fs.readFileSync(filePath, 'utf-8');
+  }
+
   private extractJSFunction(content: string, startIndex: number): string | null {
-    const lines = content.split('\n');
-    let currentLine = 0;
-    let currentPos = 0;
-
-    // 找到起始行
-    for (let i = 0; i < lines.length; i++) {
-      if (currentPos + lines[i].length >= startIndex) {
-        currentLine = i;
-        break;
-      }
-      currentPos += lines[i].length + 1; // +1 for newline
-    }
-
-    // 简单的大括号匹配
     let braceCount = 0;
+    let inFunction = false;
     let functionCode = '';
-    let started = false;
 
-    for (let i = currentLine; i < lines.length; i++) {
-      const line = lines[i];
-      functionCode += line + '\n';
+    for (let i = startIndex; i < content.length; i++) {
+      const char = content[i];
+      functionCode += char;
 
-      for (const char of line) {
-        if (char === '{') {
-          braceCount++;
-          started = true;
-        } else if (char === '}') {
-          braceCount--;
+      if (char === '{') {
+        braceCount++;
+        inFunction = true;
+      } else if (char === '}') {
+        braceCount--;
+        if (inFunction && braceCount === 0) {
+          return functionCode;
         }
       }
+    }
 
-      if (started && braceCount === 0) {
-        break;
+    return null;
+  }
+
+  private extractJSClass(content: string, startIndex: number): string | null {
+    let braceCount = 0;
+    let inClass = false;
+    let classCode = '';
+
+    for (let i = startIndex; i < content.length; i++) {
+      const char = content[i];
+      classCode += char;
+
+      if (char === '{') {
+        braceCount++;
+        inClass = true;
+      } else if (char === '}') {
+        braceCount--;
+        if (inClass && braceCount === 0) {
+          return classCode;
+        }
       }
     }
 
-    return functionCode.trim() || null;
+    return null;
   }
 } 

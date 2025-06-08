@@ -63,6 +63,7 @@
     "sqlite3": "^5.1.7",
     "swagger-ui-express": "^5.0.1",
     "tweetnacl": "^1.0.3",
+    "twitter-api-v2": "^1.23.2",
     "typeorm": "^0.3.23",
     "ulid": "^3.0.0",
     "winston": "^3.17.0",
@@ -115,5 +116,10 @@
     ],
     "coverageDirectory": "../coverage",
     "testEnvironment": "node"
+  },
+  "pnpm": {
+    "overrides": {
+      "cron": "4.3.0"
+    }
   }
 }

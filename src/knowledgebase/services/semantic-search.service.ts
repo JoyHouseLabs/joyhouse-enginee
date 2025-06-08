@@ -11,7 +11,7 @@ export interface KnowledgeSearchResult {
   relevanceScore: number;
   source: {
     knowledgebaseId: string;
-    fileId: string;
+    storageId: string;
     filename?: string;
   };
 }
@@ -49,7 +49,7 @@ export class SemanticSearchService {
     // 构建查询
     const queryBuilder = this.chunkRepo
       .createQueryBuilder('chunk')
-      .leftJoinAndSelect('chunk.file', 'file')
+      .leftJoinAndSelect('chunk.storage', 'storage')
       .where('chunk.knowledgebaseId IN (:...knowledgebaseIds)', { knowledgebaseIds });
 
     // 添加过滤条件
@@ -89,8 +89,8 @@ export class SemanticSearchService {
       relevanceScore: chunk.relevanceScore,
       source: {
         knowledgebaseId: chunk.knowledgebaseId,
-        fileId: chunk.fileId,
-        filename: chunk.file?.filename,
+        storageId: chunk.storageId,
+        filename: chunk.storage?.filename,
       },
     }));
   }
@@ -119,7 +119,7 @@ export class SemanticSearchService {
     return {
       chunks: results,
       summary,
-      sources: results.map(r => r.source.filename || r.source.fileId),
+      sources: results.map(r => r.source.filename || r.source.storageId),
     };
   }
 
@@ -129,7 +129,7 @@ export class SemanticSearchService {
   ): Promise<KnowledgeSearchResult[]> {
     const chunk = await this.chunkRepo.findOne({
       where: { id: chunkId },
-      relations: ['file'],
+      relations: ['storage'],
     });
 
     if (!chunk) {
@@ -139,7 +139,7 @@ export class SemanticSearchService {
     // 基于关键词和元数据查找相似内容
     const queryBuilder = this.chunkRepo
       .createQueryBuilder('chunk')
-      .leftJoinAndSelect('chunk.file', 'file')
+      .leftJoinAndSelect('chunk.storage', 'storage')
       .where('chunk.id != :chunkId', { chunkId })
       .andWhere('chunk.knowledgebaseId = :knowledgebaseId', {
         knowledgebaseId: chunk.knowledgebaseId,
@@ -172,8 +172,8 @@ export class SemanticSearchService {
       relevanceScore: similarChunk.relevanceScore,
       source: {
         knowledgebaseId: similarChunk.knowledgebaseId,
-        fileId: similarChunk.fileId,
-        filename: similarChunk.file?.filename,
+        storageId: similarChunk.storageId,
+        filename: similarChunk.storage?.filename,
       },
     }));
   }

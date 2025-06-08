@@ -43,7 +43,7 @@ export class LlmModel {
   params: Record<string, any>;
 
   @Column({ default: false })
-  is_default: boolean;
+  isDefault: boolean;
 
   @Column({ default: false })
   isPublic: boolean;

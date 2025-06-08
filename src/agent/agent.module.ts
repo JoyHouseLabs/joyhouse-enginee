@@ -16,6 +16,7 @@ import { WorkflowModule } from '../workflow/workflow.module';
 import { UserModule } from '../user/user.module';
 import { RoleCard } from './entities/role-card.entity';
 import { TaskModule } from '../task/task.module';
+import { AuthModule } from '../auth/auth.module';
 
 @Module({
   imports: [
@@ -29,12 +30,13 @@ import { TaskModule } from '../task/task.module';
       inject: [ConfigService],
     }),
     ConfigModule,
-    UserModule,
+    forwardRef(() => UserModule),
     LlmModule,
     ToolModule,
     McpModule,
     TaskModule,
     forwardRef(() => WorkflowModule),
+    forwardRef(() => AuthModule),
   ],
   controllers: [AgentController],
   providers: [

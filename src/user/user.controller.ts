@@ -27,6 +27,7 @@ import {
 } from './user.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { User } from '../decorators/user.decorator';
+import { UserSettingsCreateDto, UserSettingsUpdateDto } from './user-settings.dto';
 
 @ApiTags('用户')
 @Controller('users')
@@ -41,13 +42,13 @@ export class UserController {
   @ApiOperation({ summary: '获取用户列表' })
   @ApiResponse({ type: UserListResponseDto })
   async findAll(@Query() query: UserQueryDto): Promise<UserListResponseDto> {
-    const { page = 1, limit = 10 } = query;
-    const { list, total } = await this.userService.findAll(page, limit);
+    const { page = 1, pageSize = 10 } = query;
+    const { items, total } = await this.userService.findAll(page, pageSize);
     return {
-      list,
+      items,
       total,
       page,
-      limit,
+      pageSize,
     };
   }
 
@@ -99,5 +100,29 @@ export class UserController {
   async setAutoExtractContent(@Req() req, @Body() body: { auto_extract_content: boolean }) {
     await this.userService.update(req.user.id, { auto_extract_content: body.auto_extract_content })
     return { success: true }
+  }
+
+  @Get('settings')
+  @ApiResponse({ status: 200, description: '获取用户设置' })
+  async getUserSettings(@Req() req) {
+    return this.userService.getUserSettings(req.user.id);
+  }
+
+  @Post('settings')
+  @ApiResponse({ status: 201, description: '创建用户设置' })
+  async createUserSettings(@Req() req, @Body() dto: UserSettingsCreateDto) {
+    return this.userService.createUserSettings(req.user.id, dto);
+  }
+
+  @Post('settings/update')
+  @ApiResponse({ status: 200, description: '更新用户设置' })
+  async updateUserSettings(@Req() req, @Body() dto: UserSettingsUpdateDto) {
+    return this.userService.updateUserSettings(req.user.id, dto);
+  }
+
+  @Delete('settings/:id')
+  @ApiResponse({ status: 200, description: '删除用户设置' })
+  async deleteUserSettings(@Req() req, @Param('id') id: string) {
+    return this.userService.deleteUserSettings(req.user.id, id);
   }
 }

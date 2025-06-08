@@ -5,6 +5,7 @@ import {
   IsOptional,
   Min,
   Length,
+  IsBoolean,
 } from 'class-validator';
 import { MeditationLevel } from './meditation.entity';
 
@@ -21,8 +22,9 @@ export class CreateMeditationDto {
   @IsString()
   description: string;
 
+  @IsOptional()
   @IsString()
-  voice: string;
+  voice?: string;
 
   @IsNumber()
   @Min(1)
@@ -30,4 +32,14 @@ export class CreateMeditationDto {
 
   @IsEnum(MeditationLevel)
   level: MeditationLevel;
+
+  @IsOptional()
+  @IsBoolean()
+  loop?: boolean;
+
+  @IsOptional()
+  @IsBoolean({
+    message: '是否公开必须是布尔值'
+  })
+  isPublic?: boolean;
 }

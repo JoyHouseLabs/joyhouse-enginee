@@ -11,8 +11,8 @@ export class StorageDir {
   @Column({ type: 'text', nullable: true })
   description?: string;
 
-  @Column({ type: 'varchar', length: 64, nullable: true })
-  parent?: string;
+  @Column({ type: 'uuid', nullable: true })
+  parent?: string | null;
 
   @Column({ type: 'simple-array', nullable: true })
   roleIds?: string[];
@@ -26,7 +26,7 @@ export class StorageDir {
     permission: 'read' | 'write' | 'admin';
   }[];
 
-  @Column({ type: 'varchar', length: 64 })
+  @Column({ type: 'uuid' })
   userId: string;
 
   @Column({ type: 'varchar', length: 64, nullable: true })

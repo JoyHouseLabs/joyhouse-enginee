@@ -9,5 +9,5 @@ export class UserRole {
   userId: string;
 
   @Column()
-  role_id: string;
+  roleId: string;
 }

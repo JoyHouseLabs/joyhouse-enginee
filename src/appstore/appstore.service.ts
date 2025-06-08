@@ -15,7 +15,7 @@ export class AppStoreService {
 
   async create(userId: string, createDto: CreateAppDto): Promise<App> {
     const app = this.appRepository.create({
-      ...createDto,
+      ...createDto, // spread createDto to include 'recommand' if present
       userId,
     });
     return this.appRepository.save(app);
@@ -52,7 +52,7 @@ export class AppStoreService {
     return app;
   }
 
-  async update(id: string, updateDto: UpdateAppDto): Promise<App> {
+  async update(id: string, updateDto: UpdateAppDto): Promise<App> { // updateDto will include 'recommand' if present
     const app = await this.findOne(id);
     Object.assign(app, updateDto);
     return this.appRepository.save(app);
@@ -76,5 +76,9 @@ export class AppStoreService {
     }
 
     await this.appRepository.remove(app);
+  }
+
+  async getRecommandedApps(): Promise<App[]> {
+    return this.appRepository.find({ where: { recommand: true } });
   }
 } 

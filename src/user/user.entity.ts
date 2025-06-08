@@ -46,6 +46,22 @@ export class User {
   @Column({ default: true })
   auto_extract_content: boolean;
 
+  @ApiProperty({ description: '注册IP' })
+  @Column({ nullable: true })
+  registerIp?: string;
+
+  @ApiProperty({ description: '来源类型 (pc, api, app, etc.)' })
+  @Column({ nullable: true })
+  sourceType?: string;
+
+  @ApiProperty({ description: '交易密码' })
+  @Column({ nullable: true })
+  tradePassword?: string;
+
+  @ApiProperty({ description: '最后登录IP' })
+  @Column({ nullable: true })
+  lastLoginIp?: string;
+
   @CreateDateColumn()
   createdAt: Date;
 

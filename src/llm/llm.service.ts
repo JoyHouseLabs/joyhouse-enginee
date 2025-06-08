@@ -62,10 +62,10 @@ export class LlmService {
   async findProvidersPaged(
     userId: string,
     page = 1,
-    limit = 20,
+    pageSize = 20,
     name?: string,
     isPublic?: boolean,
-  ) {
+  ): Promise<{ list: any[]; total: number; page: number; pageSize: number }> {
     const where: any = { userId };
     if (name)
       where.name = typeof name === 'string' ? Like(`%${name}%`) : undefined;
@@ -74,8 +74,8 @@ export class LlmService {
     }
     const [data, total] = await this.providerRepo.findAndCount({
       where,
-      skip: (page - 1) * limit,
-      take: limit,
+      skip: (page - 1) * pageSize,
+      take: pageSize,
       order: { id: 'DESC' },
     });
     // 为每个 provider 统计模型数量
@@ -85,17 +85,17 @@ export class LlmService {
         return { ...provider, modelCount };
       }),
     );
-    return { list: listWithModelCount, total, page, limit };
+    return { list: listWithModelCount, total, page, pageSize };
   }
 
   async findModelsPaged(
     userId: string,
     page = 1,
-    limit = 20,
+    pageSize = 20,
     name?: string,
     provider?: string,
     isPublic?: boolean,
-  ): Promise<{ list: any[]; total: number; page: number; limit: number }> {
+  ): Promise<{ list: any[]; total: number; page: number; pageSize: number }> {
     const where: any = { userId };
     if (name)
       where.name = typeof name === 'string' ? Like(`%${name}%`) : undefined;
@@ -105,12 +105,12 @@ export class LlmService {
     }
     const [list, total] = await this.modelRepo.findAndCount({
       where,
-      skip: (page - 1) * limit,
-      take: limit,
+      skip: (page - 1) * pageSize,
+      take: pageSize,
       order: { id: 'DESC' },
       relations: ['provider'],
     });
-    return { list, total, page, limit };
+    return { list, total, page, pageSize };
   }
 
   async createModel(dto: Partial<LlmModel> & { providerId?: string }) {
@@ -160,13 +160,13 @@ export class LlmService {
     // 2. 开启事务，确保操作的原子性
     return this.modelRepo.manager.transaction(async (manager) => {
       // 3. 将该用户的所有模型设置为非默认
-      await manager.update(LlmModel, { userId }, { is_default: false });
+      await manager.update(LlmModel, { userId }, { isDefault: false });
 
       // 4. 将指定模型设置为默认
       const result = await manager.update(
         LlmModel,
         { id, userId },
-        { is_default: true },
+        { isDefault: true },
       );
 
       return (result.affected ?? 0) > 0;

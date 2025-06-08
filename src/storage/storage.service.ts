@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Like } from 'typeorm';
+import { Repository, Like, IsNull } from 'typeorm';
 import { Storage } from './storage.entity';
 import { StorageDir } from './storage-dir.entity';
 import * as fs from 'fs';
@@ -27,7 +27,16 @@ export class StorageService {
     private readonly multimodalService: MultimodalService,
   ) {}
 
+  async createFileStorage(meta: Partial<Storage>, userId?: string): Promise<Storage> {
+    return this.saveFile(meta, userId);
+  }
+
   async saveFile(meta: Partial<Storage>, userId?: string): Promise<Storage> {
+    // 设置默认type为'file'
+    if (!meta.type) {
+      meta.type = 'file';
+    }
+
     // 新建文件时，禁止同目录下有同名文件或目录
     if (meta.storage_dir_id && meta.filename) {
       const existFile = await this.storageRepo.findOne({
@@ -83,11 +92,17 @@ export class StorageService {
     if (!dir) throw new Error('目录不存在');
     // 检查同级目录/文件重名
     const existDir = await this.storageDirRepo.findOne({
-      where: { parent: dir.parent, name: newName },
+      where: { 
+        parent: dir.parent === null || dir.parent === undefined ? IsNull() : dir.parent, 
+        name: newName 
+      },
     });
     if (existDir) throw new Error('同级目录下已存在同名目录');
     const existFile = await this.storageRepo.findOne({
-      where: { storage_dir_id: dir.parent, filename: newName },
+      where: { 
+        storage_dir_id: dir.parent === null || dir.parent === undefined ? IsNull() : dir.parent, 
+        filename: newName 
+      },
     });
     if (existFile) throw new Error('同级目录下已存在同名文件');
     dir.name = newName;
@@ -114,22 +129,34 @@ export class StorageService {
   // 可扩展：查找、删除等
 
   async createDir(dto: Partial<StorageDir>): Promise<StorageDir> {
-    if (dto.parent && dto.parent !== '') {
+    if (dto.parent && dto.parent !== '' && dto.parent !== null) {
       const parentDir = await this.storageDirRepo.findOneBy({ id: dto.parent });
       if (!parentDir) {
         throw new Error('父目录不存在');
       }
     }
+    
+    // 处理空字符串的情况，将其转换为null
+    if (dto.parent === '') {
+      dto.parent = null;
+    }
     // 检查同级目录下是否有同名目录
     const existDir = await this.storageDirRepo.findOne({
-      where: { parent: dto.parent, name: dto.name },
+      where: { 
+        parent: dto.parent === null || dto.parent === undefined ? IsNull() : dto.parent, 
+        name: dto.name, 
+        userId: dto.userId 
+      },
     });
     if (existDir) {
       throw new Error('同级目录下已存在同名目录');
     }
     // 检查同级目录下是否有同名文件
     const existFile = await this.storageRepo.findOne({
-      where: { storage_dir_id: dto.parent, filename: dto.name },
+      where: { 
+        storage_dir_id: dto.parent === null || dto.parent === undefined ? IsNull() : dto.parent, 
+        filename: dto.name 
+      },
     });
     if (existFile) {
       throw new Error('同级目录下已存在同名文件');
@@ -194,7 +221,7 @@ export class StorageService {
 
   async findDirByUserIdAndName(userId: string, name: string) {
     return this.storageDirRepo.findOne({
-      where: { userId: userId, name, parent: '' },
+      where: { userId: userId, name, parent: IsNull() },
     });
   }
 

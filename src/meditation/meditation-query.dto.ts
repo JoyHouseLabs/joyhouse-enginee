@@ -1,4 +1,5 @@
-import { IsString, IsEnum, IsOptional } from 'class-validator';
+import { IsString, IsEnum, IsOptional, IsNumber, Min } from 'class-validator';
+import { Type } from 'class-transformer';
 import { MeditationLevel } from './meditation.entity';
 
 export class MeditationQueryDto {
@@ -13,4 +14,16 @@ export class MeditationQueryDto {
   @IsString()
   @IsOptional()
   search?: string;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(1)
+  @Type(() => Number)
+  page?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(1)
+  @Type(() => Number)
+  pageSize?: number;
 }

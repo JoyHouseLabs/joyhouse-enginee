@@ -13,26 +13,41 @@ export class MeditationService {
     private meditationRepository: Repository<Meditation>,
   ) {}
 
-  async findAll(query: MeditationQueryDto): Promise<Meditation[]> {
-    const where: any = {};
+  async findAll(query: MeditationQueryDto): Promise<{ items: Meditation[]; total: number; page: number; pageSize: number; }> {
+    const { page = 1, pageSize = 10, userId, level, search } = query;
+    const skip = (page - 1) * pageSize;
 
-    if (query.userId) {
-      where.userId = query.userId;
+    const queryBuilder = this.meditationRepository.createQueryBuilder('meditation');
+
+    queryBuilder.leftJoinAndSelect('meditation.user', 'user'); // Ensure user relation is loaded
+
+    // Filter for public meditations for the Meditation Square
+    queryBuilder.andWhere('meditation.isPublic = :isPublic', { isPublic: true });
+
+    if (userId) {
+      queryBuilder.andWhere('meditation.userId = :userId', { userId });
     }
 
-    if (query.level) {
-      where.level = query.level;
+    if (level) {
+      queryBuilder.andWhere('meditation.level = :level', { level });
     }
 
-    if (query.search) {
-      where.name = Like(`%${query.search}%`);
+    if (search) {
+      queryBuilder.andWhere('meditation.name LIKE :search', { search: `%${search}%` });
     }
 
-    return this.meditationRepository.find({
-      where,
-      order: { createdAt: 'DESC' },
-      relations: ['user'],
-    });
+    queryBuilder.orderBy('meditation.createdAt', 'DESC')
+      .skip(skip)
+      .take(pageSize);
+
+    const [items, total] = await queryBuilder.getManyAndCount();
+
+    return {
+      items,
+      total,
+      page,
+      pageSize,
+    };
   }
 
   async findOne(id: string): Promise<Meditation> {
@@ -70,19 +85,34 @@ export class MeditationService {
     return this.meditationRepository.save(meditation);
   }
 
-  async remove(id: string): Promise<void> {
-    const result = await this.meditationRepository.delete(id);
+  async remove(id: string, userId: string): Promise<void> {
+    const result = await this.meditationRepository.delete({ id, userId });
 
     if (result.affected === 0) {
       throw new NotFoundException(`Meditation with ID ${id} not found`);
     }
   }
 
-  async findByUserId(userId: string): Promise<Meditation[]> {
-    return this.meditationRepository.find({
-      where: { userId },
-      order: { createdAt: 'DESC' },
-      relations: ['user'],
-    });
+  async findByUserId(userId: string, query: Pick<MeditationQueryDto, 'page' | 'pageSize'>): Promise<{ items: Meditation[]; total: number; page: number; pageSize: number; }> {
+    const { page = 1, pageSize = 10 } = query;
+    const skip = (page - 1) * pageSize;
+
+    const queryBuilder = this.meditationRepository.createQueryBuilder('meditation');
+
+    queryBuilder
+      .leftJoinAndSelect('meditation.user', 'user') // Ensure user relation is loaded
+      .where('meditation.userId = :userId', { userId })
+      .orderBy('meditation.createdAt', 'DESC')
+      .skip(skip)
+      .take(pageSize);
+
+    const [items, total] = await queryBuilder.getManyAndCount();
+
+    return {
+      items,
+      total,
+      page,
+      pageSize,
+    };
   }
 }

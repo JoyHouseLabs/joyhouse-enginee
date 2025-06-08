@@ -109,6 +109,11 @@ export class CreateAgentDto {
   @IsOptional()
   isPublic?: boolean;
 
+  @ApiProperty({ required: false })
+  @IsBoolean()
+  @IsOptional()
+  isDefault?: boolean;
+
   @IsOptional()
   @IsObject()
   intentRecognition?: IntentRecognitionConfig;

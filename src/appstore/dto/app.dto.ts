@@ -48,6 +48,14 @@ export class AppDto {
 
   @ApiProperty({ description: '更新时间' })
   updatedAt: Date;
+
+  @ApiProperty({ description: '是否推荐', required: false })
+  @IsOptional()
+  recommand?: boolean;
+
+  @ApiProperty({ description: '是否小程序', required: false })
+  @IsOptional()
+  isMiniapp?: boolean;
 }
 
 export class CreateAppDto {
@@ -84,6 +92,14 @@ export class CreateAppDto {
   @IsNumber()
   @Transform(({ value }) => Number(value))
   priceUsd: number;
+
+  @ApiProperty({ description: '是否推荐', required: false })
+  @IsOptional()
+  recommand?: boolean;
+
+  @ApiProperty({ description: '是否小程序', required: false })
+  @IsOptional()
+  isMiniapp?: boolean;
 }
 
 export class UpdateAppDto extends CreateAppDto {

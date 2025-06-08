@@ -6,7 +6,7 @@ export class Permission {
   id: string;
 
   @Column()
-  role_id: string;
+  roleId: string;
 
   @Column()
   controller: string;

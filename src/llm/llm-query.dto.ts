@@ -12,7 +12,7 @@ export class LlmProviderQueryDto {
   @IsOptional()
   @IsInt()
   @Min(1)
-  limit?: number = 20;
+  pageSize?: number = 20;
 
   @ApiPropertyOptional({ description: 'Provider 名称模糊搜索' })
   @IsOptional()
@@ -36,7 +36,7 @@ export class LlmModelQueryDto {
   @IsOptional()
   @IsInt()
   @Min(1)
-  limit?: number = 20;
+  pageSize?: number = 20;
 
   @ApiPropertyOptional({ description: '模型名称模糊搜索' })
   @IsOptional()

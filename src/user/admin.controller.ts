@@ -27,7 +27,7 @@ import {
   UserListResponseDto,
 } from './user.dto';
 import { RoleType } from '../role/role.entity';
-
+import { User as CurrentUser } from './user.decorator';
 @ApiTags('管理员')
 @Controller('admin/users')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -46,13 +46,13 @@ export class AdminController {
   @ApiOperation({ summary: '获取用户列表' })
   @ApiResponse({ type: UserListResponseDto })
   async findAll(@Query() query: UserQueryDto): Promise<UserListResponseDto> {
-    const { page = 1, limit = 10 } = query;
-    const { list, total } = await this.userService.findAll(page, limit);
+    const { page = 1, pageSize = 10 } = query;
+    const { items, total } = await this.userService.findAll(page, pageSize);
     return {
-      list,
+      items,
       total,
       page,
-      limit,
+      pageSize: pageSize,
     };
   }
 
@@ -77,18 +77,18 @@ export class AdminController {
     return this.userService.update(id, dto);
   }
 
-  @Delete(':id')
-  @ApiOperation({ summary: '删除用户' })
-  @ApiResponse({ description: '删除成功' })
-  async delete(@Param('id') id: string): Promise<void> {
-    await this.userService.delete(id);
-  }
+  // @Delete(':id')
+  // @ApiOperation({ summary: '删除用户' })
+  // @ApiResponse({ description: '删除成功' })
+  // async delete(@Param('id') id: string): Promise<void> {
+  //   await this.userService.delete(id);
+  // }
 
   @Post(':userId/jail')
   async jailUser(
     @Param('userId') userId: string,
+    @CurrentUser('id') operator: string, 
     @Body() body: { reason: string; expiredAt: Date; operation: string },
-    @Query('operator') operator: string,
   ) {
     const user = await this.userRepo.findOneBy({ id: userId });
     if (!user) {
@@ -122,5 +122,14 @@ export class AdminController {
       isJailed: !!activeJail,
       jailInfo: activeJail,
     };
+  }
+
+  @Post(':userId/reset-password')
+  @ApiOperation({ summary: '重置用户密码' })
+  async resetUserPassword(
+    @Param('userId') userId: string,
+    @Body() body: { newPassword: string },
+  ) {
+    return this.authService.resetPassword(userId, body.newPassword);
   }
 }

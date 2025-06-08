@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { OperationLog } from './operation-log.entity';
 import { OperationLogGateway } from './operation-log.gateway';
+import { OperationLogQueryDto } from './dto/operation-log-query.dto';
 
 @Injectable()
 export class OperationLogService {
@@ -19,20 +20,31 @@ export class OperationLogService {
     this.gateway.notify(saved);
   }
 
-  async list(dto: {
-    userId?: string;
-    action?: string;
-    skip?: number;
-    take?: number;
-  }): Promise<OperationLog[]> {
-    const where: any = {};
-    if (dto.userId) where.userId = dto.userId;
-    if (dto.action) where.action = dto.action;
-    return this.logRepo.find({
-      where,
-      order: { created_at: 'DESC' },
-      skip: dto.skip || 0,
-      take: dto.take || 50,
-    });
+  async list(query: OperationLogQueryDto) {
+    const { page = 1, pageSize = 10, userId, action } = query;
+    const skip = (page - 1) * pageSize;
+
+    const queryBuilder = this.logRepo.createQueryBuilder('log');
+
+    if (userId) {
+      queryBuilder.andWhere('log.userId = :userId', { userId });
+    }
+
+    if (action) {
+      queryBuilder.andWhere('log.action = :action', { action });
+    }
+
+    const [items, total] = await queryBuilder
+      .orderBy('log.created_at', 'DESC')
+      .skip(skip)
+      .take(pageSize)
+      .getManyAndCount();
+
+    return {
+      items,
+      total,
+      page,
+      pageSize,
+    };
   }
 }

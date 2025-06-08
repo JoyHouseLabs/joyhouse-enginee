@@ -24,7 +24,7 @@ import {
 } from '@nestjs/swagger';
 import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { KnowledgebaseService } from './knowledgebase.service';
-import { KnowledgefileService } from './knowledgefile.service';
+import { StorageService } from '../storage/storage.service';
 import { SemanticSearchService } from './services/semantic-search.service';
 import { DocumentProcessingService } from './services/document-processing.service';
 
@@ -48,7 +48,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 export class KnowledgebaseController {
   constructor(
     private readonly kbService: KnowledgebaseService,
-    private readonly kfService: KnowledgefileService,
+    private readonly storageService: StorageService,
     private readonly searchService: SemanticSearchService,
     private readonly processingService: DocumentProcessingService,
   ) {}
@@ -93,12 +93,26 @@ export class KnowledgebaseController {
       filesize: file.size,
       url,
     };
-    const knowledgefile = await this.kfService.create(
-      kf,
+    // 创建Storage记录
+    const storage = await this.storageService.createFileStorage(
+      {
+        filename,
+        filepath,
+        filesize: file.size,
+        url,
+        filetype: file.mimetype,
+        type: 'file',
+      },
       userId,
-      knowledgebaseId,
     );
-    return knowledgefile;
+
+    // 将Storage关联到知识库
+    await this.kbService.addStorageToKnowledgebase(knowledgebaseId, storage.id);
+
+    // 处理文档内容
+    await this.processingService.processStorage(storage.id, knowledgebaseId);
+
+    return storage;
   }
 
   @Get('list')

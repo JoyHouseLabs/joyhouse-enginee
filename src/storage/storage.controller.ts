@@ -94,7 +94,6 @@ export class StorageController {
   }
 
   @Post('upload')
-  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiConsumes('multipart/form-data')
   @ApiBody({

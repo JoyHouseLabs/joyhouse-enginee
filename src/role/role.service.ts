@@ -1,4 +1,4 @@
-import { Injectable, Inject, forwardRef } from '@nestjs/common';
+import { Injectable, Inject, forwardRef, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Role } from './role.entity';
@@ -7,6 +7,7 @@ import { Permission } from './permission.entity';
 import { OperationLogService } from '../audit/operation-log.service';
 import { scanAllControllerMethods } from './sync-permissions.util';
 import * as path from 'path';
+import { CreateRoleDto } from './dto/create-role.dto';
 
 @Injectable()
 export class RoleService {
@@ -26,7 +27,7 @@ export class RoleService {
     const userRoles = await this.userRoleRepo.find({
       where: { userId: userId },
     });
-    const roleIds = userRoles.map((ur) => ur.role_id);
+    const roleIds = userRoles.map((ur) => ur.roleId);
     if (!roleIds.length) return [];
     return this.roleRepo.findByIds(roleIds);
   }
@@ -36,7 +37,7 @@ export class RoleService {
     const perms = await this.permissionRepo.find({
       where: { controller, method },
     });
-    const roleIds = perms.map((p) => p.role_id);
+    const roleIds = perms.map((p) => p.roleId);
     if (!roleIds.length) return [];
     return this.roleRepo.findByIds(roleIds);
   }
@@ -58,21 +59,31 @@ export class RoleService {
   async getAllRoles(): Promise<Role[]> {
     return this.roleRepo.find();
   }
-  async createRole(
-    dto: { name: string; description?: string },
-    userId?: string,
-  ): Promise<Role> {
-    const entity = this.roleRepo.create(dto);
-    const saved = await this.roleRepo.save(entity);
-    if (userId)
-      await this.logService.log(
-        userId,
-        'create_role',
-        { role_id: saved.id },
-        dto,
-      );
+
+  async create(dto: { name: string; description?: string; userId?: string }): Promise<Role> {
+    const role = this.roleRepo.create(dto);
+    const saved = await this.roleRepo.save(role);
+    await this.logService.log(
+      'system',
+      'create_role',
+      { role_id: saved.id },
+      dto,
+    );
     return saved;
   }
+
+  async findAll(): Promise<Role[]> {
+    return this.roleRepo.find();
+  }
+
+  async findOne(id: string): Promise<Role> {
+    const role = await this.roleRepo.findOne({ where: { id } });
+    if (!role) {
+      throw new NotFoundException(`Role with ID ${id} not found`);
+    }
+    return role;
+  }
+
   async deleteRole(id: string, userId?: string): Promise<void> {
     await this.roleRepo.delete(id);
     if (userId)
@@ -85,15 +96,15 @@ export class RoleService {
   }
   async assignRoleToUser(
     userId: string,
-    role_id: string,
+    roleId: string,
     operator_id?: string,
   ): Promise<UserRole> {
-    const entity = this.userRoleRepo.create({ userId, role_id });
+    const entity = this.userRoleRepo.create({ userId, roleId });
     const saved = await this.userRoleRepo.save(entity);
     if (operator_id)
       await this.logService.log(operator_id, 'assign_role_to_user', {
         userId,
-        role_id,
+        roleId,
       });
     return saved;
   }
@@ -109,7 +120,8 @@ export class RoleService {
 
   // 权限管理
   async getRolePermissions(roleId: string): Promise<Permission[]> {
-    return this.permissionRepo.find({ where: { role_id: roleId } });
+    const role = await this.findOne(roleId);
+    return this.permissionRepo.find({ where: { roleId: role.id } });
   }
   async addPermission(
     dto: { role_id: string; controller: string; method: string },
@@ -158,7 +170,7 @@ export class RoleService {
           where: {
             controller: api.controller,
             method: api.method,
-            role_id: role.id,
+            roleId: role.id,
           },
         });
         if (!exist) {
@@ -166,7 +178,7 @@ export class RoleService {
             this.permissionRepo.create({
               controller: api.controller,
               method: api.method,
-              role_id: role.id,
+              roleId: role.id,
             }),
           );
           inserted++;

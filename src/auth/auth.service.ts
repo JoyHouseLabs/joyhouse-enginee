@@ -13,11 +13,15 @@ import { UserService } from '../user/user.service';
 import { User } from '../user/user.entity';
 import { StorageDir } from '../storage/storage-dir.entity';
 import { WalletService } from '../wallet/wallet.service';
-import { RegisterDto, LoginDto } from '../dto/auth.dto';
+import { RegisterDto, LoginDto } from './auth.dto';
 import * as bcrypt from 'bcryptjs';
-import { RoleType } from '../role/role.entity';
+import { RoleType, Role } from '../role/role.entity';
+import { Permission } from '../role/permission.entity';
+import { UserRole } from '../role/user-role.entity';
 import { TokenBlacklist } from './entities/token-blacklist.entity';
 import { StorageService } from '../storage/storage.service';
+import { AgentService } from '../agent/agent.service';
+import { OperationLogService } from '../audit/operation-log.service';
 
 @Injectable()
 export class AuthService {
@@ -28,10 +32,18 @@ export class AuthService {
     private readonly storageDirRepo: Repository<StorageDir>,
     @InjectRepository(TokenBlacklist)
     private readonly tokenBlacklistRepo: Repository<TokenBlacklist>,
+    @InjectRepository(Role)
+    private readonly roleRepo: Repository<Role>,
+    @InjectRepository(Permission)
+    private readonly permissionRepo: Repository<Permission>,
+    @InjectRepository(UserRole)
+    private readonly userRoleRepo: Repository<UserRole>,
     private readonly userService: UserService,
     private readonly walletService: WalletService,
     private readonly jwtService: JwtService,
     private readonly storageService: StorageService,
+    private readonly agentService: AgentService,
+    private readonly operationLogService: OperationLogService,
   ) {}
 
   async validateUser(username: string, password: string): Promise<any> {
@@ -43,7 +55,7 @@ export class AuthService {
     return null;
   }
 
-  async register(username: string, password: string, nickname?: string) {
+  async register(username: string, password: string, nickname?: string, registerIp?: string, sourceType?: string) {
     // 检查用户名是否已存在
     const existingUser = await this.userRepo.findOneBy({ username });
     if (existingUser) {
@@ -63,49 +75,146 @@ export class AuthService {
     // 加密密码
     const hashed = await bcrypt.hash(password, 10);
 
-    // 创建用户目录
-    const [homeDir, shareDir] = await Promise.all([
-      this.storageService.createDir({
-        userId: '', // 临时ID，稍后更新
-        name: 'home',
-        parent: '',
-      }),
-      this.storageService.createDir({
-        userId: '', // 临时ID，稍后更新
-        name: 'share',
-        parent: '',
-      }),
-    ]);
+    // 如果是第一个用户,创建角色和权限
+    if (isFirstUser) {
+      // 创建管理员角色
+      const adminRole = this.roleRepo.create({
+        name: RoleType.ADMIN,
+        description: '系统管理员'
+      });
+      await this.roleRepo.save(adminRole);
 
-    // 创建用户
-    const user = this.userRepo.create({
+      // 创建普通用户角色
+      const userRole = this.roleRepo.create({
+        name: RoleType.USER,
+        description: '普通用户'
+      });
+      await this.roleRepo.save(userRole);
+
+      // 为管理员角色添加权限
+      const adminPermissions = [
+        { controller: 'user', method: 'create' },
+        { controller: 'user', method: 'read' },
+        { controller: 'user', method: 'update' },
+        { controller: 'user', method: 'delete' },
+        { controller: 'role', method: 'create' },
+        { controller: 'role', method: 'read' },
+        { controller: 'role', method: 'update' },
+        { controller: 'role', method: 'delete' },
+        { controller: 'permission', method: 'create' },
+        { controller: 'permission', method: 'read' },
+        { controller: 'permission', method: 'update' },
+        { controller: 'permission', method: 'delete' }
+      ];
+
+      for (const perm of adminPermissions) {
+        const permission = this.permissionRepo.create({
+          roleId: adminRole.id,
+          controller: perm.controller,
+          method: perm.method
+        });
+        await this.permissionRepo.save(permission);
+      }
+
+      // 为普通用户角色添加基本权限
+      const userPermissions = [
+        { controller: 'user', method: 'read' },
+        { controller: 'role', method: 'read' }
+      ];
+
+      for (const perm of userPermissions) {
+        const permission = this.permissionRepo.create({
+          roleId: userRole.id,
+          controller: perm.controller,
+          method: perm.method
+        });
+        await this.permissionRepo.save(permission);
+      }
+    }
+
+    // 1. 创建用户（不包含目录ID）
+    let user = this.userRepo.create({
       username,
       password: hashed,
       nickname,
       role: isFirstUser ? RoleType.ADMIN : RoleType.USER,
       isAdmin: isFirstUser,
       onboarded: false,
-      home_dir_id: homeDir.id,
-      share_dir_id: shareDir.id,
+      registerIp,
+      sourceType,
     });
 
-    const savedUser = await this.userRepo.save(user);
+    // 2. 保存用户以获取ID
+    const savedUserWithId = await this.userRepo.save(user);
 
-    // 更新目录的用户ID
-    await Promise.all([
-      this.storageService.updateDir(homeDir.id, { userId: savedUser.id }),
-      this.storageService.updateDir(shareDir.id, { userId: savedUser.id }),
-    ]);
+    // 如果是第一个用户,分配管理员角色
+    if (isFirstUser) {
+      const adminRole = await this.roleRepo.findOneBy({ name: RoleType.ADMIN });
+      if (adminRole) {
+        const userRole = this.userRoleRepo.create({
+          userId: savedUserWithId.id,
+          roleId: adminRole.id
+        });
+        await this.userRoleRepo.save(userRole);
+      }
+    }
 
-    const { password: _, ...result } = savedUser;
+    // 3. 使用获取到的用户ID创建用户目录
+    const homeDir = await this.storageService.createDir({
+      userId: savedUserWithId.id,
+      name: 'home',
+      parent: undefined,
+    });
+
+    const shareDir = await this.storageService.createDir({
+      userId: savedUserWithId.id,
+      name: 'share',
+      parent: undefined,
+    });
+
+    // 4. 更新用户实体以包含目录ID
+    savedUserWithId.home_dir_id = homeDir.id;
+    savedUserWithId.share_dir_id = shareDir.id;
+
+    // 5. 再次保存用户以更新目录ID
+    const finalUser = await this.userRepo.save(savedUserWithId);
+
+    // Log user registration
+    await this.operationLogService.log(finalUser.id, '用户注册', { username: finalUser.username });
+
+    // 6. 自动生成一个默认的 agent
+    await this.agentService.create(
+      {
+        name: '默认助手',
+        description: '这是一个默认的AI助手',
+        isPublic: false,
+        isDefault: true,
+        llmParams: {
+          model: 'gpt-3.5-turbo',
+          temperature: 0.7,
+          maxTokens: 2000,
+        },
+      },
+      finalUser,
+    );
+
+    const { password: _, ...result } = finalUser;
     return result;
   }
 
-  async login(username: string, password: string) {
+  async login(username: string, password: string, ip?: string) {
     const user = await this.validateUser(username, password);
     if (!user) {
       throw new UnauthorizedException('用户名或密码错误');
     }
+
+    // Update lastLoginIp
+    if (ip) {
+      await this.userRepo.update(user.id, { lastLoginIp: ip });
+    }
+
+    // Log login event
+    await this.operationLogService.log(user.id, '用户登录', { username: user.username, ip });
 
     const payload = { username: user.username, sub: user.id, role: user.role };
     return {
@@ -120,6 +229,7 @@ export class AuthService {
         isAdmin: user.isAdmin,
         home_dir_id: user.home_dir_id,
         share_dir_id: user.share_dir_id,
+        lastLoginIp: ip, // Also include in the response if needed, or fetch updated user
       },
     };
   }
