@@ -22,7 +22,9 @@ import {
 import { JailUser } from '../../user/jail-user.entity';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 
-@ApiTags('CRM')
+@ApiTags('CRM用户')
+@UseGuards(JwtAuthGuard)
+@ApiBearerAuth()
 @Controller('crm/users')
 export class CrmUserController {
   constructor(
@@ -33,8 +35,6 @@ export class CrmUserController {
   ) {}
 
   @Get()
-  @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
   @ApiResponse({ status: 200, description: '系统所有用户（分页）' })
   async findAll(@Query() query: CrmUserQueryDto) {
     const page = parseInt(query.page || '1', 10);
@@ -59,8 +59,6 @@ export class CrmUserController {
   }
 
   @Get('jail')
-  @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
   @ApiResponse({ status: 200, description: '获取封禁用户列表' })
   async findAllJailUsers(@Query() query: JailUserQueryDto) {
     const page = parseInt(query.page || '1', 10);
@@ -110,8 +108,6 @@ export class CrmUserController {
   }
 
   @Post('jail')
-  @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
   @ApiResponse({ status: 200, description: '封禁用户' })
   async jailUser(@Body() body: JailUserDto, @Req() req) {
     const user = await this.userRepo.findOneBy({ id: body.userId });
@@ -137,8 +133,6 @@ export class CrmUserController {
   }
 
   @Post('unjail')
-  @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
   @ApiResponse({ status: 200, description: '解除用户封禁' })
   async unjailUser(@Body() body: UnjailUserDto, @Req() req) {
     const jailUser = await this.jailUserRepo.findOneBy({ id: body.id });
@@ -163,8 +157,6 @@ export class CrmUserController {
   }
 
   @Get(':userId/jail')
-  @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
   @ApiResponse({ status: 200, description: '获取用户封禁状态' })
   async getUserJailStatus(@Param('userId') userId: string) {
     const activeJail = await this.jailUserRepo.findOne({

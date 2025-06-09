@@ -28,8 +28,7 @@ export class AuthService {
   constructor(
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
-    @InjectRepository(StorageDir)
-    private readonly storageDirRepo: Repository<StorageDir>,
+  
     @InjectRepository(TokenBlacklist)
     private readonly tokenBlacklistRepo: Repository<TokenBlacklist>,
     @InjectRepository(Role)
@@ -415,5 +414,11 @@ export class AuthService {
       entry.expiresAt = new Date();
       await this.tokenBlacklistRepo.save(entry);
     }
+  }
+
+  async logout(user: any): Promise<void> {
+    // 记录登出日志
+    await this.invalidateAllUserTokens(user.id);
+    await this.operationLogService.log(user.id, '用户登出', { username: user.username });
   }
 }

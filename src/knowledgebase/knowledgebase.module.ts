@@ -1,4 +1,4 @@
-import { forwardRef, Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Knowledgebase } from './knowledgebase.entity';
 import { KnowledgeChunk } from './entities/knowledge-chunk.entity';
@@ -6,7 +6,6 @@ import { KnowledgebaseService } from './knowledgebase.service';
 import { SemanticSearchService } from './services/semantic-search.service';
 import { DocumentProcessingService } from './services/document-processing.service';
 import { DocumentServiceClient } from './services/document-service.client';
-import { FileUploadedHandler } from './events/file-uploaded.handler';
 import { KnowledgebaseController } from './knowledgebase.controller';
 import { HttpClientService } from '../common/http/http-client.service';
 
@@ -19,11 +18,10 @@ import { Storage } from '../storage/storage.entity';
 import { StorageDir } from '../storage/storage-dir.entity';
 import { FileContent } from '../storage/file-content.entity';
 import { Block } from '../storage/block.entity';
-import { DataWorkflow, WorkflowExecution } from '../storage/data-workflow.entity';
 
 // 集成其他必要模块
 import { UserModule } from '../user/user.module';
-import { MultimodalModule } from '../multimodal/multimodal.module';
+import { WorkflowModule } from '../workflow/workflow.module';
 
 @Module({
   imports: [
@@ -42,14 +40,12 @@ import { MultimodalModule } from '../multimodal/multimodal.module';
       StorageDir,
       FileContent,
       Block,
-      DataWorkflow,
-      WorkflowExecution,
     ]),
     
     // 导入相关模块
     forwardRef(() => StorageModule), // 避免循环依赖
     forwardRef(() => UserModule),
-    MultimodalModule, // 用于向量化和多模态处理
+    WorkflowModule,
   ],
   
   providers: [
@@ -58,7 +54,6 @@ import { MultimodalModule } from '../multimodal/multimodal.module';
     DocumentProcessingService,
     HttpClientService,
     DocumentServiceClient,
-    FileUploadedHandler,
   ],
   
   controllers: [

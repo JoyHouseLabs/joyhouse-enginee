@@ -1,6 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Like, IsNull } from 'typeorm';
+import { Repository, Like, IsNull, In, SelectQueryBuilder, Brackets } from 'typeorm';
 import { Storage } from './storage.entity';
 import { StorageDir } from './storage-dir.entity';
 import * as fs from 'fs';
@@ -9,11 +9,11 @@ import axios from 'axios';
 import * as cheerio from 'cheerio';
 import * as crypto from 'crypto';
 import { JoyhouseConfigService } from '../common/joyhouse-config';
-import { ImporterFactory, ImporterType } from './importers/importer.factory';
-import { ApiImportParams } from './importers/api.importer';
-import { ContentExtractorService } from './content-extractor.service';
+
 import { UserService } from '../user/user.service';
-import { MultimodalService } from '../multimodal/multimodal.service';
+import { DocumentServiceClient } from '../knowledgebase/services/document-service.client';
+import { extname } from 'path';
+import { FileContent } from './file-content.entity';
 
 @Injectable()
 export class StorageService {
@@ -22,9 +22,7 @@ export class StorageService {
     private readonly storageRepo: Repository<Storage>,
     @InjectRepository(StorageDir)
     private readonly storageDirRepo: Repository<StorageDir>,
-    private readonly contentExtractorService: ContentExtractorService,
     private readonly userService: UserService,
-    private readonly multimodalService: MultimodalService,
   ) {}
 
   async createFileStorage(meta: Partial<Storage>, userId?: string): Promise<Storage> {
@@ -71,18 +69,7 @@ export class StorageService {
     }
     const entity = this.storageRepo.create(meta);
     const saved = await this.storageRepo.save(entity);
-    // 自动内容清洗
-    if (userId) {
-      const user = await this.userService.findById(userId);
-      if (user?.auto_extract_content) {
-        try {
-          await this.contentExtractorService.extractAndSave(saved);
-        } catch (e) {
-          // 日志记录，不影响主流程
-          console.error('内容提取失败:', e.message);
-        }
-      }
-    }
+   
     return saved;
   }
 
@@ -291,51 +278,7 @@ export class StorageService {
     return versions;
   }
 
-  // 从URL导入文件
-  async importFromUrl(url: string, storage_dir_id: string, userId: string): Promise<Storage> {
-    const importer = ImporterFactory.getImporter(ImporterType.URL);
-    const result = await importer.import({ url, storage_dir_id });
-    
-    return this.saveFile({
-      ...result,
-      userId,
-    });
-  }
 
-  // 从网页导入内容
-  async importFromWebpage(url: string, storage_dir_id: string, userId: string): Promise<Storage> {
-    const importer = ImporterFactory.getImporter(ImporterType.WEBPAGE);
-    const result = await importer.import({ url, storage_dir_id });
-    
-    return this.saveFile({
-      ...result,
-      userId,
-    });
-  }
-
-  // 从API导入数据
-  async importFromApi(
-    url: string,
-    method: 'GET' | 'POST' = 'GET',
-    headers: Record<string, string> = {},
-    body: any = null,
-    storage_dir_id: string,
-    userId: string
-  ): Promise<Storage> {
-    const importer = ImporterFactory.getImporter(ImporterType.API);
-    const result = await importer.import({
-      url,
-      method,
-      headers,
-      body,
-      storage_dir_id,
-    });
-    
-    return this.saveFile({
-      ...result,
-      userId,
-    });
-  }
 
   // 更新目录信息
   async updateDir(id: string, data: Partial<StorageDir>): Promise<StorageDir> {
@@ -404,13 +347,15 @@ export class StorageService {
     // 校验文件归属
     const file = await this.findFileById(fileId);
     if (!file || file.userId !== userId) throw new Error('无权限或文件不存在');
-    // 判断是否为图片类型
-    if (file.filetype && file.filetype.startsWith('image/')) {
-      // 用 multimodalService.blip2
-      return this.multimodalService.extract(file, 'blip2');
+  
+  }
+
+  // 查找单个文件 2025-06-09
+  async findOne(id: string): Promise<Storage> {
+    const file = await this.storageRepo.findOne({ where: { id } });
+    if (!file) {
+      throw new Error('文件不存在');
     }
-    // 其它类型走原有内容提取逻辑
-    if (!this.contentExtractorService) throw new Error('内容提取服务未注入');
-    return this.contentExtractorService.extractAndSave(file);
+    return file;
   }
 }

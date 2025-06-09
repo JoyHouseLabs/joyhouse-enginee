@@ -18,7 +18,6 @@ export class FileUploadedHandler implements IEventHandler<FileUploadedEvent> {
       // 提交文档处理任务到文档服务
       const result = await this.documentServiceClient.processDocument({
         fileId: event.fileId,
-        knowledgebaseId: event.knowledgebaseId,
         filePath: event.filePath,
         userId: event.userId,
         processingConfig: event.processingConfig,

@@ -37,8 +37,8 @@ export class AuthController {
 
   @Post('register')
   @ApiOperation({ summary: '用户注册' })
-  @ApiResponse({ description: '注册成功' })
-  async register(@Req() req, @Body() registerDto: RegisterDto) {
+  @ApiResponse({ status: 201, description: '注册成功' })
+  async register(@Req() req,@Body() registerDto: RegisterDto): Promise<any> {
     const { username, password, nickname, sourceType } = registerDto;
     const ip = req.headers['x-forwarded-for'] || req.ip || req.connection?.remoteAddress;
     return this.authService.register(username, password, nickname, ip, sourceType);
@@ -46,8 +46,8 @@ export class AuthController {
 
   @Post('login')
   @ApiOperation({ summary: '用户登录' })
-  @ApiResponse({ description: '登录成功' })
-  async login(@Req() req, @Body() loginDto: LoginDto) {
+  @ApiResponse({ status: 200, description: '登录成功' })
+  async login(@Req() req, @Body() loginDto: LoginDto): Promise<any> {
     const { username, password } = loginDto;
     const ip = req.headers['x-forwarded-for'] || req.ip || req.connection?.remoteAddress;
     return this.authService.login(username, password, ip);
@@ -66,18 +66,9 @@ export class AuthController {
     return result;
   }
 
-  @UseGuards(JwtAuthGuard)
-  @Get('profile')
-  @ApiBearerAuth()
-  @ApiOperation({ summary: '获取当前用户信息' })
-  @ApiResponse({ status: 200, description: '获取成功' })
-  getProfile(@Request() req) {
-    return req.user;
-  }
 
   @UseGuards(JwtAuthGuard)
   @Put('change-password')
-  @ApiBearerAuth()
   @ApiOperation({ summary: '修改密码' })
   @ApiResponse({ status: 200, description: '密码修改成功' })
   async changePassword(
@@ -94,7 +85,6 @@ export class AuthController {
 
   @UseGuards(JwtAuthGuard)
   @Put('reset-password/:userId')
-  @ApiBearerAuth()
   @ApiOperation({ summary: '重置用户密码' })
   @ApiResponse({ status: 200, description: '密码重置成功' })
   async resetPassword(
@@ -115,13 +105,9 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: '用户登出' })
-  @ApiResponse({ description: '登出成功' })
-  async logout(@Request() req) {
-    const token = req.headers.authorization?.split(' ')[1];
-    if (token) {
-      await this.authService.invalidateToken(token);
-    }
-    return { message: '登出成功' };
+  @ApiResponse({ status: 200, description: '登出成功' })
+  async logout(@Req() req): Promise<void> {
+    return this.authService.logout(req.user);
   }
 
   @Post('logout-all')

@@ -120,7 +120,12 @@ export interface WorkflowNode {
     | 'parallel_branch'
     | 'mcp_tool'
     | 'llm'
-    | 'intent_recognition';
+    | 'intent_recognition'
+    | 'extract_data'
+    | 'vectorize_data'
+    | 'summarize_data'
+    | 'analyze_data'
+    | 'transform_data';
   label: string;
   position: { x: number; y: number };
   data: {
@@ -202,6 +207,38 @@ export interface WorkflowNode {
     enableFallback?: boolean;
     fallbackNodeId?: string;
     debugMode?: boolean;
+    
+    // Data processing nodes
+    // Extract data node
+    extractors?: string[];
+    extractFormat?: 'text' | 'markdown' | 'json' | 'structured';
+    sourceFileId?: string;
+    sourceFilePath?: string;
+    dataOutputFormat?: 'text' | 'json' | 'markdown';
+    
+    // Vectorize data node
+    vectorModel?: string;
+    dimensions?: number;
+    chunkSize?: number;
+    overlap?: number;
+    indexName?: string;
+    
+    // Summarize data node
+    summaryModel?: string;
+    maxLength?: number;
+    summaryStyle?: 'brief' | 'detailed' | 'technical' | 'creative';
+    language?: string;
+    
+    // Analyze data node
+    analysisType?: 'sentiment' | 'topic' | 'entity' | 'relation' | 'classification';
+    analysisModel?: string;
+    analysisConfig?: Record<string, any>;
+    
+    // Transform data node
+    transformType?: 'format' | 'clean' | 'split' | 'merge' | 'filter';
+    transformConfig?: Record<string, any>;
+    targetFormat?: string;
+    
     [key: string]: any;
   };
 }

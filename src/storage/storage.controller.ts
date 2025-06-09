@@ -9,6 +9,7 @@ import {
   Delete,
   Param,
   Res,
+  Query,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import {
@@ -41,21 +42,114 @@ export class StorageController {
   constructor(private readonly storageService: StorageService) {}
 
   @Post('dir/rename')
-  @ApiBearerAuth()
   @ApiResponse({ status: 200, description: '目录重命名成功' })
   async renameDir(@Body() body: { id: string; name: string }): Promise<void> {
     return this.storageService.renameDir(body.id, body.name);
   }
 
-  @Post('file/rename')
-  @ApiBearerAuth()
-  @ApiResponse({ status: 200, description: '文件重命名成功' })
-  async renameFile(@Body() body: { id: string; name: string }): Promise<void> {
-    return this.storageService.renameFile(body.id, body.name);
-  }
+
+
+  // @Post('dir/delete')
+  // @ApiResponse({ status: 200, description: '目录删除成功' })
+  // async deleteDir(@Body() body: { id: string }): Promise<void> {
+  //   return this.storageService.deleteDir(body.id);
+  // }
+
+  // @Post('file/upload')
+  // @ApiResponse({ status: 200, description: '文件上传成功' })
+  // @UseInterceptors(FileInterceptor('file'))
+  // async uploadFile(
+  //   @UploadedFile() file: Express.Multer.File,
+  //   @Body() body: { parentId: string }
+  // ): Promise<void> {
+  //   return this.storageService.uploadFile(file, body.parentId);
+  // }
+
+  // @Post('file/rename')
+  // @ApiResponse({ status: 200, description: '文件重命名成功' })
+  // async renameFile(@Body() body: { id: string; name: string }): Promise<void> {
+  //   return this.storageService.renameFile(body.id, body.name);
+  // }
+
+  // @Post('file/delete')
+  // @ApiResponse({ status: 200, description: '文件删除成功' })
+  // async deleteFile(@Body() body: { id: string }): Promise<void> {
+  //   return this.storageService.deleteFile(body.id);
+  // }
+
+  // @Post('file/move')
+  // @ApiResponse({ status: 200, description: '文件移动成功' })
+  // async moveFile(@Body() body: { id: string; targetDirId: string }): Promise<void> {
+  //   return this.storageService.moveFile(body.id, body.targetDirId);
+  // }
+
+  // @Get('dir/list')
+  // @ApiResponse({ status: 200, description: '获取目录列表成功' })
+  // async listDir(@Query('id') id: string): Promise<any> {
+  //   return this.storageService.listDir(id);
+  // }
+
+  // @Get('file/list')
+  // @ApiResponse({ status: 200, description: '获取文件列表成功' })
+  // async listFiles(@Query('dirId') dirId: string): Promise<any> {
+  //   return this.storageService.listFiles(dirId);
+  // }
+
+  // @Get('file/download')
+  // @ApiResponse({ status: 200, description: '文件下载成功' })
+  // async downloadFile(@Query('id') id: string, @Res() res: Response): Promise<void> {
+  //   return this.storageService.downloadFile(id, res);
+  // }
+
+  // @Get('file/preview')
+  // @ApiResponse({ status: 200, description: '文件预览成功' })
+  // async previewFile(@Query('id') id: string, @Res() res: Response): Promise<void> {
+  //   return this.storageService.previewFile(id, res);
+  // }
+
+  // @Get('file/info')
+  // @ApiResponse({ status: 200, description: '获取文件信息成功' })
+  // async getFileInfo(@Query('id') id: string): Promise<any> {
+  //   return this.storageService.getFileInfo(id);
+  // }
+
+  // @Post('file/share')
+  // @ApiResponse({ status: 200, description: '文件分享成功' })
+  // async shareFile(@Body() body: { id: string; expireTime?: number }): Promise<any> {
+  //   return this.storageService.shareFile(body.id, body.expireTime);
+  // }
+
+  // @Get('file/shared')
+  // @ApiResponse({ status: 200, description: '获取分享文件成功' })
+  // async getSharedFile(@Query('shareId') shareId: string, @Res() res: Response): Promise<void> {
+  //   return this.storageService.getSharedFile(shareId, res);
+  // }
+
+  // @Post('file/copy')
+  // @ApiResponse({ status: 200, description: '文件复制成功' })
+  // async copyFile(@Body() body: { id: string; targetDirId: string }): Promise<void> {
+  //   return this.storageService.copyFile(body.id, body.targetDirId);
+  // }
+
+  // @Post('file/restore')
+  // @ApiResponse({ status: 200, description: '文件恢复成功' })
+  // async restoreFile(@Body() body: { id: string }): Promise<void> {
+  //   return this.storageService.restoreFile(body.id);
+  // }
+
+  // @Get('file/trash')
+  // @ApiResponse({ status: 200, description: '获取回收站文件列表成功' })
+  // async getTrashFiles(): Promise<any> {
+  //   return this.storageService.getTrashFiles();
+  // }
+
+  // @Post('file/empty-trash')
+  // @ApiResponse({ status: 200, description: '清空回收站成功' })
+  // async emptyTrash(): Promise<void> {
+  //   return this.storageService.emptyTrash();
+  // }
 
   @Post('dir/contents')
-  @ApiBearerAuth()
   @ApiResponse({ status: 200, description: '获取目录下所有目录和文件' })
   async getDirContents(@Body() body: { id: string }, @Req() req) {
     if (!body.id) {
@@ -69,7 +163,6 @@ export class StorageController {
   }
 
   @Post('user/directories')
-  @ApiBearerAuth()
   @ApiResponse({ status: 200, description: '获取用户的home和share目录' })
   async getUserDirectories(@Req() req) {
     const userId = req.user?.id;
@@ -80,21 +173,18 @@ export class StorageController {
   }
 
   @Post('file/remove')
-  @ApiBearerAuth()
   @ApiResponse({ status: 204, description: '删除文件' })
   async removeFile(@Body() body: { id: string }): Promise<void> {
     return this.storageService.removeFile(body.id);
   }
 
   @Post('dir/remove')
-  @ApiBearerAuth()
   @ApiResponse({ status: 204, description: '删除目录及其所有内容' })
   async removeDir(@Body() body: { id: string }): Promise<void> {
     return this.storageService.removeDir(body.id);
   }
 
   @Post('upload')
-  @ApiBearerAuth()
   @ApiConsumes('multipart/form-data')
   @ApiBody({
     schema: {
@@ -161,7 +251,6 @@ export class StorageController {
   }
 
   @Post('createDir')
-  @ApiBearerAuth()
   @ApiResponse({ status: 201, type: StorageDir, description: '目录创建成功' })
   async createDir(
     @Body() dto: CreateStorageDirDto,
@@ -174,7 +263,6 @@ export class StorageController {
   }
 
   @Post('search')
-  @ApiBearerAuth()
   @ApiResponse({ status: 200, description: '搜索文件和目录' })
   async search(@Body() body: { keyword: string }, @Req() req) {
     const userId = req.user?.id;
@@ -185,7 +273,6 @@ export class StorageController {
   }
 
   @Post('share')
-  @ApiBearerAuth()
   @ApiResponse({ status: 200, description: '分享文件或目录' })
   async share(
     @Body() body: { id: string; type: 'file' | 'dir'; userIds: string[]; permissions: 'read' | 'write' | 'admin' },
@@ -194,99 +281,94 @@ export class StorageController {
   }
 
   @Get('file/versions/:id')
-  @ApiBearerAuth()
   @ApiResponse({ status: 200, description: '获取文件版本历史' })
   async getFileVersions(@Param('id') id: string) {
     return this.storageService.getFileVersions(id);
   }
 
-  @Post('import/url')
-  @ApiBearerAuth()
-  @ApiResponse({ status: 201, type: StorageUploadResponseDto, description: '从URL导入文件成功' })
-  async importFromUrl(
-    @Body() body: { url: string; storage_dir_id?: string },
-    @Req() req,
-  ): Promise<StorageUploadResponseDto> {
-    const userId = req.user?.id;
-    if (!userId) {
-      throw new Error('用户未登录');
-    }
-    const storage_dir_id = body.storage_dir_id || 'publicfiles';
-    const entity = await this.storageService.importFromUrl(body.url, storage_dir_id, userId);
-    return {
-      url: entity.url,
-      filepath: entity.filepath,
-      filesize: entity.filesize,
-      filetype: entity.filetype,
-      filename: entity.filename,
-      userId: entity.userId,
-      storage_dir_id: entity.storage_dir_id,
-    };
-  }
+  // @Post('import/url')
+  // @ApiResponse({ status: 201, type: StorageUploadResponseDto, description: '从URL导入文件成功' })
+  // async importFromUrl(
+  //   @Body() body: { url: string; storage_dir_id?: string },
+  //   @Req() req,
+  // ): Promise<StorageUploadResponseDto> {
+  //   const userId = req.user?.id;
+  //   if (!userId) {
+  //     throw new Error('用户未登录');
+  //   }
+  //   const storage_dir_id = body.storage_dir_id || 'publicfiles';
+  //   const entity = await this.storageService.importFromUrl(body.url, storage_dir_id, userId);
+  //   return {
+  //     url: entity.url,
+  //     filepath: entity.filepath,
+  //     filesize: entity.filesize,
+  //     filetype: entity.filetype,
+  //     filename: entity.filename,
+  //     userId: entity.userId,
+  //     storage_dir_id: entity.storage_dir_id,
+  //   };
+  // }
 
-  @Post('import/webpage')
-  @ApiBearerAuth()
-  @ApiResponse({ status: 201, type: StorageUploadResponseDto, description: '从网页导入内容成功' })
-  async importFromWebpage(
-    @Body() body: { url: string; storage_dir_id?: string },
-    @Req() req,
-  ): Promise<StorageUploadResponseDto> {
-    const userId = req.user?.id;
-    if (!userId) {
-      throw new Error('用户未登录');
-    }
-    const storage_dir_id = body.storage_dir_id || 'publicfiles';
-    const entity = await this.storageService.importFromWebpage(body.url, storage_dir_id, userId);
-    return {
-      url: entity.url,
-      filepath: entity.filepath,
-      filesize: entity.filesize,
-      filetype: entity.filetype,
-      filename: entity.filename,
-      userId: entity.userId,
-      storage_dir_id: entity.storage_dir_id,
-    };
-  }
+  // @Post('import/webpage')
+  // @ApiResponse({ status: 201, type: StorageUploadResponseDto, description: '从网页导入内容成功' })
+  // async importFromWebpage(
+  //   @Body() body: { url: string; storage_dir_id?: string },
+  //   @Req() req,
+  // ): Promise<StorageUploadResponseDto> {
+  //   const userId = req.user?.id;
+  //   if (!userId) {
+  //     throw new Error('用户未登录');
+  //   }
+  //   const storage_dir_id = body.storage_dir_id || 'publicfiles';
+  //   const entity = await this.storageService.importFromWebpage(body.url, storage_dir_id, userId);
+  //   return {
+  //     url: entity.url,
+  //     filepath: entity.filepath,
+  //     filesize: entity.filesize,
+  //     filetype: entity.filetype,
+  //     filename: entity.filename,
+  //     userId: entity.userId,
+  //     storage_dir_id: entity.storage_dir_id,
+  //   };
+  // }
 
-  @Post('import/api')
-  @ApiBearerAuth()
-  @ApiResponse({ status: 201, type: StorageUploadResponseDto, description: '从API导入数据成功' })
-  async importFromApi(
-    @Body() body: {
-      url: string;
-      method?: 'GET' | 'POST';
-      headers?: Record<string, string>;
-      body?: any;
-      storage_dir_id?: string;
-    },
-    @Req() req,
-  ): Promise<StorageUploadResponseDto> {
-    const userId = req.user?.id;
-    if (!userId) {
-      throw new Error('用户未登录');
-    }
-    const storage_dir_id = body.storage_dir_id || 'publicfiles';
-    const entity = await this.storageService.importFromApi(
-      body.url,
-      body.method,
-      body.headers,
-      body.body,
-      storage_dir_id,
-      userId,
-    );
-    return {
-      url: entity.url,
-      filepath: entity.filepath,
-      filesize: entity.filesize,
-      filetype: entity.filetype,
-      filename: entity.filename,
-      userId: entity.userId,
-      storage_dir_id: entity.storage_dir_id,
-    };
-  }
+  // @Post('import/api')
+  // @ApiResponse({ status: 201, type: StorageUploadResponseDto, description: '从API导入数据成功' })
+  // async importFromApi(
+  //   @Body() body: {
+  //     url: string;
+  //     method?: 'GET' | 'POST';
+  //     headers?: Record<string, string>;
+  //     body?: any;
+  //     storage_dir_id?: string;
+  //   },
+  //   @Req() req,
+  // ): Promise<StorageUploadResponseDto> {
+  //   const userId = req.user?.id;
+  //   if (!userId) {
+  //     throw new Error('用户未登录');
+  //   }
+  //   const storage_dir_id = body.storage_dir_id || 'publicfiles';
+  //   const entity = await this.storageService.importFromApi(
+  //     body.url,
+  //     body.method,
+  //     body.headers,
+  //     body.body,
+  //     storage_dir_id,
+  //     userId,
+  //   );
+  //   return {
+  //     url: entity.url,
+  //     filepath: entity.filepath,
+  //     filesize: entity.filesize,
+  //     filetype: entity.filetype,
+  //     filename: entity.filename,
+  //     userId: entity.userId,
+  //     storage_dir_id: entity.storage_dir_id,
+  //   };
+  // }
 
   @Get('dir/:id')
-  @ApiBearerAuth()
   @ApiResponse({ status: 200, description: '获取目录下所有目录和文件' })
   async getDirContentsById(@Param('id') id: string, @Req() req) {
     if (!id) {
@@ -315,35 +397,10 @@ export class StorageController {
     return breadcrumbs
   }
 
-  @Get('file/:id/download')
-  @ApiBearerAuth()
-  @ApiResponse({ status: 200, description: '下载文件' })
-  async downloadFile(@Param('id') id: string, @Res() res: Response) {
-    const file = await this.storageService.findFileById(id);
-    if (!file) {
-      throw new Error('文件不存在');
-    }
-
-    // 检查文件是否存在
-    if (!fs.existsSync(file.filepath)) {
-      throw new Error('文件不存在');
-    }
-
-    // 设置响应头
-    res.setHeader('Content-Type', file.filetype);
-    res.setHeader('Content-Disposition', `attachment; filename=${encodeURIComponent(file.filename)}`);
-    
-    // 发送文件
-    const fileStream = fs.createReadStream(file.filepath);
-    fileStream.pipe(res);
-  }
-
-  @Post('extract-content')
-  @ApiBearerAuth()
-  @ApiResponse({ status: 200, description: '触发内容提取' })
+  @Post('file/extract-content')
+  @ApiResponse({ status: 200, description: '提取文件内容成功' })
   async extractContent(@Body() body: { fileId: string }, @Req() req) {
     const userId = req.user?.id;
-    if (!userId) throw new Error('用户未登录');
     return this.storageService.extractContent(body.fileId, userId);
   }
 }

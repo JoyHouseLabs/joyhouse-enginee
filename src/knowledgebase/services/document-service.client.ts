@@ -3,8 +3,8 @@ import { ConfigService } from '@nestjs/config';
 import { HttpClientService } from '../../common/http/http-client.service';
 
 export interface ProcessingOptions {
+  workflowId?: string;
   fileId: string;
-  knowledgebaseId: string;
   filePath: string;
   userId: string;
   processingConfig?: {

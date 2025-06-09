@@ -18,6 +18,7 @@ import { AgentModule } from '../agent/agent.module';
 import { McpModule } from '../mcp/mcp.module';
 import { LlmModule } from '../llm/llm.module';
 import { UserModule } from '../user/user.module';
+import { DataProcessingNodesService } from './services/data-processing-nodes.service';
 
 @Module({
   imports: [
@@ -48,6 +49,7 @@ import { UserModule } from '../user/user.module';
     WorkflowEngineService,
     WorkflowEventService,
     WorkflowRealtimeService,
+    DataProcessingNodesService,
     WsJwtAuthGuard,
   ],
   exports: [
@@ -55,6 +57,7 @@ import { UserModule } from '../user/user.module';
     WorkflowEngineService,
     WorkflowEventService,
     WorkflowRealtimeService,
+    DataProcessingNodesService,
     TypeOrmModule,
   ],
 })

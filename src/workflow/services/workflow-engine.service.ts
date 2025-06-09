@@ -20,6 +20,7 @@ import { McpService } from '../../mcp/services/mcp.service';
 import { LlmService } from '../../llm/llm.service';
 import { User } from '../../user/user.entity';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { DataProcessingNodesService } from './data-processing-nodes.service';
 
 // 循环状态接口
 interface LoopState {
@@ -74,6 +75,7 @@ export class WorkflowEngineService {
     private readonly mcpService: McpService,
     private readonly llmService: LlmService,
     private readonly eventEmitter: EventEmitter2,
+    private readonly dataProcessingNodesService: DataProcessingNodesService,
   ) {}
 
   async executeWorkflow(
@@ -226,8 +228,23 @@ export class WorkflowEngineService {
         case 'intent_recognition':
           result = await this.executeIntentRecognitionNode(execution, node);
           break;
+        case 'extract_data':
+          result = await this.dataProcessingNodesService.executeExtractDataNode(execution, node);
+          break;
+        case 'vectorize_data':
+          result = await this.dataProcessingNodesService.executeVectorizeDataNode(execution, node);
+          break;
+        case 'summarize_data':
+          result = await this.dataProcessingNodesService.executeSummarizeDataNode(execution, node);
+          break;
+        case 'analyze_data':
+          result = await this.dataProcessingNodesService.executeAnalyzeDataNode(execution, node);
+          break;
+        case 'transform_data':
+          result = await this.dataProcessingNodesService.executeTransformDataNode(execution, node);
+          break;
         default:
-          throw new Error(`Unsupported node type: ${node.type}`);
+          throw new Error(`Unknown node type: ${node.type}`);
       }
 
       // Update step with result
